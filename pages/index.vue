@@ -1,0 +1,48 @@
+<template>
+  <section>
+    <div>Tag: <input v-model="inputTag" placeholder="tag" /></div>
+    <div>
+      Game:
+      <select v-model="inputGame">
+        <option value="Super Smash Bros. Melee">Super Smash Bros. Melee</option>
+        <option value="Super Smash Bros. Ultimate"
+          >Super Smash Bros. Ultimate</option
+        >
+      </select>
+    </div>
+    <nuxt-link
+      :to="
+        `/u/${encodeURIComponent(inputGame)}/${encodeURIComponent(inputTag)}`
+      "
+      ><button>Go</button></nuxt-link
+    >
+    <div>{{ players.length }} players loaded</div>
+  </section>
+</template>
+
+<script>
+import axios from '~/plugins/axios'
+
+export default {
+  async asyncData() {
+    // let { data } = await axios.get(`/api/test/`)
+    let { data } = await axios.get(
+      `/api/players/${encodeURIComponent('Super Smash Bros. Ultimate')}`
+    )
+    return { players: data }
+  },
+  head() {
+    return {
+      title: 'Users',
+    }
+  },
+  data() {
+    return {
+      inputGame: 'Super Smash Bros. Ultimate',
+      inputTag: 'Christian',
+    }
+  },
+}
+</script>
+
+<style scoped></style>

@@ -79,11 +79,13 @@ module.exports = {
 
   async player({ game, id, tag }) {
     if (!game || (!id && !tag)) return
-    return await db.players.get({
+    const loadedPlayer = await db.players.get({
       game,
       id,
       tag,
     })
+    if (Array.isArray(loadedPlayer)) return { disambiguation: loadedPlayer }
+    return loadedPlayer
   },
 
   async players({ game }) {
@@ -95,12 +97,13 @@ module.exports = {
     const loadedPlayer = await this.player({ game, id, tag })
     if (!loadedPlayer) return
     if (Array.isArray(loadedPlayer)) return { disambiguation: loadedPlayer }
+    const peers = await db.players.peers(loadedPlayer)
     const playerPoints = await points.get(loadedPlayer)
     const collatedPlayerData = collatePointsIntoPlayerData(
       loadedPlayer,
       playerPoints
     )
-    return { player: collatedPlayerData, points: playerPoints }
+    return { player: collatedPlayerData, points: playerPoints, peers }
   },
 
   async moreEventsForPlayer({ game, id, tag }) {

@@ -1,7 +1,7 @@
 const { Router } = require('express')
 const router = Router()
 const logger = require('../data/scripts/log')
-const log = logger('api', 'white')
+const log = logger('api', 'gray')
 
 const get = require('../data/get')
 
@@ -82,9 +82,9 @@ router.get(
 
 /* GET more events for player */
 router.get('/more/:game/:id/', async (req, res, next) => {
-  log('more events for player')
   const game = decodeURIComponent(req.params.game)
   const id = parseInt(decodeURIComponent(req.params.id))
+  log('more events for player', id)
   const moreEvents = await get.moreEventsForPlayer({
     game,
     id,

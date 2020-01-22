@@ -7,9 +7,10 @@ const axios = require('axios')
 const rateLimiter = require('../scripts/rateLimiter')
 const logger = require('../scripts/log')
 const log = logger('smashgg', 'white')
+const low = logger('smashgg', 'gray')
 const logAdd = logger('smashgg', 'green')
 const logError = logger('smashgg', 'yellow')
-const limiter = new rateLimiter(20, 20000)
+const limiter = new rateLimiter(78, 60000)
 const db = require('../db/db.js')
 
 const currentlyLoadingNewEvents = []
@@ -24,7 +25,8 @@ module.exports = {
     // log(currentlyLoadingNewEvents)
 
     const eventData = await getEvent(tournamentSlug, slug)
-    if (!eventData) return logError('no event data')
+    if (!eventData || eventData.error)
+      return logError(`skipping event:`, eventData.error)
     // todo check for error
     const isDone = eventData.state === 'COMPLETED'
     if (!isDone) return { err: 'not done' }
@@ -183,11 +185,16 @@ module.exports = {
         }, [])
         .filter(isSingles)
         .filter(isNotAlreadyLoading)
-      log(
-        newPlayerSetEvents.length,
-        'additional events found via api for player',
-        player.tag
-      )
+      if (newPlayerSetEvents.length === 0)
+        low('no new events found via api for player', player.tag)
+      else
+        log(
+          newPlayerSetEvents.length,
+          'additional events found via api for player',
+          player.tag
+        )
+      if (newPlayerSetEvents.length > 0)
+        logError('Should recheck, may be new owners.')
       foundEvents.push(...newPlayerSetEvents)
     }
 
@@ -212,12 +219,14 @@ module.exports = {
             !data.data.data.tournaments.nodes
           ) {
             logError(
-              `Failed to get data for ownerId ${ownerId} on smashgg, retrying... (${JSON.stringify(
-                data.error || data.data.error || data.data.errors,
-                null,
-                2
-              )})`
+              `Failed to get data for ownerId ${ownerId} on smashgg, retrying... `
             )
+            //   (${JSON.stringify(
+            //     data.error || data.data.error || data.data.errors,
+            //     null,
+            //     2
+            //   )})`
+            // )
             attempts++
             data = null
           }
@@ -239,13 +248,21 @@ module.exports = {
           .filter(e => e)
           .filter(isSingles)
           .filter(isNotAlreadyLoading)
-        log(newEvents.length, 'additional events found via owner', ownerId)
+        if (newEvents.length === 0)
+          low('no new events found via owner', ownerId)
+        else log(newEvents.length, 'additional events found via owner', ownerId)
         foundEvents.push(...newEvents)
       })
     )
 
     // then grab 'em
-    if (foundEvents.length > 0) logAdd('will load new events:', foundEvents)
+    if (foundEvents.length > 0)
+      logAdd(
+        'will load new events:\n                        ',
+        foundEvents
+          .map(e => e.tournamentSlug + ' - ' + e.eventSlug)
+          .join('\n                         ')
+      )
     return foundEvents
   },
 }
@@ -254,9 +271,7 @@ async function getEvent(tournamentSlug, eventSlug) {
   let data,
     attempts = 0
   while (!data) {
-    log(
-      `getting new event data for tournament/${tournamentSlug}/event/${eventSlug}`
-    )
+    log(`getting new event data for ${tournamentSlug} - ${eventSlug}`)
     data = await makeQuery(queryEvent, {
       page: 1,
       slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
@@ -271,7 +286,7 @@ async function getEvent(tournamentSlug, eventSlug) {
       !data.data.data.event.sets.pageInfo
     ) {
       logError(
-        `Failed to get data for tournament/${tournamentSlug}/event/${eventSlug} on smashgg, retrying...`
+        `Failed to get data for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`
         // (${JSON.stringify(
         //   data.error || data.data.error || data.data.errors || data.data,
         //   null,
@@ -280,10 +295,10 @@ async function getEvent(tournamentSlug, eventSlug) {
       )
       attempts++
       data = null
-    } else if (attempts > 9) return null
+    } else if (attempts > 9) return { error: 'tried too many times' }
     else data = data.data.data.event
   }
-  if (!isSingles(data)) return null
+  if (!isSingles(data)) return { error: 'not singles' }
   let setsPage = 1,
     standingsPage = 1
   let areMoreSets = data.sets.pageInfo.totalPages > setsPage,
@@ -291,11 +306,11 @@ async function getEvent(tournamentSlug, eventSlug) {
 
   while (areMoreSets) {
     setsPage++
-    log(
+    low(
       'getting sets page',
       setsPage,
       'for',
-      `tournament/${tournamentSlug}/event/${eventSlug}`
+      `${tournamentSlug} - ${eventSlug}`
     )
     let moreSets = await makeQuery(queryEventSets, {
       page: setsPage,
@@ -312,7 +327,7 @@ async function getEvent(tournamentSlug, eventSlug) {
       logError(
         `Failed to get sets page`,
         setsPage,
-        `for tournament/${tournamentSlug}/event/${eventSlug} on smashgg, retrying...`,
+        `for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`,
         `(${JSON.stringify(
           moreSets.data.error ||
             moreSets.data.data.error ||
@@ -332,11 +347,11 @@ async function getEvent(tournamentSlug, eventSlug) {
 
   while (areMoreStandings) {
     standingsPage++
-    log(
+    low(
       'getting standings page',
       standingsPage,
       'for',
-      `tournament/${tournamentSlug}/event/${eventSlug}`
+      `${tournamentSlug} - ${eventSlug}`
     )
     let moreStandings = await makeQuery(queryEventStandings, {
       page: standingsPage,
@@ -348,7 +363,7 @@ async function getEvent(tournamentSlug, eventSlug) {
       moreStandings.error
     ) {
       logError(
-        `Failed to get more standings for tournament/${tournamentSlug}/event/${eventSlug} on smashgg, retrying...`
+        `Failed to get more standings for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`
       )
       standingsPage--
       continue
@@ -377,14 +392,10 @@ async function makeQuery(query, variables) {
   }
   // console.log(request)
   return limiter.queue(() => {
-    try {
-      return axios(request).catch(error => {
-        logError('axios error:', error)
-        return
-      })
-    } catch (e) {
-      logError('axios failed:', e)
-    }
+    return axios(request).catch(error => {
+      logError('axios error:', error)
+      return
+    })
   })
 }
 
@@ -394,9 +405,9 @@ function parseParticipantTag(name) {
 }
 
 function isSingles(event) {
-  const filterRegex = /(?:[２３４234][ -]?(?:vs?|on)[ -]?[２３４234]|doubles)/gi
-  if (filterRegex.exec(event.slug || event.eventSlug)) return false
-  if (filterRegex.exec(event.name || '')) return false
+  const hasNumbers = /(?:[２３４234][ -]?(?:vs?|on)[ -]?[２３４234]|doubles)/gi
+  if (hasNumbers.exec(event.slug || event.eventSlug)) return false
+  if (hasNumbers.exec(event.name || '')) return false
   return true
 }
 
@@ -470,7 +481,7 @@ query EventInfo($slug: String, $page: Int!) {
     }
     standings (query: {
       page: $page,
-      perPage: 80
+      perPage: 40
     }) {
       pageInfo {
         totalPages
@@ -491,7 +502,7 @@ query EventInfo($slug: String, $page: Int!) {
     }
     sets(
       page: $page,
-      perPage: 80,
+      perPage: 40,
       sortType: STANDARD,
       filters: {
         hideEmpty: true
@@ -548,7 +559,7 @@ query EventSets($slug: String, $page: Int!) {
   event(slug: $slug) {
     sets(
       page: $page,
-      perPage: 80,
+      perPage: 40,
       sortType: STANDARD
       filters: {
         hideEmpty: true
@@ -580,7 +591,7 @@ query EventStandings($slug: String, $page: Int!) {
   event(slug: $slug) {
     standings (query: {
       page: $page,
-      perPage: 80
+      perPage: 40
     }) {
       nodes {
         id
@@ -602,7 +613,7 @@ query EventStandings($slug: String, $page: Int!) {
 const queryTournamentsByOwner = `
 query TournamentsByOwner($ownerId: ID!) {
     tournaments(query: {
-      perPage: 80
+      perPage: 40
       filter: {
         ownerId: $ownerId
       }

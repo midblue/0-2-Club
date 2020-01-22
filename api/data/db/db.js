@@ -37,6 +37,7 @@ module.exports = {
     add: addOrUpdatePlayer,
     get: getPlayer,
     all: allPlayers,
+    peers: getPlayerPeers,
     combine,
   },
 }
@@ -178,14 +179,18 @@ function getPlayer({ game, id, tag }) {
             p => p.game === game && p.tag === tag && !p.redirect
           )
       if (foundPlayer && foundPlayer.length === 1) foundPlayer = foundPlayer[0]
-      else if (foundPlayer && foundPlayer.length > 0)
+      else if (foundPlayer && foundPlayer.length > 0) {
+        foundPlayer = foundPlayer.sort(
+          (a, b) =>
+            b.participatedInEvents.length - a.participatedInEvents.length
+        )
         logError(
           'found multiple players in the database by the tag',
           tag,
           'for',
           game
         )
-      else foundPlayer = null
+      } else foundPlayer = null
     }
     // if (foundPlayer)
     //   console.log('found player ' + foundPlayer.tag + ' in database')
@@ -193,10 +198,32 @@ function getPlayer({ game, id, tag }) {
   })
 }
 
-async function getPlayerPeers({ game, id, tag }) {
-  const player = await getPlayer({ game, id, tag })
+async function getPlayerPeers(player) {
+  // todo make this % overlap based, not just numbers
+  if (!player.participatedInEvents) player = await getPlayer(player)
   if (!player) return
-  // todo get top peers by frequency
+  const idsByFrequency = {}
+  await Promise.all(
+    player.participatedInEvents.map(partialEvent => {
+      return new Promise(async resolve => {
+        const event = await getEvent(partialEvent)
+        event.participants.forEach(({ id, tag }) => {
+          if (tag !== player.tag)
+            idsByFrequency[id] = {
+              tag,
+              common: (idsByFrequency[id] ? idsByFrequency[id].common : 0) + 1,
+            }
+        })
+        resolve()
+      })
+    })
+  )
+  const peers = Object.keys(idsByFrequency)
+    .filter(id => idsByFrequency[id].common > 2)
+    .sort((a, b) => idsByFrequency[b].common - idsByFrequency[a].common)
+    .slice(0, 10)
+    .map(id => ({ id, ...idsByFrequency[id] }))
+  return peers
 }
 
 async function updatePlayer({ player, toUpdate }) {

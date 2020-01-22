@@ -8,32 +8,36 @@ const levels = [
     label: 'Newcomer',
   },
   {
-    points: 250,
+    points: 200,
     label: 'Up-and-Comer',
   },
   {
-    points: 500,
+    points: 400,
     label: 'Community Regular',
   },
   {
-    points: 1000,
+    points: 700,
     label: 'Local Legend',
   },
   {
-    points: 2000,
+    points: 1100,
     label: 'Big Fish',
   },
   {
-    points: 4000,
+    points: 1600,
     label: 'Grindlord',
   },
   {
-    points: 8000,
+    points: 2200,
     label: 'FalcoMaster5000',
   },
   {
-    points: 16000,
+    points: 2900,
     label: 'FalcoGrandMaster5000',
+  },
+  {
+    points: 3700,
+    label: 'World Class',
   },
 ]
 

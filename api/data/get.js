@@ -1,64 +1,80 @@
-// const services = { smashgg: require('./getters/smashgg') }
+const services = { smashgg: require('./getters/smashgg') }
 const db = require('./db/db')
 const points = require('./points/points')
+const logger = require('./scripts/log')
+const log = logger('smashgg', 'white')
+const logAdd = logger('smashgg', 'green')
+const logError = logger('smashgg', 'yellow')
 
 module.exports = {
   async dbStats() {
     return await db.stats()
   },
 
-  async event({ service, id, tournamentSlug, slug, retries = 0 }) {
-    if (!service) return
-    if (!id && !tournamentSlug && !slug) return
+  event({ service, id, tournamentSlug, slug, retries = 0 }) {
+    if (!service) return logError('A service is required to get an event.')
+    if (!id && !tournamentSlug && !slug)
+      return logError(
+        'An id, tournamentSlug, or slug is required to get an event.'
+      )
+    return new Promise(async resolve => {
+      let loadedEntry
+      try {
+        loadedEntry = await db.events.get({
+          service,
+          tournamentSlug,
+          id,
+          slug,
+        })
+        if (loadedEntry) {
+          log(
+            'found existing event:',
+            loadedEntry.name,
+            '-',
+            loadedEntry.tournament.name
+          )
+          return resolve(loadedEntry)
+        }
 
-    let loadedEntry
-    try {
-      loadedEntry = await db.events.get({
-        service,
-        tournamentSlug,
-        id,
-        slug,
-      })
-      if (loadedEntry) {
-        console.log(
-          'found existing event:',
+        loadedEntry = await services[service].event({
+          id,
+          tournamentSlug,
+          slug,
+          retries,
+        })
+        // console.log('loadedEntry:', loadedEntry)
+        resolve(loadedEntry)
+      } catch (e) {
+        logError(
+          'failed to get event',
+          slug,
+          'at',
+          tournamentSlug,
+          ':',
+          e.code || e.err || e.error || e
+        )
+        if (retries < 10) {
+          log(`retrying... (attempt ${retries + 2})`)
+          return await this.event({
+            service,
+            id,
+            tournamentSlug,
+            slug,
+            retries: retries + 1,
+          })
+        }
+      }
+      if (loadedEntry && !loadedEntry.err) {
+        await db.events.add(loadedEntry)
+        log(
+          'found event from web:',
           loadedEntry.name,
           '-',
           loadedEntry.tournament.name
         )
-        return loadedEntry
       }
-
-      loadedEntry = await services[service].event({ id, tournamentSlug, slug })
-    } catch (e) {
-      console.log(
-        'failed to get event',
-        slug,
-        tournamentSlug,
-        ':',
-        e.code || e.err || e.error || e
-      )
-      if (retries < 10) {
-        console.log('retrying...')
-        return await this.event({
-          service,
-          id,
-          tournamentSlug,
-          slug,
-          retries: retries + 1,
-        })
-      }
-    }
-    if (loadedEntry && !loadedEntry.err) {
-      db.events.add(loadedEntry)
-      console.log(
-        'found new event:',
-        loadedEntry.name,
-        '-',
-        loadedEntry.tournament.name
-      )
-    }
-    return loadedEntry
+      resolve(loadedEntry)
+    })
   },
 
   async player({ game, id, tag }) {
@@ -76,15 +92,15 @@ module.exports = {
   },
 
   async points({ game, id, tag }) {
-    if (!game || (!id && !tag)) return
-    const loadedPlayer = await db.players.get({
-      game,
-      id,
-      tag,
-    })
+    const loadedPlayer = await this.player({ game, id, tag })
     if (!loadedPlayer) return
+    if (Array.isArray(loadedPlayer)) return { disambiguation: loadedPlayer }
     const playerPoints = await points.get(loadedPlayer)
-    return { player: loadedPlayer, points: playerPoints }
+    const collatedPlayerData = collatePointsIntoPlayerData(
+      loadedPlayer,
+      playerPoints
+    )
+    return { player: collatedPlayerData, points: playerPoints }
   },
 
   async moreEventsForPlayer({ game, id, tag }) {
@@ -98,22 +114,40 @@ module.exports = {
       !loadedPlayer ||
       !loadedPlayer.participatedInEvents ||
       !loadedPlayer.participatedInEvents.length
-    )
-      return
+    ) {
+      logError('no player found for', game, id, tag)
+      return []
+    }
 
     // todo check ALL
     const randomEvent =
       loadedPlayer.participatedInEvents[
         Math.floor(Math.random() * loadedPlayer.participatedInEvents.length)
       ]
-    const eventStubs = await services[randomEvent.service].moreEventsForPlayer({
-      entrantId: randomEvent.entrantId,
-      tournamentSlug: randomEvent.tournamentSlug,
-      eventSlug: randomEvent.slug,
-    })
+    const eventStubs = await services[randomEvent.service].moreEventsForPlayer(
+      loadedPlayer
+    )
     // if (!eventStubs.err)
     // db.events.add(loadedEntry)
 
     return eventStubs
   },
+
+  async combineTag({ game, tag, id }) {
+    return await db.players.combine({ game, tag, id })
+  },
+}
+
+function collatePointsIntoPlayerData(player, allPoints) {
+  const collatedEvents = player.participatedInEvents.map(event => {
+    return {
+      ...event,
+      points: (allPoints || []).filter(
+        point =>
+          point.eventSlug === event.slug &&
+          point.tournamentSlug === event.tournamentSlug
+      ),
+    }
+  })
+  return { ...player, participatedInEvents: collatedEvents }
 }

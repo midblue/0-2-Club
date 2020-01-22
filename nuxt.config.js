@@ -25,5 +25,13 @@ module.exports = {
     // API middleware
     '~/api/index.js',
   ],
-  watch: ['~/api/*.js', '~/api/routes/*.js'],
+  watch: [
+    '~/api/*.js',
+    '~/api/routes/*.js',
+    '~/api/data/*.js',
+    '~/api/data/db/*.js',
+    '~/api/data/getters/*.js',
+    '~/api/data/scripts/*.js',
+    '~/api/data/points/*.js',
+  ],
 }

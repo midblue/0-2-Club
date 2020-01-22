@@ -8,8 +8,14 @@ html,
 body {
   background: #fff;
   color: #000;
-  font-family: 'Source Sans Pro', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  font-family: 'Proxima Nova', 'Source Sans Pro', Arial, sans-serif;
   margin: 0;
+}
+
+body {
+  margin: 100px;
 }
 
 a,
@@ -17,4 +23,40 @@ a:hover,
 a:focus,
 a:visited {
   color: #000;
+}
+
+.button,
+.button:visited {
+  display: inline-block;
+  color: black;
+  letter-spacing: 1px;
+  background-color: #fff;
+  margin-top: -2px;
+  border: 2px solid #000;
+  text-decoration: none;
+  text-transform: uppercase;
+  padding: 15px 45px;
+  cursor: pointer;
+}
+
+.button:hover,
+.button:focus {
+  color: #fff;
+  background-color: #000;
+}
+
+.sub {
+  opacity: 0.6;
+  font-size: 0.8em;
+}
+.highlight {
+  color: #0bb;
+}
+
+h1 {
+  font-size: 3rem;
+}
+
+h3 {
+  margin-bottom: 0.5em;
 }

@@ -17,7 +17,7 @@ async function setup() {
 
 module.exports = async (url, selector) => {
   while (!page) await sleep(100)
-  console.log('loading url', url)
+  // console.log('loading url', url)
   await page.goto(url)
   await page.waitFor(selector)
   const results = await page.$$(selector)

@@ -26,6 +26,7 @@ export default {
               tag: params.tag,
             },
             points: [],
+            peers: [],
           }
       })
   },

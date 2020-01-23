@@ -1,13 +1,45 @@
 <template>
-  <div class="chartholder">
-    <line-chart
-      class="chart"
-      :chart-data="datacollection"
-      :options="options"
-    ></line-chart>
-    <span class="sub" v-if="checkForUpdates"
-      >loading updated comparison...</span
-    >
+  <div>
+    <div v-if="peers">
+      <b>Compare:</b>
+      <span v-for="peer in peers">
+        <span
+          class="compare"
+          :class="{ active: rivalId === peer.id }"
+          @click="
+            rivalSearchTag = null
+            rivalId = peer.id
+          "
+          >{{ peer.tag }}</span
+        >
+        &nbsp;
+      </span>
+      <span v-if="rivalId" @click="rivalId = null">Clear</span>
+      <input
+        v-model="inputRivalSearchTag"
+        placeholder="Search for a user..."
+      /><button
+        class="low"
+        @click="
+          rivalId = null
+          rivalSearchTag = inputRivalSearchTag
+        "
+      >
+        Compare
+      </button>
+    </div>
+
+    <div class="chartholder">
+      <line-chart
+        class="chart"
+        :chart-data="datacollection"
+        :options="options"
+      ></line-chart>
+      <div class="notification" v-if="checkForUpdates || notification">
+        <span v-if="checkForUpdates">Loading updated comparison...</span>
+        <span v-else-if="notification">{{ notification }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -19,20 +51,24 @@ import axios from 'axios'
 export default {
   props: {
     points: { default: () => [] },
-    rivalId: {},
-    rivalSearchTag: {},
+    peers: {},
     player: {},
     level: { default: 0 },
   },
   components: { LineChart },
   data() {
     return {
+      notification: null,
       checkForUpdates: false,
       checkForUpdatesInterval: null,
+      rivalId: null,
+      inputRivalSearchTag: null,
+      rivalSearchTag: null,
       rivalIdFromSearchTag: null,
       rivalTag: null,
       rivalPoints: null,
       datacollection: {},
+
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -50,14 +86,34 @@ export default {
               ticks: {
                 source: 'auto',
                 maxRotation: 40,
+                autoSkipPadding: 20,
               },
               gridLines: {
                 display: false,
               },
             },
           ],
-          yAxes: [{ display: true }],
+          yAxes: [
+            {
+              display: true,
+              ticks: {
+                min: 0,
+                // max: levels[this.level + 1].points,
+                maxTicksLimit: 6,
+                // callback: (value, index, values) => {
+                //   if (index === 0) return 'Level ' + (this.level + 1)
+                //   return value
+                // },
+              },
+            },
+          ],
         },
+      },
+      defaultDatasetOptions: {
+        steppedLine: true,
+        borderColor: 'rgba(0,0,0,0)',
+        pointBackgroundColor: 'rgba(0,0,0,0)',
+        pointBorderColor: 'rgba(0,0,0,0)',
       },
     }
   },
@@ -73,11 +129,9 @@ export default {
     points() {
       this.fillData()
     },
-    rivalId() {
-      if (this.rivalId) {
+    rivalId(newId) {
+      if (newId) {
         this.checkForUpdates = true
-        this.rivalSearchTag = null
-        this.rivalIdFromSearchTag = null
       } else {
         this.rivalTag = null
         this.rivalPoints = null
@@ -87,6 +141,7 @@ export default {
     rivalSearchTag() {
       if (this.rivalSearchTag) this.searchForRival()
     },
+
     checkForUpdates(willCheck, wasChecking) {
       if (willCheck !== wasChecking && willCheck) {
         this.startChecking()
@@ -94,13 +149,22 @@ export default {
         clearInterval(this.checkForUpdatesInterval)
       }
     },
+
+    notification(newNotification) {
+      if (newNotification) {
+        setTimeout(() => this.$set(this, 'notification', null), 2000)
+      }
+    },
   },
+
   mounted() {
     this.fillData()
   },
+
   beforeDestroy() {
     clearInterval(this.checkForUpdatesInterval)
   },
+
   methods: {
     fillData() {
       if (!this.pointsToUse || this.pointsToUse.length === 0) return
@@ -121,26 +185,20 @@ export default {
       const newDatacollection = {
         datasets: [
           {
-            steppedLine: true,
-            borderColor: 'rgba(0,0,0,0)',
-            pointBackgroundColor: 'rgba(0,0,0,0)',
-            pointBorderColor: 'rgba(0,0,0,0)',
+            ...this.defaultDatasetOptions,
             label: this.player.tag,
             backgroundColor: getComputedStyle(document.documentElement)
               .getPropertyValue('--l' + this.level)
-              .replace('100%)', '80%)'),
+              .replace('100%)', '75%)'),
             data,
           },
         ],
       }
       if (rivalData)
         newDatacollection.datasets.push({
-          steppedLine: true,
-          borderColor: 'rgba(0,0,0,0)',
-          pointBackgroundColor: 'rgba(0,0,0,0)',
-          pointBorderColor: 'rgba(0,0,0,0)',
+          ...this.defaultDatasetOptions,
           label: this.rivalTag,
-          backgroundColor: 'hsla(0, 0%, 30%, 80%)',
+          backgroundColor: 'hsla(0, 0%, 30%, 65%)',
           data: rivalData,
         })
       this.datacollection = newDatacollection
@@ -178,11 +236,21 @@ export default {
         this.rivalSearchTag
       )}/`
       axios.get(url).then(res => {
-        if (!res.data || res.data.err) return
-        this.rivalIdFromSearchTag = res.data.disambiguation
+        if (!res.data || res.data.err) {
+          this.checkForUpdates = false
+          this.rivalTag = null
+          this.rivalPoints = null
+          this.$set(
+            this,
+            'notification',
+            `No user found by the tag ${this.rivalSearchTag}.`
+          )
+          this.fillData()
+          return
+        }
+        this.rivalId = res.data.disambiguation
           ? res.data.disambiguation[0].id
           : res.data.id
-        console.log(this.rivalIdFromSearchTag)
         this.checkForUpdates = true
       })
     },
@@ -192,23 +260,40 @@ export default {
 function generateData(points) {
   let runningTotal = 0
   return [
-    { x: new Date(points[0].date * 1000), y: 0 },
-    ...points.map(
-      point => {
-        runningTotal += point.value
-        return { x: new Date(point.date * 1000), y: runningTotal }
-      },
-      { x: new Date(), y: points[points.length - 1].value }
-    ),
+    { x: new Date(points[0].date * 1000 - 1000000000), y: 0 },
+    ...points.map(point => {
+      runningTotal += point.value
+      return { x: new Date(point.date * 1000), y: runningTotal }
+    }),
+    { x: new Date(), y: points[points.length - 1].value },
   ]
 }
 </script>
 
 <style lang="scss">
+.chartholder {
+  --mapW: 100%;
+  --mapH: 150px;
+  max-height: var(--mapH);
+  max-width: var(--mapW);
+  position: relative;
+
+  .notification {
+    position: absolute;
+    z-index: 2;
+    top: 25%;
+    left: 50%;
+    max-width: 50%;
+    transform: translate(-50%, 50%);
+    background: hsla(0, 0, 90%, 80%);
+    color: var(--text);
+    padding: 2px 15px;
+  }
+}
 .chart {
   canvas {
-    max-height: 150px;
-    max-width: 600px;
+    max-height: var(--mapH);
+    max-width: var(--mapW);
   }
 }
 </style>

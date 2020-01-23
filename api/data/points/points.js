@@ -20,6 +20,15 @@ async function eventPoints(events, player) {
     const points = []
     const p = makePointElementGenerator(points, event)
 
+    // todo test
+    if (event.ownerId === player.id)
+      p({
+        title: `Hosted a Tournament`,
+        context: `Hell yeah, someone's got to`,
+        value: 20 + Math.floor(event.totalParticipants / 30),
+        date: event.date,
+      })
+
     if (index === 0)
       runningPlacingAverage = event.standing / event.totalParticipants
     else
@@ -150,6 +159,8 @@ async function eventPoints(events, player) {
       })
     }
 
+    // todo points for consistent event attendence
+
     const mps = await matchPoints(event.matchesWithUser, event, events, player)
     points.push(...mps)
 
@@ -169,31 +180,36 @@ async function matchPoints(matches, event, events, player) {
     let lostGames = match[didWin ? 'loser' : 'winner'].score
     if (!lostGames || lostGames < 0) lostGames = 0
 
+    //todo points for win/lose streak
     if (didWin && lostGames > 0)
       p({
         category: `Progression`,
         title: `Clinched a Close Set`,
-        context: `${wonGames}-${lostGames} vs. ${match.loser.tag}`,
+        context: `${wonGames}-${lostGames} vs.`,
+        opponent: { tag: match.loser.tag, id: match.loser.id },
         value: 4,
       })
     else if (didWin)
       p({
         category: `Progression`,
         title: `Won a Set`,
-        context: `vs. ${match.loser.tag}`,
+        context: `vs.`,
+        opponent: { tag: match.loser.tag, id: match.loser.id },
         value: 4,
       })
     else if (wonGames > 0)
       p({
         category: `Progression`,
         title: `Played a Close Set`,
-        context: `${wonGames}-${lostGames} vs. ${match.winner.tag}`,
+        context: `${wonGames}-${lostGames} vs.`,
+        opponent: { tag: match.winner.tag, id: match.winner.id },
         value: 3,
       })
     else
       p({
         title: `Played a Set`,
-        context: `vs. ${match.winner.tag}`,
+        context: `vs.`,
+        opponent: { tag: match.winner.tag, id: match.winner.id },
         value: 2,
       })
 
@@ -290,6 +306,7 @@ function makePointElementGenerator(pointsAccumulator, event, useDate) {
     category = 'Participation',
     title,
     context,
+    opponent,
     value,
     date = useDate || event.date,
   }) =>
@@ -297,6 +314,7 @@ function makePointElementGenerator(pointsAccumulator, event, useDate) {
       category,
       title,
       context,
+      opponent,
       value,
       date,
       eventSlug: event.slug,

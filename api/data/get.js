@@ -93,10 +93,14 @@ module.exports = {
     return await db.players.all({ game })
   },
 
+  async logToDb(event) {
+    db.log(event)
+  },
+
   async points({ game, id, tag }) {
     const loadedPlayer = await this.player({ game, id, tag })
     if (!loadedPlayer) return
-    if (Array.isArray(loadedPlayer)) return { disambiguation: loadedPlayer }
+    if (loadedPlayer.disambiguation) return loadedPlayer
     const peers = await db.players.peers(loadedPlayer)
     const playerPoints = await points.get(loadedPlayer)
     const collatedPlayerData = collatePointsIntoPlayerData(

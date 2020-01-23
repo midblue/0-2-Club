@@ -2,8 +2,12 @@
   <div class="eventsearch">
     <h3>Add an Event Manually</h3>
     <form @submit.prevent>
-      <input autofocus v-model="searchUrl" placeholder="Enter a Smash.gg URL..." />
-      <button type="submit" @click="searchFor">Add</button>
+      <input
+        autofocus
+        v-model="searchUrl"
+        placeholder="Enter a Smash.gg URL..."
+      />
+      <button class="low" type="submit" @click="searchFor">Add</button>
     </form>
     <div v-if="notifyMessage">{{ notifyMessage }}</div>
     <div class="sub" v-if="!playerId">

@@ -85,6 +85,7 @@ router.get('/more/:game/:id/', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const id = parseInt(decodeURIComponent(req.params.id))
   log('more events for player', id)
+  get.logToDb('more')
   const moreEvents = await get.moreEventsForPlayer({
     game,
     id,
@@ -108,6 +109,7 @@ router.get('/more/:game/:id/', async (req, res, next) => {
 /* GET more events for player */
 router.get('/combine/:game/:tag/:id/', async (req, res, next) => {
   log('combining ids')
+  get.logToDb('combine')
   const game = decodeURIComponent(req.params.game)
   const tag = decodeURIComponent(req.params.tag)
   const id = parseInt(decodeURIComponent(req.params.id))

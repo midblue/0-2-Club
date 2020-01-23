@@ -18,17 +18,18 @@ if (!data) {
     log(await stats())
   })
 
-  setInterval(saveToDb, 5000)
+  // setInterval(putDataIntoDb, 10000)
 
-  let hasUpdatedSinceAnnounce = false
-  setInterval(async () => {
-    if (hasUpdatedSinceAnnounce) log(await stats())
-    hasUpdatedSinceAnnounce = false
-  }, 10 * 60 * 1000)
+  // let hasUpdatedSinceAnnounce = false
+  // setInterval(async () => {
+  //   if (hasUpdatedSinceAnnounce) log(await stats())
+  //   hasUpdatedSinceAnnounce = false
+  // }, 10 * 60 * 1000)
 }
 
 module.exports = {
   stats,
+  log: logToDb,
   events: {
     add: addEvent,
     get: getEvent,
@@ -47,7 +48,16 @@ async function stats() {
   return {
     players: data.players ? data.players.length : 0,
     events: data.events ? data.events.length : 0,
+    log: data.log,
   }
+}
+
+async function logToDb(event) {
+  if (typeof event !== 'string') return
+  while (!data) await sleep(100)
+  if (!data.log) data.log = {}
+  data.log[event] = (data.log[event] || 0) + 1
+  save()
 }
 
 function addEvent(event) {
@@ -83,7 +93,7 @@ function addEvent(event) {
         `to db because it's missing required data (game)`
       )
     data.events.push(event)
-    dataToSave = data
+    save()
     await addOrUpdatePlayersFromEvent(event)
     resolve()
   })
@@ -126,6 +136,7 @@ function addOrUpdatePlayersFromEvent(event) {
             slug: event.slug,
             tournamentSlug: event.tournament.slug,
             tournamentName: event.tournament.name,
+            ownerId: event.tournament.ownerId,
             matchesWithUser: event.sets.filter(
               s => s.winner.tag === p.tag || s.loser.tag === p.tag
             ),
@@ -150,7 +161,7 @@ async function addOrUpdatePlayer(player) {
     }
     if (!data.players) data.players = []
     data.players.push(player)
-    dataToSave = data
+    save()
     resolve()
   })
 }
@@ -248,7 +259,7 @@ async function updatePlayer({ player, toUpdate }) {
       // console.log('updated prop ' + prop + ' for ' + player.tag)
     }
   }
-  dataToSave = data
+  save()
 }
 
 async function allPlayers({ game }) {
@@ -280,10 +291,18 @@ async function combine({ game, tag, id }) {
       player.redirect = id
     }
   })
+  save()
   return id
 }
 
-function saveToDb() {
+let saveTimeout
+function save() {
+  dataToSave = data
+  clearTimeout(saveTimeout)
+  saveTimeout = setTimeout(putDataIntoDb, 60 * 1000)
+}
+
+function putDataIntoDb() {
   if (!dataToSave) return
   if (dbBusy) return
   dbBusy = true
@@ -296,7 +315,7 @@ function saveToDb() {
       if (!dataToSave) dataToSave = currentData
     }
   })
-  hasUpdatedSinceAnnounce = true
+  // hasUpdatedSinceAnnounce = true
 }
 
 const sleep = milliseconds => {

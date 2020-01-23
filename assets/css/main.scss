@@ -1,15 +1,36 @@
 :root {
-  --l0: hsla(220, 100%, 55%, 100%);
-  --l1: hsla(200, 100%, 50%, 100%);
-  --l2: hsla(180, 100%, 40%, 100%);
-  --l3: hsla(160, 100%, 45%, 100%);
+  --l0: hsla(220, 100%, 78%, 100%);
+  --l0d: hsla(220, 100%, 70%, 100%);
+  --l1: hsla(200, 100%, 68%, 100%);
+  --l1d: hsla(200, 100%, 58%, 100%);
+  --l2: hsla(180, 100%, 50%, 100%);
+  --l2d: hsla(180, 100%, 40%, 100%);
+  --l3: hsla(160, 100%, 47%, 100%);
+  --l3d: hsla(160, 100%, 37%, 100%);
   --l4: hsla(140, 100%, 50%, 100%);
+  --l4d: hsla(140, 100%, 40%, 100%);
   --l5: hsla(80, 100%, 45%, 100%);
+  --l5d: hsla(80, 100%, 35%, 100%);
   --l6: hsla(60, 100%, 45%, 100%);
-  --l7: hsla(40, 100%, 45%, 100%);
-  --l8: hsla(30, 100%, 50%, 100%);
+  --l6d: hsla(60, 100%, 35%, 100%);
+  --l7: hsla(45, 100%, 48%, 100%);
+  --l7d: hsla(45, 100%, 38%, 100%);
+  --l8: hsla(33, 100%, 50%, 100%);
+  --l8d: hsla(33, 100%, 40%, 100%);
   --l9: hsla(20, 100%, 50%, 100%);
-  --l10: hsla(0, 100%, 50%, 100%);
+  --l9d: hsla(20, 100%, 40%, 100%);
+  --l10: hsla(0, 100%, 57%, 100%);
+  --l10d: hsla(0, 100%, 47%, 100%);
+
+  --highlight: var(--l6);
+  --active: var(--l2);
+  --active2: var(--l3);
+
+  --text: #3e3e3e;
+  --border: hsla(0, 0%, 0%, 10%);
+
+  --gray: #eee;
+  --gray2: #ddd;
 }
 
 *,
@@ -20,16 +41,67 @@
 
 html,
 body {
-  background: #fff;
-  color: #000;
-  font-size: 14px;
+  background: #fbfbfb;
+  color: var(--text);
+  font-size: 15px;
   line-height: 1.4;
   font-family: 'Proxima Nova', 'Source Sans Pro', Arial, sans-serif;
   margin: 0;
 }
 
-body {
-  margin: 100px;
+.content {
+  padding: 70px 100px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+input,
+button,
+textarea,
+select,
+option {
+  font-size: 1rem;
+  font-family: 'Proxima Nova', 'Source Sans Pro', Arial, sans-serif;
+  line-height: 1.4;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  padding: 0px 5px;
+  margin: 0;
+  border-radius: 0;
+  transition: all 0.2s;
+}
+
+button {
+  margin: 10px 0;
+  padding: 15px 80px;
+  background: var(--active);
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 2rem;
+
+  &.full {
+    width: 100%;
+  }
+
+  &:hover,
+  &:active {
+    background: var(--active2);
+  }
+
+  &.low {
+    background: var(--gray);
+    padding: 10px 40px;
+    font-size: 1rem;
+    color: var(--text);
+
+    &:hover,
+    &:active {
+      background: var(--gray2);
+    }
+  }
 }
 
 a,
@@ -37,6 +109,13 @@ a:hover,
 a:focus,
 a:visited {
   color: #000;
+}
+
+hr {
+  margin: 50px 0;
+  border: none;
+  border-top: 1px dashed var(--text);
+  opacity: 0.2;
 }
 
 .button,
@@ -61,16 +140,63 @@ a:visited {
 
 .sub {
   opacity: 0.6;
-  font-size: 0.8em;
+  font-size: 0.89em;
 }
 .highlight {
-  color: #0bb;
+  background: var(--highlight);
+  padding: 0px 3px;
+  margin: 0px -1px;
+}
+
+.colorpad {
+  display: inline-block;
+  padding: 1px 5px;
+  text-align: center;
+}
+
+.inline {
+  display: inline-block;
 }
 
 h1 {
-  font-size: 3rem;
+  font-size: 6rem;
+  line-height: 0.9;
+  margin-bottom: 0.1em;
+}
+
+h2 {
+  font-size: 2.8rem;
 }
 
 h3 {
+  font-size: 1.9rem;
   margin-bottom: 0.5em;
+}
+
+.box {
+  display: inline-block;
+  padding: 50px 80px;
+  margin: 50px 0;
+  background: white;
+}
+
+.buttonbox {
+  display: inline-block;
+  background: white;
+}
+
+.panel {
+  padding: 30px 40px;
+  margin: 20px 0;
+  background: white;
+}
+
+.box,
+.panel,
+.buttonbox {
+  box-shadow: 0 10px 40px var(--border);
+}
+
+.multiply {
+  mix-blend-mode: multiply;
 }

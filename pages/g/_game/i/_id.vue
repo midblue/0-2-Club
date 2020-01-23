@@ -18,9 +18,10 @@ export default {
         return {
           player: {
             game: params.game,
-            tag: params.tag,
+            id: params.id,
           },
           points: [],
+          peers: [],
         }
     })
   },

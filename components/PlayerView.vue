@@ -1,27 +1,45 @@
 <template>
   <section>
-    <nuxt-link to="/">Home</nuxt-link>
-    <h1>
-      {{ player.tag }}
-      <span class="sub">{{ player.game }}</span>
-    </h1>
+    <div class="tag">
+      <h1 class="inline">
+        <div class="sub">{{ player.game }}</div>
+        {{ player.tag || 'Id #' + player.id }}
+      </h1>
+    </div>
 
     <template v-if="!displayEvents">No events yet!</template>
 
     <template v-else>
-      <h2>
-        <span :style="{ background: `var(--l${level.level})` }"
-          >Level {{ level.level }} — {{ level.label }}</span
-        >
-        <span class="sub">
-          ({{ totalPoints }} points in {{ displayEvents.length }} event{{
-            displayEvents.length === 1 ? '' : 's'
-          }})
+      <div class="level">
+        <h2>
+          <span
+            class="colorpad multiply"
+            :style="{ background: `var(--l${level.level})` }"
+            >Level {{ level.level }} — {{ level.label }}</span
+          >
+        </h2>
+        <span>
+          {{
+            `
+            ${totalPoints} points in 
+            ${displayEvents.length} event${
+              displayEvents.length === 1 ? '' : 's'
+            },
+            ${pointsToNextLevel} points until level ${level.level + 1}
+          `
+          }}
         </span>
-        <span class="sub" v-if="checkForUpdates"
-          >— (loading more events...)</span
-        >
-      </h2>
+        <span class="sub" v-if="checkForUpdates">— loading more events...</span>
+        <div v-if="peers && peers.length > 0">
+          <b>Related Players:</b>
+          <span v-for="peer in peers">
+            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`">{{
+              peer.tag
+            }}</nuxt-link>
+            &nbsp;
+          </span>
+        </div>
+      </div>
     </template>
 
     <ProgressChart
@@ -29,41 +47,10 @@
       :points="points"
       :player="player"
       :level="level.level"
-      :rivalId="rivalId"
-      :rivalSearchTag="rivalSearchTag"
+      :peers="peers"
     />
-    <div v-if="peers">
-      <b>Compare:</b>
-      <span v-for="peer in peers">
-        <span
-          class="compare"
-          :class="{ active: rivalId === peer.id }"
-          @click="
-            rivalSearchTag = null
-            rivalId = peer.id
-          "
-          >{{ peer.tag }}</span
-        >
-        &nbsp;
-      </span>
-      <span v-if="rivalId" @click="rivalId = null">Clear</span>
-      <input
-        v-model="inputRivalSearchTag"
-        placeholder="Search for a user..."
-      /><button @click="rivalSearchTag = inputRivalSearchTag">Compare</button>
-    </div>
 
-    <div v-if="peers">
-      <b>Peers:</b>
-      <span v-for="peer in peers">
-        <nuxt-link :to="`/g/${player.game}/i/${peer.id}`">{{
-          peer.tag
-        }}</nuxt-link>
-        &nbsp;
-      </span>
-    </div>
-
-    <h1>Events</h1>
+    <h1 v-if="displayEvents">Events</h1>
 
     <EventSearch
       :game="player.game"
@@ -75,10 +62,16 @@
     <template v-if="displayEvents">
       <div>
         <div
+          class="panel"
           v-for="event in displayEvents"
           :key="event.slug + event.tournamentSlug"
         >
           <h3>
+            <span
+              class="colorpad"
+              :style="{ background: `var(--l${level.level})` }"
+              >+{{ event.points.reduce((t, p) => t + p.value, 0) }}</span
+            >
             {{ event.tournamentName }}
             <span class="sub">
               {{ event.name }} ({{
@@ -94,11 +87,20 @@
           >
             <span
               class="pointvalue"
-              :style="{ background: `var(--l${level.level})` }"
+              :style="{ color: `var(--l${level.level}d)` }"
               >+{{ point.value }}</span
             >
             <span class="title">{{ point.title }}</span>
-            <span class="context sub">{{ point.context }}</span>
+            <span class="context sub"
+              ><span
+                >{{ point.context }}
+                <nuxt-link
+                  v-if="point.opponent"
+                  :to="`/g/${player.game}/i/${point.opponent.id}`"
+                  >{{ point.opponent.tag }}</nuxt-link
+                ></span
+              >
+            </span>
           </div>
         </div>
       </div>
@@ -127,9 +129,6 @@ export default {
       levels,
       checkForUpdates: false,
       checkForUpdatesInterval: null,
-      rivalId: null,
-      inputRivalSearchTag: null,
-      rivalSearchTag: null,
     }
   },
   computed: {
@@ -149,9 +148,13 @@ export default {
       l--
       return { ...this.levels[l], level: l }
     },
+    pointsToNextLevel() {
+      return this.levels[(this.level.level || 0) + 1].points - this.totalPoints
+    },
   },
   watch: {
     checkForUpdates(willCheck, wasChecking) {
+      // todo def have an loading indcator
       if (willCheck !== wasChecking && willCheck) {
         this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 1500)
       } else {
@@ -187,6 +190,7 @@ export default {
               this.$set(this.player, prop, res.data.player[prop])
             }
             this.points = null
+            if (res.data.peers) this.peers = res.data.peers
             this.$nextTick(() => (this.points = res.data.points))
           }
         })
@@ -201,20 +205,48 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.tag {
+  h1 {
+    .sub {
+      font-size: 0.85rem;
+      margin-bottom: 30px;
+    }
+    margin-bottom: 0px;
+  }
+}
+.level {
+  margin-bottom: 4em;
+
+  h2 {
+    margin-top: 0;
+    margin-bottom: 8px;
+  }
+}
+
+.panel {
+  h3 {
+    margin-top: 0;
+  }
+}
+
 .point {
   line-height: 1.05;
   max-width: 500px;
   display: grid;
-  grid-template-columns: 0.15fr 0.9fr 1fr;
-  grid-gap: 20px;
+  grid-template-columns: 20px 0.9fr 1fr;
+  grid-gap: 10px;
 
   &.padtop {
     padding-top: 10px;
   }
 
-  & > * {
-    padding: 3px 5px;
+  .pointvalue {
+    font-weight: bold;
   }
+
+  // & > * {
+  //   padding: 3px 5px;
+  // }
 }
 
 .compare.active {

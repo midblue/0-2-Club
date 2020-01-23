@@ -1,16 +1,18 @@
-const $$ = require('./selectorOnPage')
-// // const smashgg = require('smashgg.js')
-// const { Event, VideoGame, Tournament, Phase, User, Attendee } = smashgg
-// smashgg.initialize(process.env.SMASHGG_APIKEY)
+// const $$ = require('./selectorOnPage')
 
 const axios = require('axios')
-const rateLimiter = require('../scripts/rateLimiter')
+
+const { parseParticipantTag } = require('../../../common/f').default
+
 const logger = require('../scripts/log')
 const log = logger('smashgg', 'white')
 const low = logger('smashgg', 'gray')
 const logAdd = logger('smashgg', 'green')
 const logError = logger('smashgg', 'yellow')
-const limiter = new rateLimiter(78, 60000)
+
+const rateLimiter = require('../scripts/rateLimiter')
+const limiter = new rateLimiter(12, 10000)
+
 const db = require('../db/db.js')
 
 const currentlyLoadingNewEvents = []
@@ -20,7 +22,10 @@ module.exports = {
     if (!(tournamentSlug && slug)) return
 
     if (currentlyLoadingNewEvents.find(e => e === tournamentSlug + slug))
-      logError('already loading this event!')
+      logError(
+        'already loading this event! load queue length:',
+        currentlyLoadingNewEvents.length
+      )
     else currentlyLoadingNewEvents.push(tournamentSlug + slug)
     // log(currentlyLoadingNewEvents)
 
@@ -39,7 +44,7 @@ module.exports = {
       entrantId: s.entrant.id,
     }))
 
-    const sets = eventData.sets.nodes
+    const sets = (eventData.sets.nodes || [])
       .map(s => {
         const player1 = {
             id: s.slots[0].entrant.participants[0].player.id,
@@ -195,13 +200,14 @@ module.exports = {
         )
       if (newPlayerSetEvents.length > 0)
         logError('Should recheck, may be new owners.')
+      //todo that
       foundEvents.push(...newPlayerSetEvents)
     }
 
     // then check other events from the same organizer as all events concerning user
     const ownerIds = await parseOwnersFromEvents(playerEventsToCheck)
     // log(ownerIds.length, 'owners found')
-    await Promise.all(
+    const eventsFromOwnerIds = await Promise.all(
       ownerIds.map(async ownerId => {
         let data = null,
           attempts = 0
@@ -251,9 +257,10 @@ module.exports = {
         if (newEvents.length === 0)
           low('no new events found via owner', ownerId)
         else log(newEvents.length, 'additional events found via owner', ownerId)
-        foundEvents.push(...newEvents)
+        return newEvents
       })
     )
+    eventsFromOwnerIds.forEach(eventList => foundEvents.push(...eventList))
 
     // then grab 'em
     if (foundEvents.length > 0)
@@ -304,6 +311,9 @@ async function getEvent(tournamentSlug, eventSlug) {
   let areMoreSets = data.sets.pageInfo.totalPages > setsPage,
     areMoreStandings = data.standings.pageInfo.totalPages > standingsPage
 
+  // todo should be able to get ALLLLLLLLA these at once np instead of waiting for a damg response every time
+  // todo also for fuck's sake we can get more sets etc per call... LET'S.
+  // like start from page 0 with just pageInfo and go for the gold from page one all the time. 2 calls for tiny events but WAY less calls for the big ones
   while (areMoreSets) {
     setsPage++
     low(
@@ -329,7 +339,8 @@ async function getEvent(tournamentSlug, eventSlug) {
         setsPage,
         `for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`,
         `(${JSON.stringify(
-          moreSets.data.error ||
+          (!moreSets ? 'no data at all!' : null) ||
+            moreSets.data.error ||
             moreSets.data.data.error ||
             moreSets.data.data.errors,
           null,
@@ -397,11 +408,6 @@ async function makeQuery(query, variables) {
       return
     })
   })
-}
-
-function parseParticipantTag(name) {
-  const minusTeam = /^(?:[^|]* \| )?(.*)$/gi.exec(name)
-  return minusTeam[1]
 }
 
 function isSingles(event) {

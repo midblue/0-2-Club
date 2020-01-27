@@ -3,8 +3,14 @@
     <div>
       <div class="sub">
         Made by
-        <a href="https://www.jasperstephenson.com/" target="_blank">jasp</a> in
-        2020.
+        <a href="https://www.jasperstephenson.com/" target="_blank">jasp</a>
+        in 2020.
+      </div>
+      <div class="sub">
+        <a
+          href="mailto:jasperstephenson@gmail.com?subject=Feedback About The 0-2 Club"
+          target="_blank"
+        >Feedback</a>
       </div>
     </div>
   </footer>
@@ -26,6 +32,7 @@ footer {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: column;
   }
 }
 

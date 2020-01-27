@@ -1,6 +1,6 @@
 export default {
   parseParticipantTag(name) {
     const minusTeam = /^(?:[^|]*(?: *[|]+ *)+)?(.*)$/gi.exec(name)
-    return minusTeam[1]
+    return minusTeam ? minusTeam[1] : null
   },
 }

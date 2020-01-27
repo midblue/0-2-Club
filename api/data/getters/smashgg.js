@@ -21,7 +21,9 @@ module.exports = {
   async event({ tournamentSlug, slug }) {
     if (!(tournamentSlug && slug)) return
 
-    if (currentlyLoadingNewEvents.find(e => e === tournamentSlug + slug))
+    if (
+      currentlyLoadingNewEvents.find(e => e === tournamentSlug + slug)
+    )
       logError(
         'already loading this event! load queue length:',
         currentlyLoadingNewEvents.length
@@ -39,7 +41,9 @@ module.exports = {
     const participants = eventData.standings.nodes.map(s => ({
       standing: s.placement,
       of: eventData.standings.nodes.length,
-      tag: parseParticipantTag(s.entrant.name),
+      tag: parseParticipantTag(
+        s.entrant.participants[0].player.gamerTag
+      ),
       id: s.entrant.participants[0].player.id,
       entrantId: s.entrant.id,
     }))
@@ -49,17 +53,23 @@ module.exports = {
         const player1 = {
             id: s.slots[0].entrant.participants[0].player.id,
             entrantId: s.slots[0].entrant.id,
-            tag: parseParticipantTag(s.slots[0].entrant.name),
+            tag: parseParticipantTag(
+              s.slots[0].entrant.participants[0].player.gamerTag
+            ),
             score: s.entrant1Score,
           },
           player2 = {
             id: s.slots[1].entrant.participants[0].player.id,
             entrantId: s.slots[1].entrant.id,
-            tag: parseParticipantTag(s.slots[1].entrant.name),
+            tag: parseParticipantTag(
+              s.slots[1].entrant.participants[0].player.gamerTag
+            ),
             score: s.entrant2Score,
           }
-        const winner = player1.entrantId === s.winnerId ? player1 : player2
-        const loser = player2.entrantId === s.winnerId ? player1 : player2
+        const winner =
+          player1.entrantId === s.winnerId ? player1 : player2
+        const loser =
+          winner.entrantId === player2.entrantId ? player1 : player2
         return {
           date: s.completedAt,
           winner,
@@ -142,7 +152,9 @@ module.exports = {
           `Failed to get recent sets for player ${
             player.id
           } on smashgg. (${JSON.stringify(
-            res.data.error || res.data.data.error || res.data.data.errors,
+            res.data.error ||
+              res.data.data.error ||
+              res.data.data.errors,
             null,
             2
           )})`
@@ -162,8 +174,13 @@ module.exports = {
               wholeString,
               tournamentSlug,
               eventSlug,
-            ] = /tournament\/([^/]*)\/event\/([^/]*)/g.exec(set.event.slug)
-            const isNew = await isUnknownEvent({ tournamentSlug, eventSlug })
+            ] = /tournament\/([^/]*)\/event\/([^/]*)/g.exec(
+              set.event.slug
+            )
+            const isNew = await isUnknownEvent({
+              tournamentSlug,
+              eventSlug,
+            })
             if (isNew)
               resolve({
                 service: 'smashgg',
@@ -256,11 +273,18 @@ module.exports = {
           .filter(isNotAlreadyLoading)
         if (newEvents.length === 0)
           low('no new events found via owner', ownerId)
-        else log(newEvents.length, 'additional events found via owner', ownerId)
+        else
+          log(
+            newEvents.length,
+            'additional events found via owner',
+            ownerId
+          )
         return newEvents
       })
     )
-    eventsFromOwnerIds.forEach(eventList => foundEvents.push(...eventList))
+    eventsFromOwnerIds.forEach(eventList =>
+      foundEvents.push(...eventList)
+    )
 
     // then grab 'em
     if (foundEvents.length > 0)
@@ -309,7 +333,8 @@ async function getEvent(tournamentSlug, eventSlug) {
   let setsPage = 1,
     standingsPage = 1
   let areMoreSets = data.sets.pageInfo.totalPages > setsPage,
-    areMoreStandings = data.standings.pageInfo.totalPages > standingsPage
+    areMoreStandings =
+      data.standings.pageInfo.totalPages > standingsPage
 
   // todo should be able to get ALLLLLLLLA these at once np instead of waiting for a damg response every time
   // todo also for fuck's sake we can get more sets etc per call... LET'S.
@@ -382,7 +407,8 @@ async function getEvent(tournamentSlug, eventSlug) {
     moreStandings = moreStandings.data.data.event.standings.nodes
     data.standings.nodes.push(...moreStandings)
 
-    areMoreStandings = data.standings.pageInfo.totalPages > standingsPage
+    areMoreStandings =
+      data.standings.pageInfo.totalPages > standingsPage
   }
   // console.log(data.data)
   return data
@@ -414,6 +440,30 @@ function isSingles(event) {
   const hasNumbers = /(?:[２３４234][ -]?(?:vs?|on)[ -]?[２３４234]|doubles)/gi
   if (hasNumbers.exec(event.slug || event.eventSlug)) return false
   if (hasNumbers.exec(event.name || '')) return false
+  if (
+    event.name &&
+    event.sets &&
+    event.sets.nodes &&
+    event.sets.nodes.length > 0
+  ) {
+    let isProbablyDoubles = 0
+    for (let c = 0; c < 6; c++) {
+      const set =
+        event.sets.nodes[
+          Math.floor(Math.random() * event.sets.nodes.length)
+        ]
+      if (
+        parseParticipantTag(
+          set.slots[0].entrant.participants[0].player.gamerTag
+        ).indexOf('/') > -1 ||
+        parseParticipantTag(
+          set.slots[1].entrant.participants[0].player.gamerTag
+        ).indexOf('/') > -1
+      )
+        isProbablyDoubles++
+    }
+    if (isProbablyDoubles >= 3) return false
+  }
   return true
 }
 
@@ -428,7 +478,10 @@ async function parseOwnersFromEvents(events) {
     new Set(
       await Promise.all(
         events.map(async ({ id }) => {
-          const eventData = await db.events.get({ service: 'smashgg', id })
+          const eventData = await db.events.get({
+            service: 'smashgg',
+            id,
+          })
           return eventData.tournament.ownerId
         })
       )
@@ -453,7 +506,9 @@ async function parseEventStubsFromTournaments(tournaments, game) {
                 wholeString,
                 tournamentSlug,
                 eventSlug,
-              ] = /tournament\/([^/]*)\/event\/([^/]*)/g.exec(event.slug)
+              ] = /tournament\/([^/]*)\/event\/([^/]*)/g.exec(
+                event.slug
+              )
               return {
                 service: 'smashgg',
                 eventSlug,
@@ -497,10 +552,10 @@ query EventInfo($slug: String, $page: Int!) {
         placement
         entrant {
           id
-          name
           participants {
             player {
               id
+              gamerTag
             }
           }
         }
@@ -525,10 +580,10 @@ query EventInfo($slug: String, $page: Int!) {
         slots {
           entrant {
             id
-            name
-              participants {
+            participants {
               player {
                 id
+                gamerTag
               }
             }
           }
@@ -579,10 +634,10 @@ query EventSets($slug: String, $page: Int!) {
         slots {
           entrant {
             id
-            name
             participants {
               player {
                 id
+                gamerTag
               }
             }
           }
@@ -604,10 +659,10 @@ query EventStandings($slug: String, $page: Int!) {
         placement
         entrant {
           id
-          name
           participants {
             player {
               id
+              gamerTag
             }
           }
         }

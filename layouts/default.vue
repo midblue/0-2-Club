@@ -1,6 +1,7 @@
 <template>
   <div>
     <Menu />
+    <Notifications />
     <div class="content">
       <nuxt />
     </div>
@@ -10,10 +11,11 @@
 
 <script>
 import Menu from '~/components/Menu'
+import Notifications from '~/components/Notifications'
 import SiteFooter from '~/components/SiteFooter'
 
 export default {
-  components: { Menu, SiteFooter },
+  components: { Menu, Notifications, SiteFooter },
 }
 </script>
 

@@ -2,28 +2,32 @@
   <section>
     <h1>
       We found multiple
-      <span class="highlight">{{player.tag}}</span>s! Which are you?
+      <span class="highlight">{{ player.tag }}</span
+      >s!
     </h1>
+    <h2>Which are you?</h2>
     <nuxt-link
-      v-for="p, index in disambiguation"
+      v-for="(p, index) in disambiguation"
       :to="`/g/${player.game}/i/${p.id}`"
       class="button full"
       :key="p.id"
       @click="userIs(index)"
     >
-      <h2>{{p.tag}}</h2>
+      <h3>{{ p.tag }}</h3>
       <div v-if="p.participatedInEvents">
         <div v-for="event in p.participatedInEvents" :key="event.id">
-          Placed {{event.standing}}/{{event.totalParticipants}} in
-          {{event.name}} at
-          <b>{{event.tournamentName}}</b>
+          Placed {{ event.standing }}/{{ event.totalParticipants }} in
+          {{ event.name }} at
+          <b>{{ event.tournamentName }}</b>
         </div>
       </div>
     </nuxt-link>
     <br />
     <br />
     <br />
-    <div class="button" @click="combineAll">These are all the same person</div>
+    <button class="low" @click="combineAll">
+      These are all the same person
+    </button>
   </section>
 </template>
 
@@ -85,7 +89,14 @@ export default {
 </script>
 
 <style scoped lang="scss">
+h1 {
+  margin-bottom: 0px;
+}
 h2 {
+  margin-bottom: 30px;
+}
+h3 {
+  font-size: 2em;
   margin: 0;
 }
 .button.full {

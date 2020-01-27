@@ -1,43 +1,37 @@
 <template>
-  <div>
-    <div v-if="peers">
-      <b>Compare:</b>
-      <span v-for="peer in peers">
-        <span
-          class="compare"
-          :class="{ active: rivalId === peer.id }"
-          @click="
-            rivalSearchTag = null
-            rivalId = peer.id
-          "
-          >{{ peer.tag }}</span
-        >
-        &nbsp;
-      </span>
-      <span v-if="rivalId" @click="rivalId = null">Clear</span>
-      <input
-        v-model="inputRivalSearchTag"
-        placeholder="Search for a user..."
-      /><button
-        class="low"
-        @click="
-          rivalId = null
-          rivalSearchTag = inputRivalSearchTag
-        "
-      >
-        Compare
-      </button>
-    </div>
-
+  <div class="progresschart" :class="{ready: chartIsReady}">
     <div class="chartholder">
       <line-chart
         class="chart"
         :chart-data="datacollection"
         :options="options"
+        @chart:render="chartIsReady = true"
       ></line-chart>
-      <div class="notification" v-if="checkForUpdates || notification">
-        <span v-if="checkForUpdates">Loading updated comparison...</span>
-        <span v-else-if="notification">{{ notification }}</span>
+    </div>
+
+    <div v-if="peers" class="compare">
+      <div>
+        <b>Compare</b>
+      </div>
+      <div>
+        <span v-for="peer in peers">
+          <span
+            class="comparetotag"
+            :class="{ active: rivalId === peer.id }"
+            @click="
+            rivalSearchTag = null
+            rivalId = peer.id
+          "
+          >{{ peer.tag }}</span>
+          &nbsp;
+        </span>
+        <span v-if="rivalId" @click="rivalId = null">Clear</span>
+        <form class="search" @submit.prevent>
+          <input v-model="inputRivalSearchTag" placeholder="Search for a user..." />
+          <button class="low" type="submit" @click="
+          searchForRival
+        ">Compare</button>
+        </form>
       </div>
     </div>
   </div>
@@ -58,16 +52,15 @@ export default {
   components: { LineChart },
   data() {
     return {
-      notification: null,
       checkForUpdates: false,
       checkForUpdatesInterval: null,
       rivalId: null,
       inputRivalSearchTag: null,
-      rivalSearchTag: null,
       rivalIdFromSearchTag: null,
       rivalTag: null,
       rivalPoints: null,
       datacollection: {},
+      chartIsReady: false,
 
       options: {
         responsive: true,
@@ -138,21 +131,12 @@ export default {
         this.fillData()
       }
     },
-    rivalSearchTag() {
-      if (this.rivalSearchTag) this.searchForRival()
-    },
 
     checkForUpdates(willCheck, wasChecking) {
       if (willCheck !== wasChecking && willCheck) {
         this.startChecking()
       } else {
         clearInterval(this.checkForUpdatesInterval)
-      }
-    },
-
-    notification(newNotification) {
-      if (newNotification) {
-        setTimeout(() => this.$set(this, 'notification', null), 2000)
       }
     },
   },
@@ -207,9 +191,11 @@ export default {
     startChecking() {
       clearInterval(this.checkForUpdatesInterval)
       this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 1500)
+      this.$store.commit('setIsLoading', true)
       const moreUrl = `/api/more/${this.player.game}/${this.rivalId ||
         this.rivalIdFromSearchTag}/`
       axios.get(moreUrl).then(res => {
+        this.$store.commit('setIsLoading', false)
         this.checkForUpdates = false
         this.reCheckPoints()
       })
@@ -232,17 +218,21 @@ export default {
     },
 
     searchForRival() {
+      if (!this.inputRivalSearchTag)
+        return this.$store.dispatch(
+          'notifications/notify',
+          `Input a player tag to compare to.`
+        )
       const url = `/api/player/${this.player.game}/${encodeURIComponent(
-        this.rivalSearchTag
+        this.inputRivalSearchTag
       )}/`
       axios.get(url).then(res => {
         if (!res.data || res.data.err) {
           this.checkForUpdates = false
           this.rivalTag = null
           this.rivalPoints = null
-          this.$set(
-            this,
-            'notification',
+          this.$store.dispatch(
+            'notifications/notify',
             `No user found by the tag ${this.rivalSearchTag}.`
           )
           this.fillData()
@@ -271,29 +261,77 @@ function generateData(points) {
 </script>
 
 <style lang="scss">
+.progresschart {
+  // background: rgba(0, 0, 0, 0.04);
+  transition: all 0.3s;
+
+  & > * {
+    opacity: 0;
+    transition: opacity 1s;
+  }
+
+  &.ready {
+    background: transparent;
+
+    & > * {
+      opacity: 1;
+    }
+  }
+}
+
 .chartholder {
   --mapW: 100%;
   --mapH: 150px;
   max-height: var(--mapH);
   max-width: var(--mapW);
   position: relative;
-
-  .notification {
-    position: absolute;
-    z-index: 2;
-    top: 25%;
-    left: 50%;
-    max-width: 50%;
-    transform: translate(-50%, 50%);
-    background: hsla(0, 0, 90%, 80%);
-    color: var(--text);
-    padding: 2px 15px;
-  }
 }
 .chart {
   canvas {
+    height: var(--mapH);
     max-height: var(--mapH);
     max-width: var(--mapW);
+  }
+}
+
+.compare {
+  display: flex;
+  margin-top: 30px;
+
+  & > *:first-child {
+    margin-right: 30px;
+  }
+}
+.comparetotag {
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px 6px;
+  margin: -4px -6px;
+
+  &:hover {
+    background: #eee;
+  }
+
+  &.active {
+    background: gray;
+    color: white;
+  }
+}
+
+form.search {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  height: 2em;
+
+  button.low {
+    margin: 0;
+    height: 100%;
+    padding: 0 30px !important;
+  }
+  input {
+    flex: 1;
+    padding: 9px 10px;
   }
 }
 </style>

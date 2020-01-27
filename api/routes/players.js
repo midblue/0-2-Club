@@ -41,7 +41,7 @@ router.get('/player/:game/:tag', async (req, res, next) => {
 router.get('/points/:game/tag/:tag', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const tag = decodeURIComponent(req.params.tag)
-  log('player w/ points by tag:', tag)
+  log('player with points by tag:', tag)
   const foundPoints = await get.points({ game, tag })
   if (foundPoints) {
     res.json(foundPoints)
@@ -54,7 +54,7 @@ router.get('/points/:game/tag/:tag', async (req, res, next) => {
 router.get('/points/:game/id/:id', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const id = parseInt(decodeURIComponent(req.params.id))
-  log('player w/ points by id:', id)
+  log('player with points by id:', id)
   const foundPoints = await get.points({ game, id })
   if (foundPoints) {
     res.json(foundPoints)
@@ -69,7 +69,9 @@ router.get(
   async (req, res, next) => {
     log('manually added event')
     const service = decodeURIComponent(req.params.service)
-    const tournamentSlug = decodeURIComponent(req.params.tournamentSlug)
+    const tournamentSlug = decodeURIComponent(
+      req.params.tournamentSlug
+    )
     const eventSlug = decodeURIComponent(req.params.eventSlug)
     const eventData = await get.event({
       service,

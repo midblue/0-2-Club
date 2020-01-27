@@ -1,19 +1,16 @@
 <template>
   <div class="eventsearch">
-    <h3>Add an Event Manually</h3>
-    <form @submit.prevent>
-      <input
-        autofocus
-        v-model="searchUrl"
-        placeholder="Enter a Smash.gg URL..."
-      />
-      <button class="low" type="submit" @click="searchFor">Add</button>
-    </form>
-    <div v-if="notifyMessage">{{ notifyMessage }}</div>
-    <div class="sub" v-if="!playerId">
-      If you give us one tournament you've been in, we should be able to find
-      more automatically!
-    </div>
+    <button class="low" v-if="!show" @click="show = true">+ Add Event by URL</button>
+    <template v-else>
+      <form @submit.prevent>
+        <input v-model="searchUrl" autofocus placeholder="Enter a URL..." />
+        <button class="low" type="submit" @click="searchFor">Add</button>
+      </form>
+      <div class="sub" v-if="!playerId">
+        If you give us one tournament you've been in, we should be able to find
+        more automatically!
+      </div>
+    </template>
   </div>
 </template>
 
@@ -27,9 +24,9 @@ export default {
   },
   data() {
     return {
+      show: false,
       searchUrl:
         'https://smash.gg/tournament/battle-gateway-21-1/events/melee-singles-vs/standings?page=2',
-      notifyMessage: null,
     }
   },
   watch: {
@@ -47,43 +44,44 @@ export default {
         event = parseSmashGGEvent(this.searchUrl)
 
       if (event) {
+        if (event.err) {
+          return this.$store.dispatch('notifications/notify', event.err)
+        }
+        this.$store.commit('setIsLoading', true)
         axios
           .get(
             `/api/event/${event.service}/${event.tournamentSlug}/${event.eventSlug}/`
           )
           .then(res => {
-            if (res.data && !res.data.err) {
-              this.$emit('events', [res.data])
-            } else {
-              this.notify(
+            this.$store.commit('setIsLoading', false)
+            if (res.data && !res.data.err) this.$emit('events', [res.data])
+            else
+              this.$store.dispatch(
+                'notifications/notify',
                 `We didn't find an event at that URL! Check to make sure that it has /tournament/ AND /event/ in it.`
               )
-            }
           })
       } else
-        this.notify(
+        this.$store.dispatch(
+          'notifications/notify',
           `That URL isn't recognizable! Please enter a URL with a service we support.`
         )
     },
     getMore() {
       this.$emit('loading')
+      this.$store.commit('setIsLoading', true)
       axios.get(`/api/more/${this.game}/${this.playerId}/`).then(res => {
         if (res.data && !res.data.err) {
+          this.$store.commit('setIsLoading', false)
           this.$emit('events', [res.data])
         }
       })
-    },
-    notify(message) {
-      this.notifyMessage = message
-      setTimeout(() => {
-        this.notifyMessage = null
-      }, 3000)
     },
   },
 }
 
 function parseSmashGGEvent(url) {
-  if (url.indexOf('tournament') && url.indexOf('event')) {
+  if (url.indexOf('tournament') > -1 && url.indexOf('event') > -1) {
     const [
       wholeString,
       ts,
@@ -95,11 +93,32 @@ function parseSmashGGEvent(url) {
       eventSlug: es,
     }
   }
+  return {
+    err: `That URL isn't recognizable! Check to make sure that it has /tournament/ AND /event/ in it.`,
+  }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .eventsearch {
-  margin: 2em 0;
+  width: 100%;
+  position: relative;
+}
+
+button,
+form,
+input {
+  margin: 0;
+  height: 100%;
+}
+
+form {
+  width: 100%;
+  display: inline-flex;
+}
+
+input {
+  flex: 1;
+  padding: 11px 10px;
 }
 </style>

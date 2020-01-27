@@ -4,15 +4,14 @@ const log = logger('db', 'white')
 const logAdd = logger('db', 'green')
 const logError = logger('db', 'yellow')
 
-let data = null,
-  dbBusy = false,
-  dataToSave = null
+let data = null
 
 const dbFilePath = './api/data/db/db.json'
 
 if (!data) {
   fs.readFile(dbFilePath, async (err, loadedData) => {
-    if (err && err.code === 'ENOENT') fs.writeFileSync(dbFilePath, '{}')
+    if (err && err.code === 'ENOENT')
+      fs.writeFileSync(dbFilePath, '{}')
     else if (err) return logError(err)
     data = loadedData ? JSON.parse(loadedData) : {}
     log(await stats())
@@ -107,7 +106,9 @@ async function getEvent({ service, id, tournamentSlug, slug }) {
     : data.events.find(
         l =>
           l.service === service &&
-          (tournamentSlug ? l.tournament.slug == tournamentSlug : true) &&
+          (tournamentSlug
+            ? l.tournament.slug == tournamentSlug
+            : true) &&
           ((l.id && l.id == id) || (l.slug && l.slug == slug))
       )
   // if (found)
@@ -167,6 +168,7 @@ async function addOrUpdatePlayer(player) {
 }
 
 function getPlayer({ game, id, tag }) {
+  //todo create participatedinevents from master event entry every time to make db smaller
   // may return null, one player, or an array of players.
   if (!game) return null
   return new Promise(async resolve => {
@@ -180,7 +182,9 @@ function getPlayer({ game, id, tag }) {
         : data.players.find(p => p.game === game && p.id === id)
       // follow redirects
       if (foundPlayer && foundPlayer.redirect)
-        foundPlayer = data.players.find(p => p.id === foundPlayer.redirect)
+        foundPlayer = data.players.find(
+          p => p.id === foundPlayer.redirect
+        )
     }
     // if by tag, may require disambiguation
     else if (tag) {
@@ -189,11 +193,13 @@ function getPlayer({ game, id, tag }) {
         : data.players.filter(
             p => p.game === game && p.tag === tag && !p.redirect
           )
-      if (foundPlayer && foundPlayer.length === 1) foundPlayer = foundPlayer[0]
+      if (foundPlayer && foundPlayer.length === 1)
+        foundPlayer = foundPlayer[0]
       else if (foundPlayer && foundPlayer.length > 0) {
         foundPlayer = foundPlayer.sort(
           (a, b) =>
-            b.participatedInEvents.length - a.participatedInEvents.length
+            b.participatedInEvents.length -
+            a.participatedInEvents.length
         )
         logError(
           'found multiple players in the database by the tag',
@@ -210,7 +216,7 @@ function getPlayer({ game, id, tag }) {
 }
 
 async function getPlayerPeers(player) {
-  // todo make this % overlap based, not just numbers
+  // todo? make this % overlap based, not just numbers
   if (!player.participatedInEvents) player = await getPlayer(player)
   if (!player) return
   const idsByFrequency = {}
@@ -222,7 +228,9 @@ async function getPlayerPeers(player) {
           if (tag !== player.tag)
             idsByFrequency[id] = {
               tag,
-              common: (idsByFrequency[id] ? idsByFrequency[id].common : 0) + 1,
+              common:
+                (idsByFrequency[id] ? idsByFrequency[id].common : 0) +
+                1,
             }
         })
         resolve()
@@ -231,7 +239,9 @@ async function getPlayerPeers(player) {
   )
   const peers = Object.keys(idsByFrequency)
     .filter(id => idsByFrequency[id].common > 2)
-    .sort((a, b) => idsByFrequency[b].common - idsByFrequency[a].common)
+    .sort(
+      (a, b) => idsByFrequency[b].common - idsByFrequency[a].common
+    )
     .slice(0, 10)
     .map(id => ({ id, ...idsByFrequency[id] }))
   return peers
@@ -241,7 +251,6 @@ async function updatePlayer({ player, toUpdate }) {
   // console.log('updating player', player.tag)
   for (let prop of Object.keys(toUpdate)) {
     if (Array.isArray(toUpdate[prop])) {
-      // todo needs to be WAY more robust to prevent duplicates
       if (!player[prop]) {
         player[prop] = toUpdate[prop]
         // console.log('added prop ' + prop + ' for ' + player.tag)
@@ -270,7 +279,11 @@ async function allPlayers({ game }) {
 async function combine({ game, tag, id }) {
   while (!data) await sleep(100)
   const foundPlayers = await getPlayer({ game, tag })
-  if (!foundPlayers || !Array.isArray(foundPlayers) || foundPlayers.length < 2)
+  if (
+    !foundPlayers ||
+    !Array.isArray(foundPlayers) ||
+    foundPlayers.length < 2
+  )
     return false
 
   const destinationPlayer = foundPlayers.find(p => p.id === id)
@@ -295,26 +308,31 @@ async function combine({ game, tag, id }) {
   return id
 }
 
-let saveTimeout
+let saveTimeout, dataToSave
 function save() {
   dataToSave = data
   clearTimeout(saveTimeout)
-  saveTimeout = setTimeout(putDataIntoDb, 60 * 1000)
+  saveTimeout = setTimeout(putDataIntoDb, 30 * 1000)
 }
 
+let dbBusy
 function putDataIntoDb() {
   if (!dataToSave) return
   if (dbBusy) return
   dbBusy = true
   const currentData = dataToSave
   dataToSave = null
-  fs.writeFile(dbFilePath, JSON.stringify(currentData, null, 2), err => {
-    dbBusy = false
-    if (err) {
-      logError(err)
-      if (!dataToSave) dataToSave = currentData
+  fs.writeFile(
+    dbFilePath,
+    JSON.stringify(currentData, null, 2),
+    err => {
+      dbBusy = false
+      if (err) {
+        logError(err)
+        if (!dataToSave) dataToSave = currentData
+      }
     }
-  })
+  )
   // hasUpdatedSinceAnnounce = true
 }
 

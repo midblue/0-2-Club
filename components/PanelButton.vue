@@ -17,8 +17,9 @@ export default {}
 .combo {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 30%;
+  grid-template-columns: 70% 30%;
   margin: 50px 0;
+  width: 100%;
 }
 .mainpanel {
   width: 100%;

@@ -1,8 +1,19 @@
 <template>
   <nav>
-    <nuxt-link to="/"
-      ><img class="logo" src="~/assets/img/logo.svg" alt="The 0-2 Club logo"
-    /></nuxt-link>
+    <div class="left">
+      <nuxt-link to="/">
+        <img class="logo" src="~/assets/img/logo.svg" alt="The 0-2 Club logo" />
+      </nuxt-link>
+    </div>
+    <div class="right">
+      <a
+        class="feedback"
+        href="mailto:jasperstephenson@gmail.com?subject=Feedback About The 0-2 Club"
+        target="_blank"
+      >
+        <button class="low">Give Feedback</button>
+      </a>
+    </div>
   </nav>
 </template>
 
@@ -25,9 +36,24 @@ nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  @media (max-width: 768px) {
+    height: 40px;
+  }
 }
+
+.right,
+.left {
+  display: flex;
+  align-items: center;
+}
+
 .logo {
   max-width: 200px;
+
+  @media (max-width: 768px) {
+    max-width: 170px;
+  }
 }
 
 a {

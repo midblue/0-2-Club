@@ -12,7 +12,8 @@ module.exports = {
   },
 
   event({ service, id, tournamentSlug, slug, retries = 0 }) {
-    if (!service) return logError('A service is required to get an event.')
+    if (!service)
+      return logError('A service is required to get an event.')
     if (!id && !tournamentSlug && !slug)
       return logError(
         'An id, tournamentSlug, or slug is required to get an event.'
@@ -84,7 +85,8 @@ module.exports = {
       id,
       tag,
     })
-    if (Array.isArray(loadedPlayer)) return { disambiguation: loadedPlayer }
+    if (Array.isArray(loadedPlayer))
+      return { disambiguation: loadedPlayer }
     return loadedPlayer
   },
 
@@ -126,14 +128,15 @@ module.exports = {
       return []
     }
 
-    // todo check ALL
     const randomEvent =
       loadedPlayer.participatedInEvents[
-        Math.floor(Math.random() * loadedPlayer.participatedInEvents.length)
+        Math.floor(
+          Math.random() * loadedPlayer.participatedInEvents.length
+        )
       ]
-    const eventStubs = await services[randomEvent.service].moreEventsForPlayer(
-      loadedPlayer
-    )
+    const eventStubs = await services[
+      randomEvent.service
+    ].moreEventsForPlayer(loadedPlayer)
     // if (!eventStubs.err)
     // db.events.add(loadedEntry)
 

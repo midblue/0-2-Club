@@ -30,7 +30,7 @@ nav {
   width: 100%;
   overflow: hidden;
   background: white;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--grayd);
   height: 50px;
   padding: 0 30px;
   display: flex;

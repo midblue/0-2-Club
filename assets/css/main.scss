@@ -52,10 +52,10 @@
 
   --text: #3e3e3e;
   --textl: #575757;
-  --border: hsla(0, 0%, 0%, 10%);
 
-  --gray: #eee;
-  --gray2: #ddd;
+  --grayl: hsla(0, 0%, 0%, 2%);
+  --gray: hsla(0, 0%, 0%, 4%);
+  --grayd: hsla(0, 0%, 0%, 10%);
 
   --bg: #fbfbfb;
 }
@@ -102,7 +102,7 @@ option,
   color: var(--text);
   background: none;
   border: none;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--grayd);
   padding: 0px 5px;
   margin: 0;
   border-radius: 0;
@@ -110,7 +110,7 @@ option,
 }
 
 input::placeholder {
-  color: hsla(0, 0%, 74.9%, 0.87);
+  color: hsla(0, 0%, 0%, 0.3);
 }
 
 .ui.selection.dropdown {
@@ -167,7 +167,7 @@ button {
 
     &:hover,
     &:active {
-      background: var(--gray2);
+      background: var(--grayd);
     }
   }
 }
@@ -192,7 +192,7 @@ hr {
   color: black;
   letter-spacing: 1px;
   background-color: #fff;
-  border: 2px solid var(--border);
+  border: 2px solid var(--grayd);
   margin-top: -2px;
   text-decoration: none;
   padding: 15px 45px;
@@ -260,10 +260,16 @@ h3 {
   background: white;
 }
 
+.drop {
+  display: inline-block;
+  background: var(--grayl);
+  box-shadow: inset 0 3px 6px var(--gray);
+}
+
 .box,
 .panel,
 .buttonbox {
-  box-shadow: 0 10px 40px var(--border);
+  box-shadow: 0 10px 40px var(--grayd);
 }
 
 .multiply {

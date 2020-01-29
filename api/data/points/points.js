@@ -8,6 +8,7 @@ module.exports = {
     const chronologicalEvents = player.participatedInEvents.sort(
       (a, b) => a.date - b.date
     )
+
     points.push(...(await eventPoints(chronologicalEvents, player)))
 
     return points
@@ -43,7 +44,7 @@ async function eventPoints(events, player) {
       p({
         title: `Played in a Tournament`,
         context: `With ${event.totalParticipants} players`,
-        value: 10 + Math.floor(event.totalParticipants / 30),
+        value: 10 + Math.floor(event.totalParticipants / 40),
         date: event.date,
       })
 
@@ -239,6 +240,16 @@ async function matchPoints(matches, event, events, player) {
           opponent: { tag: match.winner.tag, id: match.winner.id },
           value: 2,
         })
+      // todo losers run
+      // todo opponent was on fire this tournament
+      if (didWin) winStreak++
+      else winStreak = 0
+      if (winStreak > 2)
+        p({
+          title: `Hot Streak`,
+          context: `${winStreak} wins in a row`,
+          value: winStreak,
+        })
 
       const opponentId = didWin ? match.loser.id : match.winner.id
       const opponentTag = didWin ? match.loser.tag : match.winner.tag
@@ -246,10 +257,11 @@ async function matchPoints(matches, event, events, player) {
         game: player.game,
         id: opponentId,
       })
+      // todo allow for finding in passed player data
       if (!opponentData) return [...(await pointsArray), ...points]
+      const opponentRatio = getPlacingRatio(opponentData)
       if (
-        getPlacingRatio(opponentData) <
-          getPlacingRatio(player) - 0.15 &&
+        opponentRatio < getPlacingRatio(player) - 0.15 &&
         opponentData.participatedInEvents.length > 2
       ) {
         p({
@@ -267,7 +279,7 @@ async function matchPoints(matches, event, events, player) {
           })
         }
       } else if (
-        getPlacingRatio(opponentData) < 0.3 &&
+        opponentRatio < 0.3 &&
         opponentData.participatedInEvents.length > 2
       )
         p({
@@ -322,15 +334,6 @@ async function matchPoints(matches, event, events, player) {
           title: `Beat a Rival`,
           context: `You took down ${opponentTag}!`,
           value: 10,
-        })
-
-      if (didWin) winStreak++
-      else winStreak = 0
-      if (winStreak > 2)
-        p({
-          title: `Hot Streak`,
-          context: `${winStreak} wins in a row`,
-          value: winStreak,
         })
 
       return [...(await pointsArray), ...points]

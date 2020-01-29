@@ -1,4 +1,4 @@
-const services = { smashgg: require('./getters/smashgg') }
+const services = require('./services')
 const db = require('./db/db')
 const points = require('./points/points')
 const logger = require('./scripts/log')
@@ -122,7 +122,7 @@ module.exports = {
     if (
       !loadedPlayer ||
       !loadedPlayer.participatedInEvents ||
-      !loadedPlayer.participatedInEvents.length
+      !loadedPlayer.participatedInEvents.length > 0
     ) {
       logError('no player found for', game, id, tag)
       return []

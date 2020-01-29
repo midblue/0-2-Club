@@ -132,7 +132,6 @@ function addOrUpdatePlayersFromEvent(event) {
             totalParticipants: p.of,
             service: event.service,
             id: event.id,
-            entrantId: p.entrantId,
             name: event.name,
             slug: event.slug,
             tournamentSlug: event.tournament.slug,
@@ -217,6 +216,7 @@ function getPlayer({ game, id, tag }) {
 
 async function getPlayerPeers(player) {
   // todo? make this % overlap based, not just numbers
+  // todo? add random factor so it's not always the same 10 people
   if (!player.participatedInEvents) player = await getPlayer(player)
   if (!player) return
   const idsByFrequency = {}

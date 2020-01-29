@@ -16,12 +16,13 @@
             class="colorpad multiply"
             :style="{ background: `var(--l${level.level})` }"
           >Level {{ level.level }} — {{ level.label }}</span>
+          <InfoTooltip>Get points by competing in tournaments to level up!</InfoTooltip>
         </h3>
 
         <XPBar :totalPoints="totalPoints" :events="displayEvents" />
       </div>
 
-      <Badges :points="points" class="badges" />
+      <Stats class="stats" :points="points" :player="player" :level="level.level" />
     </template>
 
     <ProgressChart
@@ -33,7 +34,11 @@
       class="chart"
     />
 
-    <hr />
+    <h2
+      v-if="awards.length > 0"
+      class="awardslabel"
+    >{{awards.length}} Award{{awards.length === 1 ? '' : 's' }}</h2>
+    <Awards :awards="awards" class="awards" />
 
     <div class="eventslabel">
       <h2
@@ -48,72 +53,37 @@
         class="eventsearch"
       />
     </div>
+    <EventsListing :events="displayEvents" :level="level.level" :game="player.game" />
 
-    <template v-if="displayEvents">
-      <div>
-        <div class="panel" v-for="event in displayEvents" :key="event.slug + event.tournamentSlug">
-          <h3>
-            <span class="colorpad" :style="{ background: `var(--l${level.level})` }">
-              +{{
-              event.points.reduce((t, p) => t + p.value, 0)
-              }}
-            </span>
-            {{ event.tournamentName }}
-            <span class="sub">
-              {{ event.name }} ({{
-              new Date(event.date * 1000).toLocaleDateString()
-              }})
-            </span>
-          </h3>
-          <div
-            v-for="(point, index) in event.points"
-            :key="event.slug + event.tournamentSlug + 'point' + index"
-            class="point"
-            :class="{ padtop: point.title.indexOf('Set') > -1 }"
-          >
-            <span
-              class="pointvalue"
-              :style="{ color: `var(--l${level.level}d)` }"
-            >+{{ point.value }}</span>
-            <span class="title">{{ point.title }}</span>
-            <span class="context sub">
-              <span>
-                {{ point.context }}
-                <nuxt-link
-                  v-if="point.opponent"
-                  :to="`/g/${player.game}/i/${point.opponent.id}`"
-                >{{ point.opponent.tag }}</nuxt-link>
-              </span>
-            </span>
-          </div>
+    <template v-if="peers && peers.length > 0">
+      <hr />
+
+      <div class="peers flex">
+        <div style="margin-right: 30px; flex-shrink: 0;">
+          <b>Related Players</b>
+        </div>
+        <div>
+          <span v-for="peer in peers">
+            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`">{{ peer.tag }}</nuxt-link>&nbsp;
+          </span>
         </div>
       </div>
     </template>
-
-    <hr />
-
-    <div v-if="peers && peers.length > 0" class="peers flex">
-      <div style="margin-right: 30px;">
-        <b>Related Players</b>
-      </div>
-      <div>
-        <span v-for="peer in peers">
-          <nuxt-link :to="`/g/${player.game}/i/${peer.id}`">{{ peer.tag }}</nuxt-link>&nbsp;
-        </span>
-      </div>
-    </div>
+  </section>
+</template>
   </section>
 </template>
 
 <script>
+import InfoTooltip from '~/components/InfoTooltip'
 import EventSearch from '~/components/EventSearch'
+import EventsListing from '~/components/EventsListing'
 import ProgressChart from '~/components/ProgressChart'
 import XPBar from '~/components/XPBar'
-import Badges from '~/components/Badges'
+import Stats from '~/components/Stats'
+import Awards from '~/components/Awards'
 import levels from '~/common/levels'
 import axios from 'axios'
-
-// todo badges
 
 export default {
   props: {
@@ -121,12 +91,21 @@ export default {
     initialPeers: {},
     initialPoints: {},
   },
-  components: { EventSearch, ProgressChart, XPBar, Badges },
+  components: {
+    InfoTooltip,
+    EventSearch,
+    EventsListing,
+    ProgressChart,
+    XPBar,
+    Stats,
+    Awards,
+  },
   data() {
     return {
       player: {},
       peers: [],
       points: [],
+      awards: [1, 2, 3, 4],
       levels,
       checkForUpdates: false,
       checkForUpdatesInterval: null,
@@ -201,32 +180,34 @@ export default {
 
 <style scoped lang="scss">
 .tag {
+  margin-top: 1em;
   h1 {
+    margin-bottom: 0px;
+
     .sub {
       font-size: 0.85rem;
       margin-bottom: 10px;
     }
-    margin-bottom: 0px;
   }
 }
 .level {
-  margin-top: 3em;
-  margin-bottom: 0.3em;
+  margin-top: 0.5em;
+  margin-bottom: 2em;
 
   h3 {
     margin-top: 0;
     margin-bottom: -5px;
   }
 }
-.badges {
-  margin-bottom: 3em;
+.stats {
+  margin-bottom: 2em;
+}
+.awards {
+  margin-bottom: 4em;
 }
 
 .chart {
-  margin-bottom: 30px;
-}
-.peers {
-  margin-bottom: 30px;
+  margin-bottom: 5em;
 }
 
 .panel {
@@ -235,8 +216,12 @@ export default {
   }
 }
 
+.awardslabel {
+  margin: 0 0 0 0;
+}
+
 .eventslabel {
-  margin: 30px 0 0 0;
+  margin: 6em 0 0 0;
   display: flex;
   align-items: center;
 
@@ -244,10 +229,13 @@ export default {
     margin-top: 0;
     margin-bottom: 0;
   }
+
+  h2 {
+    margin-right: 0.5em;
+  }
 }
 .eventsearch {
   flex: 1;
-  margin-left: 2em;
 }
 
 h3 {
@@ -256,7 +244,7 @@ h3 {
 
 .point {
   line-height: 1.05;
-  max-width: 500px;
+  max-width: 600px;
   display: grid;
   grid-template-columns: 20px 0.9fr 1fr;
   grid-gap: 10px;

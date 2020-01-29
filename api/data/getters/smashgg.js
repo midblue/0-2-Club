@@ -18,7 +18,8 @@ const db = require('../db/db.js')
 const currentlyLoadingNewEvents = []
 
 module.exports = {
-  async event({ tournamentSlug, slug }) {
+  async event({ tournamentSlug, slug, eventSlug }) {
+    if (eventSlug && !slug) slug = eventSlug
     if (!(tournamentSlug && slug)) return
 
     if (
@@ -34,7 +35,6 @@ module.exports = {
     const eventData = await getEvent(tournamentSlug, slug)
     if (!eventData || eventData.error)
       return logError(`skipping event:`, eventData.error)
-    // todo check for error
     const isDone = eventData.state === 'COMPLETED'
     if (!isDone) return { err: 'not done' }
 
@@ -70,6 +70,8 @@ module.exports = {
           player1.entrantId === s.winnerId ? player1 : player2
         const loser =
           winner.entrantId === player2.entrantId ? player1 : player2
+        delete winner.entrantId
+        delete loser.entrantId
         return {
           date: s.completedAt,
           winner,
@@ -112,7 +114,7 @@ module.exports = {
     }
   },
 
-  async moreEventsForPlayer(player) {
+  async moreEventsForPlayer(player, ownerIdsToCheck, existingEvents) {
     if (!player) return []
 
     let foundEvents = []
@@ -126,11 +128,18 @@ module.exports = {
         )
         if (existsInNewFoundEvents) return resolve(false)
 
-        const existsInDb = await db.events.get({
-          service: 'smashgg',
-          tournamentSlug,
-          slug: eventSlug,
-        })
+        const existsInDb = existingEvents
+          ? existingEvents.find(
+              existingEvent =>
+                existingEvent.tournamentSlug === tournamentSlug &&
+                existingEvent.slug === slug &&
+                existingEvent.service === 'smashgg'
+            )
+          : await db.events.get({
+              service: 'smashgg',
+              tournamentSlug,
+              slug: eventSlug,
+            })
         if (existsInDb) return resolve(false)
 
         return resolve(true)
@@ -222,7 +231,9 @@ module.exports = {
     }
 
     // then check other events from the same organizer as all events concerning user
-    const ownerIds = await parseOwnersFromEvents(playerEventsToCheck)
+    const ownerIds =
+      ownerIdsToCheck ||
+      (await parseOwnersFromEvents(playerEventsToCheck))
     // log(ownerIds.length, 'owners found')
     const eventsFromOwnerIds = await Promise.all(
       ownerIds.map(async ownerId => {
@@ -338,7 +349,7 @@ async function getEvent(tournamentSlug, eventSlug) {
 
   // todo should be able to get ALLLLLLLLA these at once np instead of waiting for a damg response every time
   // todo also for fuck's sake we can get more sets etc per call... LET'S.
-  // like start from page 0 with just pageInfo and go for the gold from page one all the time. 2 calls for tiny events but WAY less calls for the big ones
+  // todo like start from page 0 with just pageInfo and go for the gold from page one all the time. 2 calls for tiny events but WAY less calls for the big ones
   while (areMoreSets) {
     setsPage++
     low(
@@ -674,7 +685,7 @@ query EventStandings($slug: String, $page: Int!) {
 const queryTournamentsByOwner = `
 query TournamentsByOwner($ownerId: ID!) {
     tournaments(query: {
-      perPage: 40
+      perPage: 100
       filter: {
         ownerId: $ownerId
       }

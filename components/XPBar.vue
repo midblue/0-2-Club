@@ -91,7 +91,7 @@ export default {
 .bar {
   width: 100%;
   height: 2px;
-  background: var(--border);
+  background: var(--grayd);
   margin-bottom: 2px;
 }
 .progress {

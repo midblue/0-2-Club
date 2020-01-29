@@ -1,5 +1,5 @@
 <template>
-  <div class="progresschart" :class="{ready: chartIsReady}">
+  <div class="progresschart drop" :class="{ready: chartIsReady}">
     <div class="chartholder">
       <line-chart
         class="chart"
@@ -10,8 +10,8 @@
     </div>
 
     <div v-if="peers" class="compare">
-      <div>
-        <b>Compare</b>
+      <div class="comparelabel">
+        <b>Compare to Peers</b>
       </div>
       <div>
         <span v-for="peer in peers">
@@ -25,13 +25,18 @@
           >{{ peer.tag }}</span>
           &nbsp;
         </span>
-        <span v-if="rivalId" @click="rivalId = null">Clear</span>
         <form class="search" @submit.prevent>
           <input v-model="inputRivalSearchTag" placeholder="Search for a user..." />
-          <button class="low" type="submit" @click="
-          searchForRival
-        ">Compare</button>
+          <button
+            class="low"
+            type="submit"
+            v-if="inputRivalSearchTag"
+            @click="searchForRival"
+          >Search</button>
         </form>
+      </div>
+      <div class="clear">
+        <button class="low" v-if="rivalId" @click="rivalId = null">Clear</button>
       </div>
     </div>
   </div>
@@ -233,7 +238,7 @@ export default {
           this.rivalPoints = null
           this.$store.dispatch(
             'notifications/notify',
-            `No user found by the tag ${this.rivalSearchTag}.`
+            `No user found by the tag ${this.inputRivalSearchTag}.`
           )
           this.fillData()
           return
@@ -262,7 +267,6 @@ function generateData(points) {
 
 <style lang="scss">
 .progresschart {
-  // background: rgba(0, 0, 0, 0.04);
   transition: all 0.3s;
 
   & > * {
@@ -271,8 +275,6 @@ function generateData(points) {
   }
 
   &.ready {
-    background: transparent;
-
     & > * {
       opacity: 1;
     }
@@ -280,26 +282,49 @@ function generateData(points) {
 }
 
 .chartholder {
-  --mapW: 100%;
-  --mapH: 150px;
-  max-height: var(--mapH);
-  max-width: var(--mapW);
+  --chartW: 100%;
+  --chartH: 150px;
   position: relative;
+  padding: 40px 40px 0 40px;
 }
 .chart {
   canvas {
-    height: var(--mapH);
-    max-height: var(--mapH);
-    max-width: var(--mapW);
+    height: var(--chartH);
+    max-height: var(--chartH);
+    max-width: var(--chartW);
   }
 }
 
 .compare {
   display: flex;
   margin-top: 30px;
+  padding: 18px 40px 18px 40px;
+  line-height: 1.6;
+  background: var(--grayl);
 
   & > *:first-child {
+    position: relative;
+    width: 70px;
+    flex-shrink: 0;
+  }
+  & > *:not(:last-child) {
     margin-right: 30px;
+  }
+
+  .comparelabel {
+    margin-top: 2px;
+    line-height: 1.2;
+  }
+
+  .clear {
+    flex-grow: 0;
+    flex-shrink: 1;
+
+    button {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+    }
   }
 }
 .comparetotag {

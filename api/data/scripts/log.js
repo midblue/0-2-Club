@@ -19,7 +19,6 @@ module.exports = function(
   const isBrowser = typeof window !== 'undefined'
   let prefix = name + ' '
   while (prefix.length < minLength) prefix += ' '
-  prefix += '|'
   if (isBrowser)
     return (...args) => {
       console.log(

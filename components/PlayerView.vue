@@ -130,7 +130,7 @@ export default {
   watch: {
     checkForUpdates(willCheck, wasChecking) {
       if (willCheck !== wasChecking && willCheck) {
-        // this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 1500)
+        this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 5000)
       } else {
         clearInterval(this.checkForUpdatesInterval)
       }

@@ -3,6 +3,7 @@ const db = require('./firebaseClient')
 const dbInterface = require('./updateManager')
 const points = require('./points/points')
 const logger = require('./scripts/log')
+const low = logger('get', 'gray')
 const log = logger('get', 'white')
 const logAdd = logger('get', 'green')
 const logError = logger('get', 'yellow')
@@ -30,7 +31,7 @@ module.exports = {
           game,
         })
         if (loadedEntry) {
-          log(
+          low(
             'found existing event in db:',
             loadedEntry.name,
             '-',
@@ -58,7 +59,7 @@ module.exports = {
           e.code || e.err || e.error || e
         )
         if (retries < 10) {
-          log(`retrying... (attempt ${retries + 2})`)
+          low(`retrying... (attempt ${retries + 2})`)
           return await this.event({
             service,
             id,
@@ -71,7 +72,7 @@ module.exports = {
       if (loadedEntry && !loadedEntry.err) {
         await dbInterface.addEventWithNoContext(loadedEntry)
         log(
-          `found event from ${loadedEntry.service}:`,
+          `returning newly loaded event from ${loadedEntry.service}:`,
           loadedEntry.name,
           '-',
           loadedEntry.tournamentName

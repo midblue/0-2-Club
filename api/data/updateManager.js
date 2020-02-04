@@ -29,12 +29,12 @@ setTimeout(async () => {
     tournamentSlug: 'battlegateway-29-1',
     game: 'Super Smash Bros. Melee',
   })
-  //   await require('./get').event({
-  //     service: 'smashgg',
-  //     slug: 'melee-singles-vs',
-  //     tournamentSlug: 'battlegateway-26',
-  //     game: 'Super Smash Bros. Melee',
-  //   })
+  await require('./get').event({
+    service: 'smashgg',
+    slug: 'melee-singles-vs',
+    tournamentSlug: 'battlegateway-26',
+    game: 'Super Smash Bros. Melee',
+  })
 }, 5000)
 // user 640241
 
@@ -57,6 +57,8 @@ function daily() {
       logInfo(
         `${activePlayers.length} active and ${passivePlayers.length} passive players found in ${allEvents.length} events for game ${game}`
       )
+      db.setStat(`players ${game}`, allPlayers.length)
+      db.setStat(`events ${game}`, allEvents.length)
 
       // get new event info for all active players
       const alreadyCheckedOwnerIds = []
@@ -255,8 +257,7 @@ async function recalculatePoints(player, allPlayers) {
 }
 
 async function recalculatePeers(player, allEvents) {
-  // todo? make this % overlap based, not just numbers
-  // todo? add random factor so it's not always the same 10 people
+  // todo? make this based on avg % overlap over all events for both players, not just raw numbers
   const startingPeers = player.peers || []
   const idsByFrequency = {}
   player.participatedInEvents.map(partialEvent => {
@@ -335,7 +336,7 @@ async function addEventWithNoContext(event) {
   })
 
   // calculate points, as far as possible
-  // * without allPlayers, only opponent points from THIS event are possible... so we only recalc ones from this event. the rest will be handled by the daily sweep.
+  // * without access to All Players, only opponent points from THIS event are possible... so we only calculate ones from this event. the rest will be handled by the daily sweep.
   const playersWithPoints = await Promise.all(
     players.map(async player => {
       let newPoints = await points.get(player, players, event.id)
@@ -345,14 +346,21 @@ async function addEventWithNoContext(event) {
       }
     })
   )
-  low(`updating ${playersWithPoints.length} players...`)
+  // low(`updating ${playersWithPoints.length} players...`)
 
   // * no peers for now, that'll also be handled in the daily sweep. if they already had them, they stay the same for now.
 
   // save all
   db.addEvent(event)
-  await Promise.all(
-    playersWithPoints.map(player => db.addPlayer(player))
+  await Promise.all([
+    ...playersWithPoints
+      .filter(p => p.participatedInEvents.length <= 1)
+      .map(player => db.addPlayer(player)),
+    ...playersWithPoints
+      .filter(p => p.participatedInEvents.length > 1)
+      .map(player => db.updatePlayer(player)),
+  ])
+  log(
+    `done saving all data for ${event.slug} @ ${event.tournamentSlug}`
   )
-  log(`updated ${playersWithPoints.length} players`)
 }

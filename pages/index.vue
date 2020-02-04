@@ -68,6 +68,16 @@
           through smash.gg.
         </div>
       </div>
+
+      <br />
+      <br />
+      <hr />
+      <br />
+      <br />
+
+      <div class="patchnotes">
+        <h3>Patch Notes</h3>
+      </div>
     </div>
   </section>
 </template>

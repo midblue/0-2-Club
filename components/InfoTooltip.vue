@@ -3,10 +3,12 @@
     <button
       class="icon low"
       @mouseover="show = true"
-      @mouseout="show=false"
-      @focus="show=true"
-      @blur="show=false"
-    >?</button>
+      @mouseout="show = false"
+      @focus="show = true"
+      @blur="show = false"
+    >
+      <span class="textlabel">?</span>
+    </button>
 
     <transition name="fade">
       <div class="tooltip" v-if="show">
@@ -34,20 +36,25 @@ export default {
   display: inline-block;
   vertical-align: top;
   line-height: 1;
-  width: 30px;
+  width: 25px;
 }
 .icon {
   font-size: 1rem;
   line-height: 1;
   font-weight: bold;
   cursor: help;
-  padding: 7px 12px;
+  padding: 2px 7px;
   margin: 0;
   user-select: none;
   outline: none;
   position: absolute;
   top: 0;
   left: 0;
+
+  .textlabel {
+    opacity: 0.7;
+    pointer-events: none;
+  }
 }
 .tooltip {
   position: absolute;
@@ -59,7 +66,7 @@ export default {
   font-size: 0.9rem;
   width: 200px;
   font-weight: 400;
-  padding: 6px 14px;
+  padding: 10px 20px;
   background: hsla(0, 0%, 0%, 0.8);
   color: var(--bg);
 }

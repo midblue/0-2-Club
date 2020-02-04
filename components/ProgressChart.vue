@@ -1,5 +1,5 @@
 <template>
-  <div class="progresschart drop" :class="{ready: chartIsReady}">
+  <div class="progresschart drop" :class="{ready: chartIsReady}" v-if="pointsToUse.length">
     <div class="chartholder">
       <line-chart
         class="chart"
@@ -9,7 +9,7 @@
       ></line-chart>
     </div>
 
-    <div v-if="peers" class="compare">
+    <div v-if="peers.length" class="compare">
       <div class="comparelabel">
         <b>Compare to Peers</b>
       </div>

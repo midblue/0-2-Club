@@ -30,15 +30,7 @@ async function eventPoints(
   return await events.reduce(
     async (collectedPoints, event, index) => {
       if (onlyTouchEventId && event.id !== onlyTouchEventId) {
-        // const pointsToReuse = player.points.filter(
-        //   point =>
-        //     point.eventSlug === event.slug &&
-        //     point.tournamentSlug === event.tournamentSlug
-        // )
-        // console.log(
-        //   `reusing ${pointsToReuse.length} point objects for ${event.slug} ${event.tournamentSlug} for player ${player.tag}`
-        // )
-        return []
+        return collectedPoints
       }
 
       const points = []
@@ -208,7 +200,7 @@ async function eventPoints(
         player,
         allPlayers
       )
-      points.push(...mps)
+      points.push(...(await mps))
 
       return [...(await collectedPoints), ...(await points)]
     },

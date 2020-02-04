@@ -167,6 +167,7 @@ module.exports = {
             if (
               !set.event ||
               set.event.state !== 'COMPLETED' ||
+              set.event.videogame.name !== player.game ||
               set.slots.length > 2
             )
               return resolve()
@@ -598,6 +599,10 @@ query PlayerSets ($id: ID!) {
         name
         state
         slug
+        videogame {
+          name
+          slug
+        }
         tournament {
           id
           name

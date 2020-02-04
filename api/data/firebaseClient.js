@@ -129,7 +129,7 @@ module.exports = {
 
   async getEvent({ service, id, tournamentSlug, slug, game }) {
     const memoed = memoizedEvents.get(
-      service + id + tournamentSlug + slug + game
+      service + (id || tournamentSlug + slug) + game
     )
     if (memoed) return memoed
 
@@ -148,16 +148,16 @@ module.exports = {
       .get()
       .then(snapshot => {
         if (snapshot.docs.length === 0) {
-          low(
-            `event ${id ||
-              slug +
-                ' @ ' +
-                tournamentSlug} on ${service} not found in database`
-          )
+          // low(
+          //   `event ${id ||
+          //     slug +
+          //       ' @ ' +
+          //       tournamentSlug} on ${service} not found in database`
+          // )
           return
         }
         memoizedEvents.set(
-          service + id + tournamentSlug + slug + game,
+          service + (id || tournamentSlug + slug) + game,
           snapshot.docs[0].data()
         )
         return snapshot.docs[0].data()
@@ -212,6 +212,12 @@ module.exports = {
     if (typeof event !== 'string') return
     statsRef.update({
       [event]: admin.firestore.FieldValue.increment(1),
+    })
+  },
+  setStat(type, value) {
+    if (typeof type !== 'string') return
+    statsRef.update({
+      [type]: value,
     })
   },
 }

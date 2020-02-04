@@ -95,16 +95,17 @@ router.get('/more/:game/:id/', async (req, res, next) => {
     id,
   })
   const newEvents = []
-  // * intentionally doing one at a time here to avoid race conditions with updating players. could be mitigated by using `participatedInEvents: admin.firestore.FieldValue.arrayUnion(` cleverly, but, you know... I'm not that clever.
-  for (let stub of moreEventStubs) {
-    const eventData = await get.event({
-      service: stub.service,
-      tournamentSlug: stub.tournamentSlug,
-      slug: stub.eventSlug,
-      game,
+  await Promise.all(
+    moreEventStubs.map(async stub => {
+      const eventData = await get.event({
+        service: stub.service,
+        tournamentSlug: stub.tournamentSlug,
+        slug: stub.eventSlug,
+        game,
+      })
+      newEvents.push(eventData)
     })
-    newEvents.push(eventData)
-  }
+  )
   res.json(newEvents)
 })
 

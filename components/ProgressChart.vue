@@ -223,6 +223,7 @@ export default {
     },
 
     searchForRival() {
+      this.$store.commit('setIsLoading', true)
       if (!this.inputRivalSearchTag)
         return this.$store.dispatch(
           'notifications/notify',
@@ -232,6 +233,7 @@ export default {
         this.inputRivalSearchTag
       )}/`
       axios.get(url).then(res => {
+        this.$store.commit('setIsLoading', false)
         if (!res.data || res.data.err) {
           this.checkForUpdates = false
           this.rivalTag = null
@@ -268,6 +270,9 @@ function generateData(points) {
 <style lang="scss">
 .progresschart {
   transition: all 0.3s;
+  --chartW: 100%;
+  --chartH: 150px;
+  width: var(--chartW);
 
   & > * {
     opacity: 0;
@@ -282,8 +287,6 @@ function generateData(points) {
 }
 
 .chartholder {
-  --chartW: 100%;
-  --chartH: 150px;
   position: relative;
   padding: 40px 40px 0 40px;
 }

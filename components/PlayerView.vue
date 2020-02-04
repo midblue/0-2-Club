@@ -88,8 +88,6 @@ import axios from 'axios'
 export default {
   props: {
     initialPlayer: {},
-    initialPeers: {},
-    initialPoints: {},
   },
   components: {
     InfoTooltip,
@@ -132,7 +130,7 @@ export default {
   watch: {
     checkForUpdates(willCheck, wasChecking) {
       if (willCheck !== wasChecking && willCheck) {
-        this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 1500)
+        // this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 1500)
       } else {
         clearInterval(this.checkForUpdatesInterval)
       }
@@ -140,8 +138,8 @@ export default {
   },
   created() {
     this.player = this.initialPlayer
-    this.points = this.initialPoints
-    this.peers = this.initialPeers
+    this.points = this.initialPlayer.points
+    this.peers = this.initialPlayer.peers
   },
   mounted() {},
   beforeDestroy() {
@@ -196,7 +194,7 @@ export default {
 
   h3 {
     margin-top: 0;
-    margin-bottom: -5px;
+    margin-bottom: 0px;
   }
 }
 .stats {

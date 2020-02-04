@@ -32,7 +32,7 @@
         </template>
       </PanelButton>
 
-      <div class="sub negmartop">{{ players }} players and {{ events }} events analyzed so far.</div>
+      <!-- <div class="sub negmartop">{{ players }} players and {{ events }} events analyzed so far.</div> -->
 
       <br />
       <br />
@@ -97,17 +97,11 @@ export default {
         text: '',
       },
       inputTag: '',
-      gameOptions: [
-        {
-          value: 'Super Smash Bros. Melee',
-          text: 'Super Smash Bros. Melee',
-        },
-        {
-          value: 'Super Smash Bros. Ultimate',
-          text: 'Super Smash Bros. Ultimate',
-        },
-      ],
+      gameOptions: [],
     }
+  },
+  mounted() {
+    this.gameOptions = this.games.map(g => ({ value: g, text: g }))
   },
   methods: {
     go() {

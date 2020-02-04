@@ -3,7 +3,7 @@ const multiplier = 175
 const levels = [
   {
     points: 0 * multiplier,
-    label: 'Pallet Town',
+    label: 'Brand New',
   },
   {
     points: 1 * multiplier,

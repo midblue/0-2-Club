@@ -1,5 +1,5 @@
 <template>
-  <PlayerView :initialPlayer="player" :initialPoints="points" :initialPeers="peers" />
+  <PlayerView :initialPlayer="player" />
 </template>
 
 <script>
@@ -10,15 +10,16 @@ export default {
   scrollToTop: true,
   asyncData({ params, error, redirect }) {
     return axios.get(`/api/points/${params.game}/id/${params.id}`).then(res => {
-      if (res.data && !res.data.err && !res.data.disambiguation) return res.data
+      if (res.data && !res.data.err && !res.data.disambiguation)
+        return { player: res.data }
       else
         return {
           player: {
             game: params.game,
+            peers: [],
+            points: [],
             id: params.id,
           },
-          points: [],
-          peers: [],
         }
     })
   },

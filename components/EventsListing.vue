@@ -4,7 +4,11 @@
       <div>
         <div class="panel" v-for="event in events" :key="event.slug + event.tournamentSlug">
           <h3>
-            <span class="colorpad" :style="{ background: `var(--l${level})` }">
+            <span
+              v-if="event.points.reduce((t, p) => t + p.value, 0)"
+              class="colorpad"
+              :style="{ background: `var(--l${level})` }"
+            >
               +{{
               event.points.reduce((t, p) => t + p.value, 0)
               }}
@@ -16,6 +20,10 @@
               }})
             </span>
           </h3>
+          <div
+            v-if="event.points.length === 0"
+            class="sub"
+          >Calculating points... Check back in 24 hours!</div>
           <div
             v-for="(point, index) in event.points"
             :key="event.slug + event.tournamentSlug + 'point' + index"

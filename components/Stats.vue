@@ -61,7 +61,7 @@ export default {
         return (
           total +
           event.matchesWithUser.reduce((total, match) => {
-            if (match.winner.id === this.player.id) return total + 1
+            if (match.winnerId === this.player.id) return total + 1
             return total
           }, 0)
         )

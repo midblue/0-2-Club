@@ -65,10 +65,11 @@ router.get('/points/:game/id/:id', async (req, res, next) => {
 
 /* GET get manually added event data */
 router.get(
-  '/event/:service/:tournamentSlug/:eventSlug',
+  '/event/:service/:game/:tournamentSlug/:eventSlug',
   async (req, res, next) => {
     log('manually added event')
     const service = decodeURIComponent(req.params.service)
+    const game = decodeURIComponent(req.params.game)
     const tournamentSlug = decodeURIComponent(
       req.params.tournamentSlug
     )
@@ -77,6 +78,7 @@ router.get(
       service,
       tournamentSlug,
       slug: eventSlug,
+      game,
     })
     res.json(eventData)
   }
@@ -88,27 +90,25 @@ router.get('/more/:game/:id/', async (req, res, next) => {
   const id = parseInt(decodeURIComponent(req.params.id))
   log('more events for player', id)
   get.logToDb('more')
-  const moreEvents = await get.moreEventsForPlayer({
+  const moreEventStubs = await get.moreEventsForPlayer({
     game,
     id,
   })
-  const eventData = await Promise.all(
-    moreEvents.map(
-      event =>
-        new Promise(async resolve => {
-          const eventData = await get.event({
-            service: event.service,
-            tournamentSlug: event.tournamentSlug,
-            slug: event.eventSlug,
-          })
-          resolve(eventData)
-        })
-    )
-  )
-  res.json(eventData)
+  const newEvents = []
+  // * intentionally doing one at a time here to avoid race conditions with updating players. could be mitigated by using `participatedInEvents: admin.firestore.FieldValue.arrayUnion(` cleverly, but, you know... I'm not that clever.
+  for (let stub of moreEventStubs) {
+    const eventData = await get.event({
+      service: stub.service,
+      tournamentSlug: stub.tournamentSlug,
+      slug: stub.eventSlug,
+      game,
+    })
+    newEvents.push(eventData)
+  }
+  res.json(newEvents)
 })
 
-/* GET more events for player */
+/* GET combine all instances of a tag into one id */
 router.get('/combine/:game/:tag/:id/', async (req, res, next) => {
   log('combining ids')
   get.logToDb('combine')

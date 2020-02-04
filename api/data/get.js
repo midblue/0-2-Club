@@ -1,17 +1,18 @@
 const services = require('./services')
-const db = require('./db/db')
+const db = require('./firebaseClient')
+const dbInterface = require('./updateManager')
 const points = require('./points/points')
 const logger = require('./scripts/log')
-const log = logger('smashgg', 'white')
-const logAdd = logger('smashgg', 'green')
-const logError = logger('smashgg', 'yellow')
+const log = logger('get', 'white')
+const logAdd = logger('get', 'green')
+const logError = logger('get', 'yellow')
 
 module.exports = {
   async dbStats() {
-    return await db.stats()
+    return await db.getStats()
   },
 
-  event({ service, id, tournamentSlug, slug, retries = 0 }) {
+  event({ service, id, tournamentSlug, slug, game, retries = 0 }) {
     if (!service)
       return logError('A service is required to get an event.')
     if (!id && !tournamentSlug && !slug)
@@ -21,18 +22,19 @@ module.exports = {
     return new Promise(async resolve => {
       let loadedEntry
       try {
-        loadedEntry = await db.events.get({
+        loadedEntry = await db.getEvent({
           service,
           tournamentSlug,
           id,
           slug,
+          game,
         })
         if (loadedEntry) {
           log(
-            'found existing event:',
+            'found existing event in db:',
             loadedEntry.name,
             '-',
-            loadedEntry.tournament.name
+            loadedEntry.tournamentName
           )
           return resolve(loadedEntry)
         }
@@ -43,6 +45,7 @@ module.exports = {
           slug,
           retries,
         })
+
         // console.log('loadedEntry:', loadedEntry)
         resolve(loadedEntry)
       } catch (e) {
@@ -66,12 +69,12 @@ module.exports = {
         }
       }
       if (loadedEntry && !loadedEntry.err) {
-        await db.events.add(loadedEntry)
+        await dbInterface.addEventWithNoContext(loadedEntry)
         log(
-          'found event from web:',
+          `found event from ${loadedEntry.service}:`,
           loadedEntry.name,
           '-',
-          loadedEntry.tournament.name
+          loadedEntry.tournamentName
         )
       }
       resolve(loadedEntry)
@@ -80,7 +83,7 @@ module.exports = {
 
   async player({ game, id, tag }) {
     if (!game || (!id && !tag)) return
-    const loadedPlayer = await db.players.get({
+    const loadedPlayer = await db.getPlayer({
       game,
       id,
       tag,
@@ -92,7 +95,7 @@ module.exports = {
 
   async players({ game }) {
     if (!game) return
-    return await db.players.all({ game })
+    return await db.getPlayers({ game })
   },
 
   async logToDb(event) {
@@ -103,31 +106,37 @@ module.exports = {
     const loadedPlayer = await this.player({ game, id, tag })
     if (!loadedPlayer) return
     if (loadedPlayer.disambiguation) return loadedPlayer
-    const peers = await db.players.peers(loadedPlayer)
-    const playerPoints = await points.get(loadedPlayer)
     const collatedPlayerData = collatePointsIntoPlayerData(
-      loadedPlayer,
-      playerPoints
+      loadedPlayer
     )
-    return { player: collatedPlayerData, points: playerPoints, peers }
+    return collatedPlayerData
   },
 
   async moreEventsForPlayer({ game, id, tag }) {
     if (!game || (!id && !tag)) return
-    const loadedPlayer = await db.players.get({
-      game,
-      id,
-      tag,
-    })
+    const loadedPlayer = await this.player({ game, id, tag })
+    if (!loadedPlayer) return
     if (
       !loadedPlayer ||
       !loadedPlayer.participatedInEvents ||
-      !loadedPlayer.participatedInEvents.length > 0
+      !loadedPlayer.participatedInEvents.length
     ) {
       logError('no player found for', game, id, tag)
       return []
     }
+    if (loadedPlayer.disambiguation) {
+      logError(
+        'disambiguation required to get more events for',
+        game,
+        id,
+        tag
+      )
+      return []
+    }
 
+    db.setPlayerActive(loadedPlayer)
+
+    // todo check all services
     const randomEvent =
       loadedPlayer.participatedInEvents[
         Math.floor(
@@ -144,15 +153,15 @@ module.exports = {
   },
 
   async combineTag({ game, tag, id }) {
-    return await db.players.combine({ game, tag, id })
+    return await db.combinePlayers({ game, tag, id })
   },
 }
 
-function collatePointsIntoPlayerData(player, allPoints) {
+function collatePointsIntoPlayerData(player) {
   const collatedEvents = player.participatedInEvents.map(event => {
     return {
       ...event,
-      points: (allPoints || []).filter(
+      points: (player.points || []).filter(
         point =>
           point.eventSlug === event.slug &&
           point.tournamentSlug === event.tournamentSlug

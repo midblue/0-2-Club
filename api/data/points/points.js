@@ -1,25 +1,46 @@
-const cachedPoints = {}
-const db = require('../db/db.js')
-
 module.exports = {
-  async get(player) {
-    const points = []
+  async get(player, allPlayers, onlyTouchEventId) {
+    let points = []
 
     const chronologicalEvents = player.participatedInEvents.sort(
       (a, b) => a.date - b.date
     )
 
-    points.push(...(await eventPoints(chronologicalEvents, player)))
+    points.push(
+      ...(await eventPoints(
+        chronologicalEvents,
+        player,
+        allPlayers,
+        onlyTouchEventId
+      ))
+    )
 
     return points
   },
 }
 
-async function eventPoints(events, player) {
+async function eventPoints(
+  events,
+  player,
+  allPlayers,
+  onlyTouchEventId
+) {
   let runningPlacingAverage
   let lastEventDate
   return await events.reduce(
     async (collectedPoints, event, index) => {
+      if (onlyTouchEventId && event.id !== onlyTouchEventId) {
+        // const pointsToReuse = player.points.filter(
+        //   point =>
+        //     point.eventSlug === event.slug &&
+        //     point.tournamentSlug === event.tournamentSlug
+        // )
+        // console.log(
+        //   `reusing ${pointsToReuse.length} point objects for ${event.slug} ${event.tournamentSlug} for player ${player.tag}`
+        // )
+        return []
+      }
+
       const points = []
       const p = makePointElementGenerator(points, event)
 
@@ -184,7 +205,8 @@ async function eventPoints(events, player) {
         event.matchesWithUser,
         event,
         events,
-        player
+        player,
+        allPlayers
       )
       points.push(...mps)
 
@@ -194,7 +216,13 @@ async function eventPoints(events, player) {
   )
 }
 
-async function matchPoints(matches, event, events, player) {
+async function matchPoints(
+  matches,
+  event,
+  events,
+  player,
+  allPlayers
+) {
   const chronologicalMatches = matches.sort((a, b) => a.date - b.date)
   let winStreak = 0
 
@@ -203,10 +231,10 @@ async function matchPoints(matches, event, events, player) {
       const points = []
       const p = makePointElementGenerator(points, event, match.date)
 
-      const didWin = match.winner.tag === player.tag
-      let wonGames = match[didWin ? 'winner' : 'loser'].score
+      const didWin = match.winnerTag === player.tag
+      let wonGames = match[didWin ? 'winnerScore' : 'loserScore']
       if (!wonGames || wonGames < 0) wonGames = 0
-      let lostGames = match[didWin ? 'loser' : 'winner'].score
+      let lostGames = match[didWin ? 'loserScore' : 'winnerScore']
       if (!lostGames || lostGames < 0) lostGames = 0
 
       if (didWin && lostGames > 0)
@@ -214,7 +242,7 @@ async function matchPoints(matches, event, events, player) {
           category: `Progression`,
           title: `Clinched a Close Set`,
           context: `${wonGames}-${lostGames} vs.`,
-          opponent: { tag: match.loser.tag, id: match.loser.id },
+          opponent: { tag: match.loserTag, id: match.loserId },
           value: 4,
         })
       else if (didWin)
@@ -222,7 +250,7 @@ async function matchPoints(matches, event, events, player) {
           category: `Progression`,
           title: `Won a Set`,
           context: `vs.`,
-          opponent: { tag: match.loser.tag, id: match.loser.id },
+          opponent: { tag: match.loserTag, id: match.loserId },
           value: 4,
         })
       else if (wonGames > 0)
@@ -230,14 +258,14 @@ async function matchPoints(matches, event, events, player) {
           category: `Progression`,
           title: `Played a Close Set`,
           context: `${wonGames}-${lostGames} vs.`,
-          opponent: { tag: match.winner.tag, id: match.winner.id },
+          opponent: { tag: match.winnerTag, id: match.winnerId },
           value: 3,
         })
       else
         p({
           title: `Played a Set`,
           context: `vs.`,
-          opponent: { tag: match.winner.tag, id: match.winner.id },
+          opponent: { tag: match.winnerTag, id: match.winnerId },
           value: 2,
         })
       // todo losers run
@@ -251,13 +279,9 @@ async function matchPoints(matches, event, events, player) {
           value: winStreak,
         })
 
-      const opponentId = didWin ? match.loser.id : match.winner.id
-      const opponentTag = didWin ? match.loser.tag : match.winner.tag
-      const opponentData = await db.players.get({
-        game: player.game,
-        id: opponentId,
-      })
-      // todo allow for finding in passed player data
+      const opponentId = didWin ? match.loserId : match.winnerId
+      const opponentTag = didWin ? match.loserTag : match.winnerTag
+      const opponentData = allPlayers.find(p => p.id === opponentId)
       if (!opponentData) return [...(await pointsArray), ...points]
       const opponentRatio = getPlacingRatio(opponentData)
       if (
@@ -301,8 +325,8 @@ async function matchPoints(matches, event, events, player) {
           ...matchesInCommon,
           ...matchesWithUser.filter(
             m =>
-              m.winner.tag === opponentTag ||
-              m.loser.tag === opponentTag
+              m.winnerTag === opponentTag ||
+              m.loserTag === opponentTag
           ),
         ],
         []
@@ -321,7 +345,7 @@ async function matchPoints(matches, event, events, player) {
       const winPercentUpToAndIncludingEvent =
         pastMatches.reduce(
           (wonCount, m) =>
-            wonCount + (m.winner.tag === player.tag ? 1 : 0),
+            wonCount + (m.winnerTag === player.tag ? 1 : 0),
           0
         ) / pastMatches.length
 
@@ -364,17 +388,19 @@ function makePointElementGenerator(
     opponent,
     value,
     date = useDate || event.date,
-  }) =>
-    pointsAccumulator.push({
+  }) => {
+    const newPoint = {
       category,
       title,
       context,
-      opponent,
       value,
       date,
       eventSlug: event.slug,
       eventName: event.name,
       tournamentSlug: event.tournamentSlug,
       tournamentName: event.tournamentName,
-    })
+    }
+    if (opponent) newPoint.opponent = opponent
+    pointsAccumulator.push(newPoint)
+  }
 }

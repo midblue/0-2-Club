@@ -1,19 +1,16 @@
-// const $$ = require('./selectorOnPage')
-
 const axios = require('axios')
 
 const { parseParticipantTag } = require('../../../common/f').default
 
+const silent = () => {}
 const logger = require('../scripts/log')
 const log = logger('smashgg', 'white')
-const low = logger('smashgg', 'gray')
+const low = silent //logger('smashgg', 'gray')
 const logAdd = logger('smashgg', 'green')
 const logError = logger('smashgg', 'yellow')
 
 const rateLimiter = require('../scripts/rateLimiter')
 const limiter = new rateLimiter(12, 10000)
-
-const db = require('../db/db.js')
 
 const currentlyLoadingNewEvents = []
 
@@ -74,8 +71,12 @@ module.exports = {
         delete loser.entrantId
         return {
           date: s.completedAt,
-          winner,
-          loser,
+          winnerId: winner.id,
+          loserId: loser.id,
+          winnerTag: winner.tag,
+          loserTag: loser.tag,
+          winnerScore: winner.score,
+          loserScore: loser.score,
         }
       })
       .filter(s => s)
@@ -103,12 +104,9 @@ module.exports = {
       game: eventData.videogame.name,
       date: eventData.startAt,
       service: 'smashgg',
-      tournament: {
-        id: eventData.tournament.id,
-        slug: tournamentSlug,
-        name: eventData.tournament.name,
-        ownerId: eventData.tournament.ownerId,
-      },
+      tournamentSlug,
+      tournamentName: eventData.tournament.name,
+      ownerId: eventData.tournament.ownerId,
       participants,
       sets,
     }
@@ -132,23 +130,16 @@ module.exports = {
           ? existingEvents.find(
               existingEvent =>
                 existingEvent.tournamentSlug === tournamentSlug &&
-                existingEvent.slug === slug &&
+                existingEvent.slug === eventSlug &&
                 existingEvent.service === 'smashgg'
             )
-          : await db.events.get({
-              service: 'smashgg',
-              tournamentSlug,
-              slug: eventSlug,
-            })
+          : false
+        // todo get list of all known events before doing this for client-initiated "more" call
         if (existsInDb) return resolve(false)
 
         return resolve(true)
       })
     }
-
-    const playerEventsToCheck = player.participatedInEvents.filter(
-      event => event.service === 'smashgg'
-    )
 
     // check recent sets for that player via api
     if (player.id) {
@@ -216,14 +207,14 @@ module.exports = {
         }, [])
         .filter(isSingles)
         .filter(isNotAlreadyLoading)
-      if (newPlayerSetEvents.length === 0)
-        low('no new events found via api for player', player.tag)
-      else
+      if (newPlayerSetEvents.length > 0)
         log(
           newPlayerSetEvents.length,
           'additional events found via api for player',
           player.tag
         )
+      else low('no new events found via api for player', player.tag)
+
       if (newPlayerSetEvents.length > 0)
         logError('Should recheck, may be new owners.')
       //todo that
@@ -233,7 +224,14 @@ module.exports = {
     // then check other events from the same organizer as all events concerning user
     const ownerIds =
       ownerIdsToCheck ||
-      (await parseOwnersFromEvents(playerEventsToCheck))
+      Array.from(
+        new Set(
+          player.participatedInEvents
+            .filter(event => event.service === 'smashgg')
+            .map(e => e.ownerId)
+        )
+      )
+
     // log(ownerIds.length, 'owners found')
     const eventsFromOwnerIds = await Promise.all(
       ownerIds.map(async ownerId => {
@@ -282,14 +280,14 @@ module.exports = {
           .filter(e => e)
           .filter(isSingles)
           .filter(isNotAlreadyLoading)
-        if (newEvents.length === 0)
-          low('no new events found via owner', ownerId)
-        else
+        if (newEvents.length > 0)
           log(
             newEvents.length,
             'additional events found via owner',
             ownerId
           )
+        else low('no new events found via owner', ownerId)
+
         return newEvents
       })
     )
@@ -481,22 +479,6 @@ function isSingles(event) {
 function isNotAlreadyLoading(event) {
   return !currentlyLoadingNewEvents.find(
     e => e === event.tournamentSlug + (event.slug || event.eventSlug)
-  )
-}
-
-async function parseOwnersFromEvents(events) {
-  return Array.from(
-    new Set(
-      await Promise.all(
-        events.map(async ({ id }) => {
-          const eventData = await db.events.get({
-            service: 'smashgg',
-            id,
-          })
-          return eventData.tournament.ownerId
-        })
-      )
-    )
   )
 }
 

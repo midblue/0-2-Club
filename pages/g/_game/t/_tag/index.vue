@@ -1,5 +1,5 @@
 <template>
-  <PlayerView :initialPlayer="player" :initialPoints="points" :initialPeers="peers" />
+  <PlayerView :initialPlayer="player" />
 </template>
 
 <script>
@@ -13,7 +13,7 @@ export default {
       .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)
       .then(res => {
         if (res.data && !res.data.err && !res.data.disambiguation)
-          return res.data
+          return { player: res.data }
         else if (res.data.disambiguation)
           redirect(`/g/${params.game}/t/${params.tag}/disambiguation`)
         else
@@ -21,9 +21,9 @@ export default {
             player: {
               game: params.game,
               tag: params.tag,
+              points: [],
+              peers: [],
             },
-            points: [],
-            peers: [],
           }
       })
   },

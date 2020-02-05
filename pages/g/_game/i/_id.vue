@@ -9,23 +9,48 @@ import PlayerView from '~/components/PlayerView'
 export default {
   scrollToTop: true,
   asyncData({ params, error, redirect }) {
-    return axios.get(`/api/points/${params.game}/id/${params.id}`).then(res => {
-      if (res.data && !res.data.err && !res.data.disambiguation)
-        return { player: res.data }
-      else
-        return {
-          player: {
-            game: params.game,
-            peers: [],
-            points: [],
-            id: params.id,
-          },
-        }
-    })
+    return axios
+      .get(`/api/points/${params.game}/id/${params.id}`)
+      .then(res => {
+        if (res.data && !res.data.err && !res.data.disambiguation)
+          return { player: res.data }
+        else
+          return {
+            player: {
+              game: params.game,
+              peers: [],
+              points: [],
+              id: params.id,
+            },
+          }
+      })
   },
   components: { PlayerView },
   head() {
-    return {}
+    return {
+      title: this.player.tag,
+      meta: [
+        {
+          property: 'og:title',
+          hid: `og:title`,
+          content: `${
+            this.player.tag ? this.player.tag + ' | ' : ''
+          }The 0-2 Club`,
+        },
+        {
+          property: 'twitter:title',
+          hid: `twitter:title`,
+          content: `${
+            this.player.tag ? this.player.tag + ' | ' : ''
+          }The 0-2 Club`,
+        },
+        {
+          hid: `og:url`,
+          property: 'og:url',
+          content: `https://www.0-2.club/${this.player.game}/i/${this.player.id}/`,
+        },
+      ],
+    }
   },
   data() {
     return {}

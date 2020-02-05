@@ -45,8 +45,9 @@
                 {{
                   point.context.substring(
                     0,
-                    point.context.indexOf('%O') ||
-                      point.context.length
+                    point.context.indexOf('%O') > -1
+                      ? point.context.indexOf('%O')
+                      : point.context.length
                   )
                 }}
                 <nuxt-link
@@ -56,8 +57,9 @@
                 >
                 {{
                   point.context.substring(
-                    point.context.indexOf('%O') + 2 ||
-                      point.context.length
+                    point.context.indexOf('%O') > -1
+                      ? point.context.indexOf('%O') + 2
+                      : point.context.length
                   )
                 }}
               </span>

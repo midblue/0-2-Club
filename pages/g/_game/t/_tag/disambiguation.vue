@@ -57,7 +57,25 @@ export default {
   },
   components: {},
   head() {
-    return {}
+    return {
+      meta: [
+        {
+          property: 'og:title',
+          hid: `og:title`,
+          content: `Disambiguation: ${this.player.tag} | The 0-2 Club`,
+        },
+        {
+          property: 'twitter:title',
+          hid: `twitter:title`,
+          content: `Disambiguation: ${this.player.tag} | The 0-2 Club`,
+        },
+        {
+          hid: `og:url`,
+          property: 'og:url',
+          content: `https://www.0-2.club/${this.player.game}/t/${this.player.tag}/disambiguation/`,
+        },
+      ],
+    }
   },
   data() {
     return {}

@@ -9,9 +9,8 @@
       </div>
       <h3>
         Track your progress, keep improving, and stay motivated —
-        <br />An
-        <span class="highlight">esports fitbit</span> for anyone getting started
-        in competitive gaming.
+        <br />An <span class="highlight">esports fitbit</span> for
+        anyone getting started in competitive gaming.
       </h3>
 
       <PanelButton>
@@ -24,7 +23,11 @@
 
           <!-- Game -->
           <div class="game">
-            <ModelSelect :options="gameOptions" v-model="inputGame" placeholder="Your game" />
+            <ModelSelect
+              :options="gameOptions"
+              v-model="inputGame"
+              placeholder="Your game"
+            />
           </div>
         </div>
         <template #button>
@@ -38,9 +41,16 @@
       <br />
       <div>
         <b>See it in action:</b>
-        <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/H0P">H0P</nuxt-link>・
-        <nuxt-link to="/g/Super%20Smash%20Bros.%20Ultimate/t/Zaheer">Zaheer</nuxt-link>・
-        <nuxt-link to="/g/Super%20Smash%20Bros.%20Ultimate/t/ChunkyKong">ChunkyKong</nuxt-link>
+        <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/H0P"
+          >H0P</nuxt-link
+        >・
+        <nuxt-link to="/g/Super%20Smash%20Bros.%20Ultimate/t/Zaheer"
+          >Zaheer</nuxt-link
+        >・
+        <nuxt-link
+          to="/g/Super%20Smash%20Bros.%20Ultimate/t/ChunkyKong"
+          >ChunkyKong</nuxt-link
+        >
       </div>
 
       <br />
@@ -51,21 +61,24 @@
 
       <div class="intro">
         <div class="text">
-          <h3>See Your Growth</h3>If you feel like you've been leveling up this year, now you can prove
-          it. Your progress is charted over time, and you can compare your
-          growth with your peers.
+          <h3>See Your Growth</h3>
+          If you feel like you've been leveling up this year, now you
+          can prove it. Your progress is charted over time, and you
+          can compare your growth with your peers.
         </div>
 
         <div class="text">
-          <h3>Points for All</h3>In training, victory isn't as important as growth and consistency.
-          Lose a tight set to a strong player? That's worth some points. Support
-          your local scene? Points city.
+          <h3>Points for All</h3>
+          In training, victory isn't as important as growth and
+          consistency. Lose a tight set to a strong player? That's
+          worth some points. Support your local scene? Points city.
         </div>
 
         <div class="text">
-          <h3>Easy Data Handling</h3>Just link us one tournament with you in it, and we'll automatically
-          snag more. Currently supports all 1v1 tournaments for any game hosted
-          through smash.gg.
+          <h3>Easy Data Handling</h3>
+          Just link us one tournament with you in it, and we'll
+          automatically snag more. Currently supports all 1v1
+          tournaments for any game hosted through smash.gg.
         </div>
       </div>
 
@@ -77,8 +90,10 @@
           <summary>
             <h4>Patch Notes</h4>
           </summary>
-          <div v-for="patch, index in patchNotes" :key="index">
-            <div class="sub">{{ new Date(patch.date).toLocaleDateString() }}</div>
+          <div v-for="(patch, index) in patchNotes" :key="index">
+            <div class="sub">
+              {{ new Date(patch.date).toLocaleDateString() }}
+            </div>
             <div>{{ patch.content }}</div>
           </div>
         </details>
@@ -102,7 +117,23 @@ export default {
   },
   head() {
     return {
-      title: 'Users',
+      meta: [
+        {
+          property: 'og:title',
+          hid: `og:title`,
+          content: 'Home | The 0-2 Club',
+        },
+        {
+          property: 'twitter:title',
+          hid: `twitter:title`,
+          content: 'Home | The 0-2 Club',
+        },
+        {
+          hid: `og:url`,
+          property: 'og:url',
+          content: `https://www.0-2.club/`,
+        },
+      ],
     }
   },
   components: { PanelButton, ModelSelect },
@@ -124,11 +155,12 @@ export default {
     go() {
       const tag = parseParticipantTag(this.inputTag)
       if (!tag) return this.notify('You need to enter a tag!')
-      if (!this.inputGame.value) return this.notify('You need to pick a game!')
+      if (!this.inputGame.value)
+        return this.notify('You need to pick a game!')
       return this.$router.push(
-        `/g/${encodeURIComponent(this.inputGame.value)}/t/${encodeURIComponent(
-          tag
-        )}`
+        `/g/${encodeURIComponent(
+          this.inputGame.value
+        )}/t/${encodeURIComponent(tag)}`
       )
     },
     notify(message) {

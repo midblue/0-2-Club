@@ -10,7 +10,11 @@ export default {
   scrollToTop: true,
   asyncData({ params, error, redirect }) {
     return axios
-      .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)
+      .get(
+        `/api/points/${params.game}/tag/${encodeURIComponent(
+          params.tag
+        )}/`
+      )
       .then(res => {
         if (res.data && !res.data.err && !res.data.disambiguation)
           return { player: res.data }
@@ -29,7 +33,26 @@ export default {
   },
   components: { PlayerView },
   head() {
-    return {}
+    return {
+      title: this.player.tag,
+      meta: [
+        {
+          property: 'og:title',
+          hid: `og:title`,
+          content: `${this.player.tag} | The 0-2 Club`,
+        },
+        {
+          property: 'twitter:title',
+          hid: `twitter:title`,
+          content: `${this.player.tag} | The 0-2 Club`,
+        },
+        {
+          hid: `og:url`,
+          property: 'og:url',
+          content: `https://www.0-2.club/${this.player.game}/t/${this.player.tag}/`,
+        },
+      ],
+    }
   },
   data() {
     return {}

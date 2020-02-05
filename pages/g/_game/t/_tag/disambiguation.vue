@@ -68,12 +68,10 @@ export default {
   beforeDestroy() {},
   methods: {
     combineAll() {
-      if (
-        !confirm(
-          'Wait, really? This will irreparably combine all of the players shown here into one single tag. Is that really what you want?'
-        )
+      const really = confirm(
+        'Wait, really? This will irreparably combine all of the players shown here into one single tag. Is that really what you want?'
       )
-        return
+      if (!really) return
       const idWithMostEvents = this.disambiguation.reduce(
         (mostEvents, player) => {
           if (player.participatedInEvents.length > mostEvents.total)

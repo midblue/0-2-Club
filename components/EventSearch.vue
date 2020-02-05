@@ -85,6 +85,8 @@ export default {
         )
     },
     getMore() {
+      if (this.hasLoadedGetMore) return
+      console.log('MORE')
       this.$emit('loading')
       this.$store.commit('setIsLoading', true)
       this.hasLoadedGetMore = true

@@ -216,7 +216,8 @@ async function matchPoints(
   allPlayers
 ) {
   const chronologicalMatches = matches.sort((a, b) => a.date - b.date)
-  let winStreak = 0
+  let winStreak = 0,
+    inLosers = false
 
   return await chronologicalMatches.reduce(
     async (pointsArray, match) => {
@@ -233,42 +234,62 @@ async function matchPoints(
         p({
           category: `Progression`,
           title: `Clinched a Close Set`,
-          context: `${wonGames}-${lostGames} vs.`,
-          opponent: { tag: match.loserTag, id: match.loserId },
+          context: `${wonGames}-${lostGames} vs. %O`,
+          opponent: {
+            tag: match.loserTag,
+            id: match.loserId,
+          },
           value: 4,
         })
       else if (didWin)
         p({
           category: `Progression`,
           title: `Won a Set`,
-          context: `vs.`,
-          opponent: { tag: match.loserTag, id: match.loserId },
+          context: `vs. %O`,
+          opponent: {
+            tag: match.loserTag,
+            id: match.loserId,
+          },
           value: 4,
         })
       else if (wonGames > 0)
         p({
           category: `Progression`,
           title: `Played a Close Set`,
-          context: `${wonGames}-${lostGames} vs.`,
-          opponent: { tag: match.winnerTag, id: match.winnerId },
+          context: `${wonGames}-${lostGames} vs. %O`,
+          opponent: {
+            tag: match.winnerTag,
+            id: match.winnerId,
+          },
           value: 3,
         })
       else
         p({
           title: `Played a Set`,
-          context: `vs.`,
-          opponent: { tag: match.winnerTag, id: match.winnerId },
+          context: `vs. %O`,
+          opponent: {
+            tag: match.winnerTag,
+            id: match.winnerId,
+          },
           value: 2,
         })
       // todo losers run
-      // todo opponent was on fire this tournament
       if (didWin) winStreak++
-      else winStreak = 0
+      else {
+        winStreak = 0
+        inLosers = true
+      }
       if (winStreak > 2)
         p({
           title: `Hot Streak`,
           context: `${winStreak} wins in a row`,
           value: winStreak,
+        })
+      if (winStreak > 2 && inLosers)
+        p({
+          title: `Losers' Bracket Run`,
+          context: `${winStreak} wins in lower bracket`,
+          value: 2,
         })
 
       const opponentId = didWin ? match.loserId : match.winnerId
@@ -276,6 +297,7 @@ async function matchPoints(
       const opponentData = allPlayers.find(p => p.id === opponentId)
       if (!opponentData) return [...(await pointsArray), ...points]
       const opponentRatio = getPlacingRatio(opponentData)
+      // todo opponent was on fire this tournament
       if (
         opponentRatio < getPlacingRatio(player) - 0.15 &&
         opponentData.participatedInEvents.length > 2
@@ -330,7 +352,7 @@ async function matchPoints(
       if (pastMatches.length >= 10)
         p({
           title: `Old Rivals`,
-          context: `You played against ${opponentTag} ${pastMatches.length} times before`,
+          context: `You've played against ${opponentTag} ${pastMatches.length} times before`,
           value: 2,
         })
 

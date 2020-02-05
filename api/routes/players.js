@@ -106,6 +106,7 @@ router.get('/more/:game/:id/', async (req, res, next) => {
         })
     )
   )
+  // todo returning too EARLY!!!!!!
   res.json(newEvents)
 })
 

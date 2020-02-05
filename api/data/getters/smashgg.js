@@ -318,13 +318,13 @@ module.exports = {
       foundEvents.push(...eventList)
     )
 
-    if (foundEvents.length > 0)
-      logAdd(
-        'found additional events:\n                        ',
-        foundEvents
-          .map(e => e.tournamentSlug + ' - ' + e.eventSlug)
-          .join('\n                         ')
-      )
+    // if (foundEvents.length > 0)
+    //   logAdd(
+    //     'found additional events:\n                        ',
+    //     foundEvents
+    //       .map(e => e.tournamentSlug + ' - ' + e.eventSlug)
+    //       .join('\n                         ')
+    //   )
     return foundEvents
   },
 }

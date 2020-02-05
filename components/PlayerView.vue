@@ -34,11 +34,10 @@
       class="chart"
     />
 
-    <h2
+    <!-- <h2
       v-if="awards.length > 0"
       class="awardslabel"
-    >{{awards.length}} Award{{awards.length === 1 ? '' : 's' }}</h2>
-    <Awards :awards="awards" class="awards" />
+    >{{awards.length}} Award{{awards.length === 1 ? '' : 's' }}</h2>  <Awards :awards="awards" class="awards" /> -->
 
     <div class="eventslabel">
       <h2
@@ -46,8 +45,7 @@
       >{{displayEvents.length}} Event{{displayEvents.length === 1 ? '' : 's' }}</h2>
 
       <EventSearch
-        :game="player.game"
-        :playerId="player.id"
+        :player="player"
         @events="addedEvents"
         @loading="checkForUpdates = true"
         class="eventsearch"
@@ -205,7 +203,7 @@ export default {
 }
 
 .chart {
-  margin-bottom: 5em;
+  margin-bottom: 2em;
 }
 
 .panel {
@@ -219,7 +217,7 @@ export default {
 }
 
 .eventslabel {
-  margin: 6em 0 0 0;
+  margin: 2em 0 0 0;
   // display: flex;
   // align-items: center;
 

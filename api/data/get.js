@@ -31,12 +31,12 @@ module.exports = {
           game,
         })
         if (loadedEntry) {
-          // low(
-          //   'found existing event in db:',
-          //   loadedEntry.name,
-          //   '-',
-          //   loadedEntry.tournamentName
-          // )
+          low(
+            'found existing event in db:',
+            loadedEntry.name,
+            '-',
+            loadedEntry.tournamentName
+          )
           return resolve(loadedEntry)
         }
 
@@ -71,12 +71,12 @@ module.exports = {
       }
       if (loadedEntry && !loadedEntry.err) {
         await dbInterface.addEventWithNoContext(loadedEntry)
-        // log(
-        //   `returning newly loaded event from ${loadedEntry.service}:`,
-        //   loadedEntry.name,
-        //   '-',
-        //   loadedEntry.tournamentName
-        // )
+        log(
+          `returning newly loaded event from ${loadedEntry.service}:`,
+          loadedEntry.name,
+          '-',
+          loadedEntry.tournamentName
+        )
       }
       resolve(loadedEntry)
     })

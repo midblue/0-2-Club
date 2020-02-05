@@ -37,7 +37,11 @@ import axios from '~/plugins/axios'
 export default {
   asyncData({ params, error, redirect }) {
     return axios
-      .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)
+      .get(
+        `/api/points/${params.game}/tag/${encodeURIComponent(
+          params.tag
+        )}/`
+      )
       .then(res => {
         if (!res.data.disambiguation)
           return redirect(`/g/${params.game}/t/${params.tag}`)
@@ -64,10 +68,19 @@ export default {
   beforeDestroy() {},
   methods: {
     combineAll() {
+      if (
+        !confirm(
+          'Wait, really? This will irreparably combine all of the players shown here into one single tag. Is that really what you want?'
+        )
+      )
+        return
       const idWithMostEvents = this.disambiguation.reduce(
         (mostEvents, player) => {
           if (player.participatedInEvents.length > mostEvents.total)
-            return { id: player.id, total: player.participatedInEvents.length }
+            return {
+              id: player.id,
+              total: player.participatedInEvents.length,
+            }
           return mostEvents
         },
         { total: 0 }
@@ -80,7 +93,9 @@ export default {
         )
         .then(res => {
           if (res.data && !res.data.err) {
-            this.$router.push(`/g/${this.player.game}/t/${this.player.tag}`)
+            this.$router.push(
+              `/g/${this.player.game}/t/${this.player.tag}`
+            )
           } else console.log(err)
         })
     },

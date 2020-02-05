@@ -24,7 +24,7 @@ let games = []
 // daily()
 
 setTimeout(async () => {
-  console.log(await db.getStats())
+  // console.log(await db.getStats())
   // await require('./get').event({
   //   service: 'smashgg',
   //   slug: 'dx-melee-singles-1-vs-1',
@@ -47,6 +47,8 @@ function daily() {
     games = await db.getGames()
 
     for (let game of games) {
+      // todo if there are players that need regenerating, might want to have a list in the DB for that (and code here to regen that player)
+
       const allPlayers = await db.getPlayers(game)
       const activeCutoff = Date.now() / 1000 - 14 * aDayInSeconds
       const activePlayers = allPlayers.filter(
@@ -151,6 +153,7 @@ function daily() {
 
       resolve()
     }
+    logInfo(`daily full update complete!`)
   })
 }
 

@@ -68,7 +68,7 @@ router.get('/points/:game/id/:id', async (req, res, next) => {
 router.get(
   '/event/:service/:game/:tournamentSlug/:eventSlug',
   async (req, res, next) => {
-    log('manually added event')
+    log('event by url')
     const service = decodeURIComponent(req.params.service)
     const game = decodeURIComponent(req.params.game)
     const tournamentSlug = decodeURIComponent(

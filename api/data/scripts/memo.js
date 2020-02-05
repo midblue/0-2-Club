@@ -21,5 +21,8 @@ module.exports = function(limit) {
       if (found) delete found.memoAddedTime
       return found
     },
+    all: function() {
+      return Object.values(this.memos)
+    },
   }
 }

@@ -1,5 +1,9 @@
 <template>
-  <div class="progresschart drop" :class="{ready: chartIsReady}" v-if="pointsToUse.length">
+  <div
+    class="progresschart drop"
+    :class="{ready: chartIsReady, padb: !peers.length}"
+    v-if="pointsToUse.length > 0"
+  >
     <div class="chartholder">
       <line-chart
         class="chart"
@@ -14,17 +18,16 @@
         <b>Compare to Peers</b>
       </div>
       <div>
-        <span v-for="peer in peers">
-          <span
-            class="comparetotag"
-            :class="{ active: rivalId === peer.id }"
-            @click="
+        <span
+          v-for="peer in peers"
+          class="comparetotag"
+          :class="{ active: rivalId === peer.id }"
+          @click="
             rivalSearchTag = null
             rivalId = peer.id
           "
-          >{{ peer.tag }}</span>
-          &nbsp;
-        </span>
+        >{{ peer.tag }}</span>
+
         <form class="search" @submit.prevent>
           <input v-model="inputRivalSearchTag" placeholder="Search for a user..." />
           <button
@@ -36,7 +39,7 @@
         </form>
       </div>
       <div class="clear">
-        <button class="low" v-if="rivalId" @click="rivalId = null">Clear</button>
+        <button class="low" v-if="rivalTag" @click="resetRival">Clear</button>
       </div>
     </div>
   </div>
@@ -57,8 +60,6 @@ export default {
   components: { LineChart },
   data() {
     return {
-      checkForUpdates: false,
-      checkForUpdatesInterval: null,
       rivalId: null,
       inputRivalSearchTag: null,
       rivalIdFromSearchTag: null,
@@ -127,21 +128,11 @@ export default {
     points() {
       this.fillData()
     },
-    rivalId(newId) {
+    rivalId(newId, oldId) {
       if (newId) {
-        this.checkForUpdates = true
-      } else {
-        this.rivalTag = null
-        this.rivalPoints = null
-        this.fillData()
-      }
-    },
-
-    checkForUpdates(willCheck, wasChecking) {
-      if (willCheck !== wasChecking && willCheck) {
-        this.startChecking()
-      } else {
-        clearInterval(this.checkForUpdatesInterval)
+        this.getRivalPoints()
+      } else if (newId !== oldId) {
+        this.resetRival()
       }
     },
   },
@@ -150,9 +141,7 @@ export default {
     this.fillData()
   },
 
-  beforeDestroy() {
-    clearInterval(this.checkForUpdatesInterval)
-  },
+  beforeDestroy() {},
 
   methods: {
     fillData() {
@@ -193,32 +182,20 @@ export default {
       this.datacollection = newDatacollection
     },
 
-    startChecking() {
-      clearInterval(this.checkForUpdatesInterval)
-      this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 1500)
+    getRivalPoints() {
       this.$store.commit('setIsLoading', true)
-      const moreUrl = `/api/more/${this.player.game}/${this.rivalId ||
-        this.rivalIdFromSearchTag}/`
-      axios.get(moreUrl).then(res => {
+      const pointsURL = `/api/points/${
+        this.player.game
+      }/id/${encodeURIComponent(this.rivalId)}/`
+      axios.get(pointsURL).then(res => {
+        if (res.data && !res.data.err) {
+          this.rivalTag = res.data.tag
+          this.$nextTick(() => {
+            this.rivalPoints = res.data.points
+            this.fillData()
+          })
+        }
         this.$store.commit('setIsLoading', false)
-        this.checkForUpdates = false
-        this.reCheckPoints()
-      })
-    },
-
-    reCheckPoints() {
-      return new Promise(async resolve => {
-        const url = `/api/points/${this.player.game}/id/${this.rivalId ||
-          this.rivalIdFromSearchTag}/`
-        await axios.get(url).then(res => {
-          if (res.data && !res.data.err) {
-            this.rivalTag = res.data.player.tag
-            this.$nextTick(() => {
-              this.rivalPoints = res.data.points
-              this.fillData()
-            })
-          }
-        })
       })
     },
 
@@ -229,15 +206,13 @@ export default {
           'notifications/notify',
           `Input a player tag to compare to.`
         )
-      const url = `/api/player/${this.player.game}/${encodeURIComponent(
+      const url = `/api/points/${this.player.game}/tag/${encodeURIComponent(
         this.inputRivalSearchTag
       )}/`
       axios.get(url).then(res => {
         this.$store.commit('setIsLoading', false)
         if (!res.data || res.data.err) {
-          this.checkForUpdates = false
-          this.rivalTag = null
-          this.rivalPoints = null
+          this.rivalId = null
           this.$store.dispatch(
             'notifications/notify',
             `No user found by the tag ${this.inputRivalSearchTag}.`
@@ -245,11 +220,19 @@ export default {
           this.fillData()
           return
         }
-        this.rivalId = res.data.disambiguation
-          ? res.data.disambiguation[0].id
-          : res.data.id
-        this.checkForUpdates = true
+        if (res.data.disambiguation)
+          return (this.rivalId = res.data.disambiguation[0].id)
+        this.rivalTag = res.data.tag
+        this.rivalPoints = res.data.points
+        this.fillData()
       })
+    },
+
+    resetRival() {
+      this.rivalTag = null
+      this.rivalId = null
+      this.rivalPoints = null
+      this.fillData()
     },
   },
 }
@@ -284,6 +267,10 @@ function generateData(points) {
       opacity: 1;
     }
   }
+
+  &.padb {
+    padding-bottom: 30px;
+  }
 }
 
 .chartholder {
@@ -305,13 +292,14 @@ function generateData(points) {
   line-height: 1.6;
   background: var(--grayl);
 
+  & > *:not(:last-child) {
+    margin-right: 10px;
+  }
   & > *:first-child {
     position: relative;
     width: 70px;
     flex-shrink: 0;
-  }
-  & > *:not(:last-child) {
-    margin-right: 30px;
+    margin-right: 20px;
   }
 
   .comparelabel {
@@ -333,11 +321,13 @@ function generateData(points) {
 .comparetotag {
   cursor: pointer;
   transition: all 0.2s;
-  padding: 4px 6px;
-  margin: -4px -6px;
+  padding: 2px 6px;
+  margin: 0 4px 4px 0;
+  background: var(--gray);
+  display: inline-block;
 
   &:hover {
-    background: #eee;
+    background: var(--grayd);
   }
 
   &.active {

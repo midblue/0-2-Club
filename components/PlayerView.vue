@@ -130,7 +130,7 @@ export default {
   watch: {
     checkForUpdates(willCheck, wasChecking) {
       if (willCheck !== wasChecking && willCheck) {
-        this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 5000)
+        this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 8000)
       } else {
         clearInterval(this.checkForUpdatesInterval)
       }
@@ -158,11 +158,11 @@ export default {
                 `/g/${this.player.game}/t/${this.player.tag}/disambiguation`
               )
             }
-            for (let prop in res.data.player) {
-              this.$set(this.player, prop, res.data.player[prop])
+            for (let prop in res.data) {
+              this.$set(this.player, prop, res.data[prop])
             }
-            this.points = null
             if (res.data.peers) this.peers = res.data.peers
+            this.points = null
             this.$nextTick(() => (this.points = res.data.points))
           }
         })
@@ -220,17 +220,17 @@ export default {
 
 .eventslabel {
   margin: 6em 0 0 0;
-  display: flex;
-  align-items: center;
+  // display: flex;
+  // align-items: center;
 
   & > * {
     margin-top: 0;
     margin-bottom: 0;
   }
 
-  h2 {
-    margin-right: 0.5em;
-  }
+  // h2 {
+  // margin-right: 0.5em;
+  // }
 }
 .eventsearch {
   flex: 1;

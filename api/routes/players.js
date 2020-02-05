@@ -24,6 +24,7 @@ router.get('/players/:game', async (req, res, next) => {
   res.json(players)
 })
 
+// todo obsolete but one thing uses it i think
 /* GET player by game and tag. */
 router.get('/player/:game/:tag', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
@@ -42,7 +43,7 @@ router.get('/points/:game/tag/:tag', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const tag = decodeURIComponent(req.params.tag)
   log('player with points by tag:', tag)
-  const foundPoints = await get.points({ game, tag })
+  const foundPoints = await get.points({ game, tag, setActive: true })
   if (foundPoints) {
     res.json(foundPoints)
   } else {
@@ -55,7 +56,7 @@ router.get('/points/:game/id/:id', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const id = parseInt(decodeURIComponent(req.params.id))
   log('player with points by id:', id)
-  const foundPoints = await get.points({ game, id })
+  const foundPoints = await get.points({ game, id, setActive: true })
   if (foundPoints) {
     res.json(foundPoints)
   } else {
@@ -94,17 +95,16 @@ router.get('/more/:game/:id/', async (req, res, next) => {
     game,
     id,
   })
-  const newEvents = []
-  await Promise.all(
-    moreEventStubs.map(async stub => {
-      const eventData = await get.event({
-        service: stub.service,
-        tournamentSlug: stub.tournamentSlug,
-        slug: stub.eventSlug,
-        game,
-      })
-      newEvents.push(eventData)
-    })
+  const newEvents = await Promise.all(
+    moreEventStubs.map(
+      async stub =>
+        await get.event({
+          service: stub.service,
+          tournamentSlug: stub.tournamentSlug,
+          slug: stub.eventSlug,
+          game: stub.game,
+        })
+    )
   )
   res.json(newEvents)
 })

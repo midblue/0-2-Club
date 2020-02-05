@@ -91,7 +91,7 @@ export default {
 .stats {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   grid-gap: 0px;
 
   &:after {

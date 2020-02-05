@@ -9,13 +9,17 @@ const memo = require('./scripts/memo')
 const prep = require('./dbDataPrep')
 
 const admin = require('firebase-admin')
-
-let serviceAccount = require('../serviceAccountKey.json')
-
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: 'https://club-da74f.firebaseio.com',
+    credential: admin.credential.cert({
+      project_id: process.env.FIREBASE_PROJECT_ID,
+      private_key: process.env.FIREBASE_PRIVATE_KEY.replace(
+        /\\n/g,
+        '\n'
+      ),
+      client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    }),
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
   })
 }
 const db = admin.firestore()
@@ -55,23 +59,25 @@ module.exports = {
     if (!game || !id) return
     const gameRef = await getGameRef(game)
     if (!gameRef) return
-    return (
-      gameRef
-        .collection('players')
-        .where('id', '==', id)
-        // todo redirects are being ignored here, need to re-query
-        .get()
-        .then(snapshot => {
-          if (snapshot.docs.length === 0) {
-            // low(`player ${id} of ${game} not found in database`)
-            return
-          }
-          return snapshot.docs[0].data()
-        })
-        .catch(err => {
-          logError('Error getting player by id', err)
-        })
-    )
+    return gameRef
+      .collection('players')
+      .where('id', '==', id)
+      .get()
+      .then(async snapshot => {
+        if (snapshot.docs.length === 0) {
+          // low(`player ${id} of ${game} not found in database`)
+          return
+        }
+        if (snapshot.docs[0].redirect)
+          return await this.getPlayerById(
+            game,
+            snapshot.docs[0].redirect
+          )
+        return snapshot.docs[0].data()
+      })
+      .catch(err => {
+        logError('Error getting player by id', err)
+      })
   },
 
   async getPlayerByTag(game, tag) {
@@ -104,7 +110,9 @@ module.exports = {
       .collection('players')
       .get()
       .then(snapshot => {
-        return snapshot.docs.map(d => d.data())
+        return snapshot.docs
+          .map(d => d.data())
+          .filter(p => !p.redirect)
       })
       .catch(err => {
         logError('Error getting players', err)
@@ -115,6 +123,7 @@ module.exports = {
   async getEvents(game) {
     const gameRef = await getGameRef(game)
     if (!gameRef) return
+    // todo could use memoed games here to reduce calls slightly
     return gameRef
       .collection('events')
       .get()
@@ -147,15 +156,7 @@ module.exports = {
     return docRef
       .get()
       .then(snapshot => {
-        if (snapshot.docs.length === 0) {
-          // low(
-          //   `event ${id ||
-          //     slug +
-          //       ' @ ' +
-          //       tournamentSlug} on ${service} not found in database`
-          // )
-          return
-        }
+        if (snapshot.docs.length === 0) return
         memoizedEvents.set(
           service + (id || tournamentSlug + slug) + game,
           snapshot.docs[0].data()
@@ -170,10 +171,10 @@ module.exports = {
   async addPlayer(player) {
     const gameRef = await getGameRef(player.game)
     let playerRef = gameRef.collection('players').doc(`${player.id}`)
-    await playerRef.set(
-      { ...player, lastUpdated: parseInt(Date.now() / 1000) },
-      { merge: true }
-    )
+    await playerRef.set({
+      ...player,
+      lastUpdated: parseInt(Date.now() / 1000),
+    })
   },
 
   async updatePlayer(player) {

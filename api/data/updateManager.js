@@ -12,30 +12,32 @@ const logError = logger('updater', 'yellow')
 
 module.exports = {
   addEventWithNoContext,
+  combinePlayers,
 }
 
 const aDayInSeconds = 24 * 60 * 60
+const aDayInMilliseconds = aDayInSeconds * 1000
 let games = []
 
-// setInterval(daily, 24 * 60 * 60 * 1000)
+// setInterval(daily, aDayInMilliseconds)
 // setTimeout(daily, 5000)
 // daily()
 
 setTimeout(async () => {
-  // console.log(await db.getStats())
-  await require('./get').event({
-    service: 'smashgg',
-    slug: 'dx-melee-singles-1-vs-1',
-    tournamentSlug: 'battlegateway-29-1',
-    game: 'Super Smash Bros. Melee',
-  })
-  await require('./get').event({
-    service: 'smashgg',
-    slug: 'melee-singles-vs',
-    tournamentSlug: 'battlegateway-26',
-    game: 'Super Smash Bros. Melee',
-  })
-}, 5000)
+  console.log(await db.getStats())
+  // await require('./get').event({
+  //   service: 'smashgg',
+  //   slug: 'dx-melee-singles-1-vs-1',
+  //   tournamentSlug: 'battlegateway-29-1',
+  //   game: 'Super Smash Bros. Melee',
+  // })
+  // await require('./get').event({
+  //   service: 'smashgg',
+  //   slug: 'melee-singles-vs',
+  //   tournamentSlug: 'battlegateway-26',
+  //   game: 'Super Smash Bros. Melee',
+  // })
+}, 2000)
 // user 640241
 
 function daily() {
@@ -57,27 +59,35 @@ function daily() {
       logInfo(
         `${activePlayers.length} active and ${passivePlayers.length} passive players found in ${allEvents.length} events for game ${game}`
       )
-      db.setStat(`players ${game}`, allPlayers.length)
-      db.setStat(`events ${game}`, allEvents.length)
+      db.setStat(
+        `playerCounts.${encodeURIComponent(game).replace(
+          /\./g,
+          '+'
+        )}`,
+        allPlayers.length
+      )
+      db.setStat(
+        `eventCounts.${encodeURIComponent(game).replace(/\./g, '+')}`,
+        allEvents.length
+      )
 
       // get new event info for all active players
       const alreadyCheckedOwnerIds = []
-      const eventPromises = await Promise.all(
-        activePlayers.map(async player => {
-          const {
-            newOwnerIds,
-            newPlayers,
-          } = await findAndSaveNewEventsForPlayer(
-            player,
-            alreadyCheckedOwnerIds,
-            allEvents,
-            allPlayers
-          )
-          alreadyCheckedOwnerIds.push(newOwnerIds)
-          return newPlayers
-        })
-      )
-      const newUnsavedPlayers = [].concat.apply([], eventPromises)
+      const newUnsavedPlayers = []
+      for (let player of activePlayers) {
+        const {
+          newOwnerIds,
+          newPlayers,
+        } = await findAndSaveNewEventsForPlayer(
+          player,
+          alreadyCheckedOwnerIds,
+          allEvents,
+          allPlayers
+        )
+        alreadyCheckedOwnerIds.push(...newOwnerIds)
+        newUnsavedPlayers.push(...newPlayers)
+      }
+
       allPlayers.push(...newUnsavedPlayers)
       ;(newUnsavedPlayers.length > 0 ? log : low)(
         `${newUnsavedPlayers.length} new players found for ${game}`
@@ -160,33 +170,32 @@ async function findAndSaveNewEventsForPlayer(
   const newOwnerIds = playerEventOwnerIds.filter(
     id => !skipOwnerIds.find(skipId => skipId === id)
   )
-  // low(
-  //   `${newOwnerIds.length} owner/s found related to player ${player.tag}`
-  // )
-
-  const stubs = await getMoreEventStubs(
-    player,
-    newOwnerIds,
-    allEvents
+  low(
+    `${newOwnerIds.length} new owner/s found related to player ${
+      player.tag
+    } (${playerEventOwnerIds.length - newOwnerIds.length} skipped)`
   )
 
+  let stubs = await getMoreEventStubs(player, newOwnerIds, allEvents)
+
   let newEvents = await loadNewEvents(stubs)
+  newEvents = newEvents.filter(e => e)
   let newPlayers = []
 
   if (newEvents && newEvents.length > 0) {
-    newEvents = newEvents.filter(newEvent => {
-      !allEvents.find(
-        e => e.id === newEvent.id && e.service === newEvent.service
-      )
-    })
+    newEvents = newEvents.filter(
+      newEvent =>
+        newEvent &&
+        !allEvents.find(
+          e => e.id === newEvent.id && e.service === newEvent.service
+        )
+    )
     allEvents.push(...newEvents)
 
     for (let e of newEvents) {
-      await db.saveEvent(e)
+      db.addEvent(e)
       e.participants.forEach(p => {
-        const existingPlayer = allPlayers.find(
-          existingPlayer => existingPlayer.id === p.id
-        )
+        const existingPlayer = allPlayers.find(ep => ep.id === p.id)
         if (!existingPlayer)
           newPlayers.push(prep.makeNewPlayerToSaveFromEvent(e, p))
         else
@@ -223,14 +232,15 @@ async function getMoreEventStubs(player, ownerIdsToCheck, allEvents) {
       return services[s].moreEventsForPlayer(
         player,
         ownerIdsToCheck,
-        allEvents
+        allEvents,
+        player.game
       )
     })
   )
   const eventStubs = [].concat.apply([], newStubs || [])
   if (eventStubs.length > 0)
     log(
-      `${eventStubs.length} new event/s found for ${
+      `${eventStubs.length} usable new event/s found for ${
         player.tag
       } on ${servicesList.join(' and ')}`
     )
@@ -238,11 +248,10 @@ async function getMoreEventStubs(player, ownerIdsToCheck, allEvents) {
 }
 
 async function loadNewEvents(eventStubs) {
-  const eventData = eventStubs.map(stub => {
-    services[stub.service].event(stub)
-  })
-  await Promise.all(eventData)
-  return eventData
+  const newEvents = await Promise.all(
+    eventStubs.map(stub => services[stub.service].event(stub))
+  )
+  return newEvents
 }
 
 async function recalculatePoints(player, allPlayers) {
@@ -299,7 +308,49 @@ async function recalculatePeers(player, allEvents) {
   return
 }
 
+async function combinePlayers({ game, tag, id }) {
+  if (!game || !id || !tag)
+    return logError('unable to combine players!', game, id, tag)
+  const playersToCombine = await db.getPlayerByTag(game, tag)
+  if (
+    !playersToCombine ||
+    !Array.isArray(playersToCombine) ||
+    playersToCombine.length < 2
+  )
+    return logError(
+      'unable to combine players — appears to be too few to combine',
+      playersToCombine
+    )
+  const masterPlayer = playersToCombine.find(p => p.id === id)
+  const subPlayers = playersToCombine.filter(p => p.id !== id)
+  if (!masterPlayer)
+    return logError(
+      `unable to combine players — can't find a player by the tag`,
+      tag,
+      `with id`,
+      id
+    )
+
+  subPlayers.forEach(subPlayer => {
+    masterPlayer.participatedInEvents.push(
+      ...subPlayer.participatedInEvents
+    )
+    masterPlayer.points.push(...subPlayer.points)
+    subPlayer.redirect = id
+    delete subPlayer.lastActive
+    delete subPlayer.lastUpdated
+    delete subPlayer.participatedInEvents
+    delete subPlayer.peers
+    delete subPlayer.points
+  })
+  masterPlayer.lastActive = Date.now() / 1000
+  await Promise.all(
+    playersToCombine.map(player => db.addPlayer(player))
+  )
+}
+
 async function addEventWithNoContext(event) {
+  // todo these often happen in batches, we could save all players at the end to slightly reduce calls & also stop race conditions
   // get players or lack thereof from db
   let players = await Promise.all(
     event.participants.map(async participant => {
@@ -351,8 +402,8 @@ async function addEventWithNoContext(event) {
   // * no peers for now, that'll also be handled in the daily sweep. if they already had them, they stay the same for now.
 
   // save all
-  db.addEvent(event)
   await Promise.all([
+    db.addEvent(event),
     ...playersWithPoints
       .filter(p => p.participatedInEvents.length <= 1)
       .map(player => db.addPlayer(player)),

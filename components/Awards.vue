@@ -1,6 +1,6 @@
 <template>
   <div class="badges">
-    <div v-for="badge, index in badges" :key="badge+index" class="placeholder"></div>
+    <div v-for="badge, index in badges" :key="badge+index" class="badge"></div>
   </div>
 </template>
 
@@ -31,10 +31,11 @@ export default {
   grid-template-columns: repeat(auto-fit, 80px);
   grid-gap: 10px;
 }
-.placeholder {
+.badge {
   width: 80px;
   height: 80px;
-  background: var(--grayd);
+  background: var(--grayl);
   border-radius: 50%;
+  box-shadow: inset 0 -7px 15px 3px var(--gray);
 }
 </style>

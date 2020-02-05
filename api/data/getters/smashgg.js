@@ -5,7 +5,7 @@ const { parseParticipantTag } = require('../../../common/f').default
 const silent = () => {}
 const logger = require('../scripts/log')
 const log = logger('smashgg', 'white')
-const low = silent //logger('smashgg', 'gray')
+const low = logger('smashgg', 'gray')
 const logAdd = logger('smashgg', 'green')
 const logError = logger('smashgg', 'yellow')
 
@@ -13,6 +13,8 @@ const rateLimiter = require('../scripts/rateLimiter')
 const limiter = new rateLimiter(12, 10000)
 
 const currentlyLoadingNewEvents = []
+
+const perQueryPage = 100
 
 module.exports = {
   async event({ tournamentSlug, slug, eventSlug }) {
@@ -112,7 +114,12 @@ module.exports = {
     }
   },
 
-  async moreEventsForPlayer(player, ownerIdsToCheck, existingEvents) {
+  async moreEventsForPlayer(
+    player,
+    ownerIdsToCheck,
+    existingEvents,
+    onlyFromGame
+  ) {
     if (!player) return []
 
     let foundEvents = []
@@ -134,7 +141,6 @@ module.exports = {
                 existingEvent.service === 'smashgg'
             )
           : false
-        // todo get list of all known events before doing this for client-initiated "more" call
         if (existsInDb) return resolve(false)
 
         return resolve(true)
@@ -142,10 +148,12 @@ module.exports = {
     }
 
     // check recent sets for that player via api
+    let ownersFoundFromRecentSets = []
     if (player.id) {
       const res = await makeQuery(queryPlayerSets, {
         id: player.id,
       })
+      // todo we really can't get MORE?
       let sets
       if (!res.data.data.player) {
         logError(
@@ -167,7 +175,8 @@ module.exports = {
             if (
               !set.event ||
               set.event.state !== 'COMPLETED' ||
-              set.event.videogame.name !== player.game ||
+              (onlyFromGame &&
+                set.event.videogame.name !== onlyFromGame) ||
               set.slots.length > 2
             )
               return resolve()
@@ -182,13 +191,17 @@ module.exports = {
               tournamentSlug,
               eventSlug,
             })
-            if (isNew)
+            if (isNew) {
+              ownersFoundFromRecentSets.push(
+                set.event.tournament.ownerId
+              )
               resolve({
                 service: 'smashgg',
                 tournamentSlug,
                 eventSlug,
+                game: set.event.videogame.name,
               })
-            else resolve()
+            } else resolve()
           })
         })
       )
@@ -211,14 +224,18 @@ module.exports = {
       if (newPlayerSetEvents.length > 0)
         log(
           newPlayerSetEvents.length,
-          'additional events found via api for player',
+          'additional event/s found via api for player',
           player.tag
         )
       else low('no new events found via api for player', player.tag)
 
-      if (newPlayerSetEvents.length > 0)
-        logError('Should recheck, may be new owners.')
-      //todo that
+      ownersFoundFromRecentSets = Array.from(
+        new Set(ownersFoundFromRecentSets)
+      )
+      if (ownersFoundFromRecentSets.length > 0)
+        log(
+          `found ${ownersFoundFromRecentSets.length} owner/s from recent sets`
+        )
       foundEvents.push(...newPlayerSetEvents)
     }
 
@@ -226,14 +243,19 @@ module.exports = {
     const ownerIds =
       ownerIdsToCheck ||
       Array.from(
-        new Set(
-          player.participatedInEvents
+        new Set([
+          ...player.participatedInEvents
             .filter(event => event.service === 'smashgg')
-            .map(e => e.ownerId)
-        )
+            .map(e => e.ownerId),
+          ...ownersFoundFromRecentSets,
+        ])
       )
 
-    // log(ownerIds.length, 'owners found')
+    log(
+      ownerIds.length,
+      'owner/s found to check —',
+      ownerIdsToCheck ? 'preset' : 'organic'
+    )
     const eventsFromOwnerIds = await Promise.all(
       ownerIds.map(async ownerId => {
         let data = null,
@@ -252,7 +274,7 @@ module.exports = {
             !data.data.data.tournaments.nodes
           ) {
             logError(
-              `Failed to get data for ownerId ${ownerId} on smashgg, retrying... `
+              `Failed to get data for ownerId ${ownerId} on smashgg, retrying... (attempt ${attempts})`
             )
             //   (${JSON.stringify(
             //     data.error || data.data.error || data.data.errors,
@@ -268,7 +290,7 @@ module.exports = {
 
         let newEvents = await parseEventStubsFromTournaments(
           data.data.data.tournaments.nodes,
-          player.game
+          onlyFromGame
         )
         newEvents = await Promise.all(
           newEvents.map(async e => {
@@ -284,7 +306,7 @@ module.exports = {
         if (newEvents.length > 0)
           log(
             newEvents.length,
-            'additional events found via owner',
+            'additional event/s found via owner',
             ownerId
           )
         else low('no new events found via owner', ownerId)
@@ -296,14 +318,13 @@ module.exports = {
       foundEvents.push(...eventList)
     )
 
-    // then grab 'em
-    if (foundEvents.length > 0)
-      logAdd(
-        'will load new events:\n                        ',
-        foundEvents
-          .map(e => e.tournamentSlug + ' - ' + e.eventSlug)
-          .join('\n                         ')
-      )
+    // if (foundEvents.length > 0)
+    //   logAdd(
+    //     'found additional events:\n                        ',
+    //     foundEvents
+    //       .map(e => e.tournamentSlug + ' - ' + e.eventSlug)
+    //       .join('\n                         ')
+    //   )
     return foundEvents
   },
 }
@@ -312,6 +333,7 @@ async function getEvent(tournamentSlug, eventSlug) {
   let data,
     attempts = 0
   while (!data) {
+    if (attempts > 4) return { error: 'tried too many times' }
     log(`getting new event data for ${tournamentSlug} - ${eventSlug}`)
     data = await makeQuery(queryEvent, {
       page: 1,
@@ -327,7 +349,7 @@ async function getEvent(tournamentSlug, eventSlug) {
       !data.data.data.event.sets.pageInfo
     ) {
       logError(
-        `Failed to get data for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`
+        `Failed to get data for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts})`
         // (${JSON.stringify(
         //   data.error || data.data.error || data.data.errors || data.data,
         //   null,
@@ -336,91 +358,114 @@ async function getEvent(tournamentSlug, eventSlug) {
       )
       attempts++
       data = null
-    } else if (attempts > 9) return { error: 'tried too many times' }
-    else data = data.data.data.event
+    } else data = data.data.data.event
   }
   if (!isSingles(data)) return { error: 'not singles' }
-  let setsPage = 1,
-    standingsPage = 1
-  let areMoreSets = data.sets.pageInfo.totalPages > setsPage,
-    areMoreStandings =
-      data.standings.pageInfo.totalPages > standingsPage
 
-  // todo should be able to get ALLLLLLLLA these at once np instead of waiting for a damg response every time
-  // todo also for fuck's sake we can get more sets etc per call... LET'S.
-  // todo like start from page 0 with just pageInfo and go for the gold from page one all the time. 2 calls for tiny events but WAY less calls for the big ones
-  while (areMoreSets) {
-    setsPage++
-    low(
-      'getting sets page',
-      setsPage,
-      'for',
-      `${tournamentSlug} - ${eventSlug}`
-    )
-    let moreSets = await makeQuery(queryEventSets, {
-      page: setsPage,
-      slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
-    })
-    if (
-      !moreSets ||
-      !moreSets.data ||
-      moreSets.data.error ||
-      moreSets.error ||
-      !moreSets.data.data.event ||
-      !moreSets.data.data.event.sets.nodes
-    ) {
-      logError(
-        `Failed to get sets page`,
-        setsPage,
-        `for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`,
-        `(${JSON.stringify(
-          (!moreSets ? 'no data at all!' : null) ||
+  data.sets.nodes = []
+  data.standings.nodes = []
+
+  const totalSetNumber = data.sets.pageInfo.totalPages,
+    totalStandingNumber = data.standings.pageInfo.totalPages
+
+  const totalSetPages = Math.ceil(totalSetNumber / perQueryPage),
+    totalStandingPages = Math.ceil(totalStandingNumber / perQueryPage)
+
+  let allSets = []
+  for (
+    let currentSetsPage = 1;
+    currentSetsPage <= totalSetPages;
+    currentSetsPage++
+  ) {
+    allSets.push(
+      new Promise(async resolve => {
+        low(
+          'getting sets page',
+          currentSetsPage,
+          'for',
+          `${tournamentSlug} - ${eventSlug}`
+        )
+        let moreSets
+        while (!moreSets) {
+          moreSets = await makeQuery(queryEventSets, {
+            page: currentSetsPage,
+            slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
+          })
+          if (
+            !moreSets ||
+            !moreSets.data ||
             moreSets.data.error ||
-            moreSets.data.data.error ||
-            moreSets.data.data.errors,
-          null,
-          2
-        )})`
-      )
-      setsPage--
-      continue
-    }
-    moreSets = moreSets.data.data.event.sets.nodes
-    data.sets.nodes.push(...moreSets)
-
-    areMoreSets = data.sets.pageInfo.totalPages > setsPage
-  }
-
-  while (areMoreStandings) {
-    standingsPage++
-    low(
-      'getting standings page',
-      standingsPage,
-      'for',
-      `${tournamentSlug} - ${eventSlug}`
+            moreSets.error ||
+            !moreSets.data.data.event ||
+            !moreSets.data.data.event.sets.nodes
+          ) {
+            logError(
+              `Failed to get sets page`,
+              currentSetsPage,
+              `for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`,
+              `(${JSON.stringify(
+                (!moreSets ? 'no data at all!' : null) ||
+                  moreSets.data.error ||
+                  moreSets.data.data.error ||
+                  moreSets.data.data.errors,
+                null,
+                2
+              )})`
+            )
+            moreSets = null
+          }
+        }
+        moreSets = moreSets.data.data.event.sets.nodes
+        return resolve(moreSets)
+      })
     )
-    let moreStandings = await makeQuery(queryEventStandings, {
-      page: standingsPage,
-      slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
-    })
-    if (
-      !moreStandings.data ||
-      moreStandings.data.error ||
-      moreStandings.error
-    ) {
-      logError(
-        `Failed to get more standings for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`
-      )
-      standingsPage--
-      continue
-    }
-    moreStandings = moreStandings.data.data.event.standings.nodes
-    data.standings.nodes.push(...moreStandings)
-
-    areMoreStandings =
-      data.standings.pageInfo.totalPages > standingsPage
   }
-  // console.log(data.data)
+
+  let allStandings = []
+  for (
+    let currentStandingsPage = 1;
+    currentStandingsPage <= totalStandingPages;
+    currentStandingsPage++
+  ) {
+    allStandings.push(
+      new Promise(async resolve => {
+        low(
+          'getting standings page',
+          currentStandingsPage,
+          'for',
+          `${tournamentSlug} - ${eventSlug}`
+        )
+        let moreStandings
+        while (!moreStandings) {
+          moreStandings = await makeQuery(queryEventStandings, {
+            page: currentStandingsPage,
+            slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
+          })
+          if (
+            !moreStandings.data ||
+            moreStandings.data.error ||
+            moreStandings.error
+          ) {
+            logError(
+              `Failed to get more standings for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`
+            )
+            moreStandings = null
+          }
+        }
+        moreStandings = moreStandings.data.data.event.standings.nodes
+        return resolve(moreStandings)
+      })
+    )
+  }
+
+  allSets = await Promise.all(allSets)
+  allSets = [].concat.apply([], allSets)
+  data.sets.nodes = allSets
+
+  allStandings = await Promise.all(allStandings)
+  allStandings = [].concat.apply([], allStandings)
+  data.standings.nodes = allStandings
+
   return data
 }
 
@@ -490,7 +535,7 @@ async function parseEventStubsFromTournaments(tournaments, game) {
         ? tournament.events
             .filter(
               event =>
-                event.videogame.name === game &&
+                (!game || event.videogame.name === game) &&
                 event.state === 'COMPLETED' &&
                 event.sets.nodes &&
                 event.sets.nodes.length > 0
@@ -507,6 +552,7 @@ async function parseEventStubsFromTournaments(tournaments, game) {
                 service: 'smashgg',
                 eventSlug,
                 tournamentSlug,
+                game: event.videogame.name,
               }
             })
         : []
@@ -536,7 +582,7 @@ query EventInfo($slug: String, $page: Int!) {
     }
     standings (query: {
       page: $page,
-      perPage: 40
+      perPage: 1
     }) {
       pageInfo {
         totalPages
@@ -557,7 +603,7 @@ query EventInfo($slug: String, $page: Int!) {
     }
     sets(
       page: $page,
-      perPage: 40,
+      perPage: 1,
       sortType: STANDARD,
       filters: {
         hideEmpty: true
@@ -605,6 +651,7 @@ query PlayerSets ($id: ID!) {
         }
         tournament {
           id
+          ownerId
           name
           slug
         }
@@ -618,7 +665,7 @@ query EventSets($slug: String, $page: Int!) {
   event(slug: $slug) {
     sets(
       page: $page,
-      perPage: 40,
+      perPage:  ${perQueryPage},
       sortType: STANDARD
       filters: {
         hideEmpty: true
@@ -650,7 +697,7 @@ query EventStandings($slug: String, $page: Int!) {
   event(slug: $slug) {
     standings (query: {
       page: $page,
-      perPage: 40
+      perPage: ${perQueryPage}
     }) {
       nodes {
         id

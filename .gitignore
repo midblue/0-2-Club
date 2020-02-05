@@ -1,8 +1,6 @@
 planning
 
-serviceAccountKey.json
-
-db.json
+oldDb
 
 # dependencies
 node_modules

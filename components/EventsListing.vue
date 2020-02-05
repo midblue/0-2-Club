@@ -46,6 +46,9 @@
             </span>
           </div>
         </div>
+        <div
+          class="sub disclaimer"
+        >See something wrong? Check back in a day or two — we fully update all points on a rotating basis. If something still seems wrong a few days later, please send us a screenshot!</div>
       </div>
     </template>
   </div>
@@ -71,13 +74,14 @@ export default {
 <style scoped lang="scss">
 h3 {
   line-height: 1.1;
+  margin-top: 0;
 }
 
 .point {
   line-height: 1.05;
   max-width: 600px;
   display: grid;
-  grid-template-columns: 20px 0.9fr 1fr;
+  grid-template-columns: 20px 200px 1fr;
   grid-gap: 10px;
 
   &.padtop {
@@ -87,5 +91,11 @@ h3 {
   .pointvalue {
     font-weight: bold;
   }
+}
+
+.disclaimer {
+  text-align: center;
+  max-width: 450px;
+  margin: 0 auto;
 }
 </style>

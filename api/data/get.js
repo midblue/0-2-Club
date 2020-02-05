@@ -31,12 +31,12 @@ module.exports = {
           game,
         })
         if (loadedEntry) {
-          low(
-            'found existing event in db:',
-            loadedEntry.name,
-            '-',
-            loadedEntry.tournamentName
-          )
+          // low(
+          //   'found existing event in db:',
+          //   loadedEntry.name,
+          //   '-',
+          //   loadedEntry.tournamentName
+          // )
           return resolve(loadedEntry)
         }
 
@@ -71,12 +71,12 @@ module.exports = {
       }
       if (loadedEntry && !loadedEntry.err) {
         await dbInterface.addEventWithNoContext(loadedEntry)
-        log(
-          `returning newly loaded event from ${loadedEntry.service}:`,
-          loadedEntry.name,
-          '-',
-          loadedEntry.tournamentName
-        )
+        // log(
+        //   `returning newly loaded event from ${loadedEntry.service}:`,
+        //   loadedEntry.name,
+        //   '-',
+        //   loadedEntry.tournamentName
+        // )
       }
       resolve(loadedEntry)
     })
@@ -103,10 +103,19 @@ module.exports = {
     db.log(event)
   },
 
-  async points({ game, id, tag }) {
+  async setActive({ game, id, tag, player }) {
+    if (!player) player = await this.player({ game, id, tag })
+    if (!player || player.disambiguation) return
+    db.setPlayerActive(player)
+  },
+
+  async points({ game, id, tag, setActive = false }) {
     const loadedPlayer = await this.player({ game, id, tag })
     if (!loadedPlayer) return
     if (loadedPlayer.disambiguation) return loadedPlayer
+
+    if (setActive) this.setActive(loadedPlayer)
+
     const collatedPlayerData = collatePointsIntoPlayerData(
       loadedPlayer
     )
@@ -146,7 +155,7 @@ module.exports = {
       ]
     const eventStubs = await services[
       randomEvent.service
-    ].moreEventsForPlayer(loadedPlayer)
+    ].moreEventsForPlayer(loadedPlayer, null, null, loadedPlayer.game)
     // if (!eventStubs.err)
     // db.events.add(loadedEntry)
 
@@ -154,7 +163,7 @@ module.exports = {
   },
 
   async combineTag({ game, tag, id }) {
-    return await db.combinePlayers({ game, tag, id })
+    return await dbInterface.combinePlayers({ game, tag, id })
   },
 }
 

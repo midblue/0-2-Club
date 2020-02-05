@@ -2,7 +2,7 @@
   <div class="eventsearch">
     <button
       class="low marr"
-      v-if="playerId && !isLoadingGetMore"
+      v-if="playerId && !hasLoadedGetMore"
       @click="getMore"
     >Auto-Scan For Recent Events</button>
     <button class="low" v-if="!showSearchBar" @click="showSearchBar = true">+ Add Event by URL</button>
@@ -30,7 +30,7 @@ export default {
   data() {
     return {
       showSearchBar: false,
-      isLoadingGetMore: false,
+      hasLoadedGetMore: false,
       searchUrl:
         'https://smash.gg/tournament/battle-gateway-21-1/events/melee-singles-vs/standings?page=2',
     }
@@ -48,14 +48,12 @@ export default {
           return this.$store.dispatch('notifications/notify', event.err)
         }
         this.$store.commit('setIsLoading', true)
-        this.isLoadingGetMore = true
         axios
           .get(
             `/api/event/${event.service}/${this.game}/${event.tournamentSlug}/${event.eventSlug}/`
           )
           .then(res => {
             this.$store.commit('setIsLoading', false)
-            this.isLoadingGetMore = false
             if (res.data && !res.data.err) this.$emit('events', [res.data])
             else
               this.$store.dispatch(
@@ -72,6 +70,7 @@ export default {
     getMore() {
       this.$emit('loading')
       this.$store.commit('setIsLoading', true)
+      this.hasLoadedGetMore = true
       axios.get(`/api/more/${this.game}/${this.playerId}/`).then(res => {
         if (res.data && !res.data.err) {
           this.$store.commit('setIsLoading', false)

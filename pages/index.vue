@@ -71,12 +71,17 @@
 
       <br />
       <br />
-      <hr />
-      <br />
-      <br />
 
       <div class="patchnotes">
-        <h3>Patch Notes</h3>
+        <details>
+          <summary>
+            <h4>Patch Notes</h4>
+          </summary>
+          <div v-for="patch, index in patchNotes" :key="index">
+            <div class="sub">{{ new Date(patch.date).toLocaleDateString() }}</div>
+            <div>{{ patch.content }}</div>
+          </div>
+        </details>
       </div>
     </div>
   </section>
@@ -87,6 +92,7 @@ import axios from '~/plugins/axios'
 import PanelButton from '~/components/PanelButton'
 import { ModelSelect } from 'vue-search-select'
 const { parseParticipantTag } = require('~/common/f').default
+import patchNotes from '~/assets/patchNotes'
 
 export default {
   scrollToTop: true,
@@ -102,6 +108,7 @@ export default {
   components: { PanelButton, ModelSelect },
   data() {
     return {
+      patchNotes,
       inputGame: {
         value: '',
         text: '',
@@ -174,5 +181,16 @@ export default {
   margin: 0;
   width: 100%;
   height: 100%;
+}
+
+.patchnotes {
+  details {
+    summary {
+      * {
+        display: inline-block;
+        margin: 0;
+      }
+    }
+  }
 }
 </style>

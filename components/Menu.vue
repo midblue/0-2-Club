@@ -4,9 +4,10 @@
       <nuxt-link to="/">
         <svg
           class="logo"
-          :width="isMobile ? `394px` : `1207px`"
-          :viewBox="isMobile ? `0 0 394 188` : `0 0 1207 188`"
-          preserveAspectRatio="xMinYMin"
+          width="1207px"
+          height="100%"
+          viewBox="0 0 1207 188"
+          preserveAspectRatio="xMaxYMax"
           version="1.1"
           xmlns="http://www.w3.org/2000/svg"
           xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -121,7 +122,7 @@ nav {
   max-width: 200px;
 
   @media (max-width: 768px) {
-    max-width: 55px;
+    max-width: 150px;
 
     #logotext {
       display: none;

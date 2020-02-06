@@ -1,6 +1,6 @@
 export const state = () => ({
   isLoading: false,
-  isMobile: true,
+  isMobile: false,
 })
 
 export const mutations = {

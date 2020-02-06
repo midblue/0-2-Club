@@ -19,7 +19,7 @@
         <input
           v-model="searchUrl"
           autofocus
-          placeholder="Enter a URL..."
+          placeholder="Enter a smash.gg URL..."
         />
         <button class="low" type="submit" @click="searchFor">
           Add

@@ -2,26 +2,33 @@
   <div class="xpbar">
     <div class="toplabels">
       <div></div>
-      <div class="end">Level {{level.level+1}}</div>
+      <div class="end">Level {{ level.level + 1 }}</div>
     </div>
     <div class="bar">
       <div
         class="progress"
-        :style="{background: `var(--l${level.level})`, width: `${displayPercent}%`}"
+        :style="{
+          background: `var(--l${level.level})`,
+          width: `${displayPercent}%`,
+        }"
       ></div>
     </div>
     <div class="labels">
-      <div class="start">{{level.points}}</div>
+      <div class="start">{{ level.points }}</div>
       <transition name="fade">
         <div
           class="floatinglabel"
-          :style="{left: `${displayLabelPosition}%`, color: `var(--l${level.level}d)` , opacity: displayLabelPosition === 9.001 ? 0 : 1}"
+          :style="{
+            left: `${displayLabelPosition}%`,
+            color: `var(--l${level.level}d)`,
+            opacity: displayLabelPosition === 9.001 ? 0 : 1,
+          }"
         >
-          {{totalPoints}}
+          {{ totalPoints }}
           ({{ displayPercent }}%)
         </div>
       </transition>
-      <div class="end">{{levels[level.level + 1].points}}</div>
+      <div class="end">{{ levels[level.level + 1].points }}</div>
     </div>
   </div>
 </template>
@@ -42,6 +49,9 @@ export default {
     }
   },
   computed: {
+    isMobile() {
+      return this.$store.state.isMobile
+    },
     level() {
       let l = 0
       while (this.totalPoints > levels[l].points) l++
@@ -56,12 +66,16 @@ export default {
       )
     },
     pointsToNextLevel() {
-      return this.levels[this.level.level + 1].points - this.totalPoints
+      return (
+        this.levels[this.level.level + 1].points - this.totalPoints
+      )
     },
     labelPosition() {
-      const buffer = 9
+      const buffer = this.isMobile ? 15 : 9
       let pos =
-        this.displayPercent > 100 - buffer ? 100 - buffer : this.displayPercent
+        this.displayPercent > 100 - buffer
+          ? 100 - buffer
+          : this.displayPercent
       if (pos < buffer) pos = buffer
       return pos
     },

@@ -3,8 +3,7 @@
     <div>
       <div class="header">
         <h1>
-          Welcome to
-          <br />the club.
+          Welcome to the club.
         </h1>
       </div>
       <h3>
@@ -178,6 +177,7 @@ export default {
 <style scoped lang="scss">
 .header {
   padding-top: 1px;
+  max-width: 500px;
 }
 
 .negmartop {

@@ -1,7 +1,7 @@
 {
-  "name": "positivity",
+  "name": "0-2club",
   "version": "1.0.0",
-  "description": "Nuxt.js project",
+  "description": "An esports fitbit for anyone getting started in competitive gaming.",
   "author": "Jasper Stephenson <jasperstephenson@gmail.com>",
   "private": true,
   "scripts": {

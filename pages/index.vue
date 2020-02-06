@@ -37,8 +37,8 @@
 
       <!-- <div class="sub negmartop">{{ players }} players and {{ events }} events analyzed so far.</div> -->
 
-      <br />
-      <br />
+      <br v-if="!isMobile" />
+      <br v-if="!isMobile" />
       <div>
         <b>See it in action:</b>
         <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/H0P"
@@ -57,7 +57,7 @@
       <br />
       <hr />
       <br />
-      <br />
+      <br v-if="!isMobile" />
 
       <div class="intro">
         <div class="text">
@@ -148,6 +148,11 @@ export default {
       gameOptions: [],
     }
   },
+  computed: {
+    isMobile() {
+      return this.$store.state.isMobile
+    },
+  },
   mounted() {
     this.gameOptions = this.games.map(g => ({ value: g, text: g }))
   },
@@ -182,6 +187,10 @@ export default {
 .mainselector {
   position: relative;
 
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+
   .tag {
     margin-top: 3px;
     font-size: 4em;
@@ -192,6 +201,11 @@ export default {
       line-height: 0.6;
       padding: 3px 5px 0px 5px;
     }
+
+    @media (max-width: 768px) {
+      font-size: 2.5em;
+      width: 100%;
+    }
   }
 
   .game {
@@ -199,6 +213,11 @@ export default {
     font-size: 1.8em;
     margin-top: 40px;
     margin-bottom: 20px;
+
+    @media (max-width: 768px) {
+      font-size: 1.2em;
+      max-width: 100%;
+    }
   }
 }
 

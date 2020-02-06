@@ -3,15 +3,18 @@
     <transition-group name="notification" tag="div">
       <div v-if="isLoading" key="isLoading" class="notification">
         <span>
-          <img class="loader" src="~/assets/img/gridloader.svg" />Loading latest data...
+          <img
+            class="loader"
+            src="~/assets/img/gridloader.svg"
+          />Loading latest data...
         </span>
       </div>
       <div
-        v-for="notification, index in notifications"
+        v-for="(notification, index) in notifications"
         :key="notification + index"
         class="notification"
       >
-        <span>{{notification}}</span>
+        <span>{{ notification }}</span>
       </div>
     </transition-group>
   </div>
@@ -42,13 +45,13 @@ export default {
     color: white;
     margin-bottom: 3px;
     transition: all 0.2s;
+    width: 70vw;
 
     span {
       display: inline-flex;
       align-items: center;
       padding: 7px 12px;
       background: hsla(0, 0%, 0%, 0.8);
-      white-space: nowrap;
     }
   }
 }

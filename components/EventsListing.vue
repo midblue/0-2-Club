@@ -39,31 +39,33 @@
               }"
               >+{{ point.value }}</span
             >
-            <span class="title">{{ point.title }}</span>
-            <span class="context sub">
-              <span>
-                {{
-                  point.context.substring(
-                    0,
-                    point.context.indexOf('%O') > -1
-                      ? point.context.indexOf('%O')
-                      : point.context.length
-                  )
-                }}
-                <nuxt-link
-                  v-if="point.opponent"
-                  :to="`/g/${game}/i/${point.opponent.id}`"
-                  >{{ point.opponent.tag }}</nuxt-link
-                >
-                {{
-                  point.context.substring(
-                    point.context.indexOf('%O') > -1
-                      ? point.context.indexOf('%O') + 2
-                      : point.context.length
-                  )
-                }}
+            <div class="explanation">
+              <span class="title">{{ point.title }}</span>
+              <span class="context sub">
+                <span>
+                  {{
+                    point.context.substring(
+                      0,
+                      point.context.indexOf('%O') > -1
+                        ? point.context.indexOf('%O')
+                        : point.context.length
+                    )
+                  }}
+                  <nuxt-link
+                    v-if="point.opponent"
+                    :to="`/g/${game}/i/${point.opponent.id}`"
+                    >{{ point.opponent.tag }}</nuxt-link
+                  >
+                  {{
+                    point.context.substring(
+                      point.context.indexOf('%O') > -1
+                        ? point.context.indexOf('%O') + 2
+                        : point.context.length
+                    )
+                  }}
+                </span>
               </span>
-            </span>
+            </div>
           </div>
         </div>
         <div class="sub disclaimer">
@@ -103,11 +105,25 @@ h3 {
   line-height: 1.05;
   max-width: 600px;
   display: grid;
-  grid-template-columns: 20px 200px 1fr;
+  grid-template-columns: 20px 1fr;
   grid-gap: 10px;
 
   &.padtop {
     padding-top: 10px;
+
+    @media (max-width: 768px) {
+      padding-top: 20px;
+    }
+  }
+
+  .explanation {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+
+    @media (max-width: 768px) {
+      margin-bottom: 4px;
+      grid-template-columns: 1fr;
+    }
   }
 
   .pointvalue {

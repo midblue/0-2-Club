@@ -20,15 +20,24 @@ export default {}
   grid-template-columns: 70% 30%;
   margin: 50px 0;
   width: 100%;
+  max-width: 100%;
+
+  @media (max-width: 768px) {
+    display: block;
+    margin: 40px 0;
+  }
 }
 .mainpanel {
+  position: relative;
   width: 100%;
   height: 100%;
   margin: 0;
+  max-width: 100%;
 }
 .bigbutton {
   position: relative;
   height: 100%;
+  max-width: 100%;
 
   & > *,
   & > * > * {

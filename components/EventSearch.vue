@@ -126,6 +126,14 @@ function parseSmashGGEvent(url) {
   width: 100%;
   position: relative;
   display: inline-flex;
+
+  @media (max-width: 768px) {
+    display: block;
+
+    & > * {
+      margin-bottom: 5px;
+    }
+  }
 }
 
 button {

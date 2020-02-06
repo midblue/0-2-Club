@@ -16,6 +16,24 @@ import SiteFooter from '~/components/SiteFooter'
 
 export default {
   components: { Menu, Notifications, SiteFooter },
+  computed: {
+    isMobile() {
+      return this.$store.state.isMobile
+    },
+  },
+  mounted() {
+    this.checkWidth()
+    window.addEventListener('resize', this.checkWidth)
+  },
+  methods: {
+    checkWidth() {
+      console.log(window.outerWidth)
+      if (!this.isMobile && window.outerWidth <= 768)
+        this.$store.commit('setIsMobile', true)
+      else if (this.isMobile && window.outerWidth > 768)
+        this.$store.commit('setIsMobile', false)
+    },
+  },
 }
 </script>
 

@@ -15,14 +15,23 @@
           <span
             class="colorpad multiply"
             :style="{ background: `var(--l${level.level})` }"
-          >Level {{ level.level }} — {{ level.label }}</span>
-          <InfoTooltip>Get points by competing in tournaments to level up!</InfoTooltip>
+            >Level {{ level.level }} — {{ level.label }}</span
+          >
+          <InfoTooltip
+            >Get points by competing in tournaments to level
+            up!</InfoTooltip
+          >
         </h3>
 
         <XPBar :totalPoints="totalPoints" :events="displayEvents" />
       </div>
 
-      <Stats class="stats" :points="points" :player="player" :level="level.level" />
+      <Stats
+        class="stats"
+        :points="points"
+        :player="player"
+        :level="level.level"
+      />
     </template>
 
     <ProgressChart
@@ -40,9 +49,11 @@
     >{{awards.length}} Award{{awards.length === 1 ? '' : 's' }}</h2>  <Awards :awards="awards" class="awards" /> -->
 
     <div class="eventslabel">
-      <h2
-        v-if="displayEvents"
-      >{{displayEvents.length}} Event{{displayEvents.length === 1 ? '' : 's' }}</h2>
+      <h2 v-if="displayEvents">
+        {{ displayEvents.length }} Event{{
+          displayEvents.length === 1 ? '' : 's'
+        }}
+      </h2>
 
       <EventSearch
         :player="player"
@@ -51,24 +62,29 @@
         class="eventsearch"
       />
     </div>
-    <EventsListing :events="displayEvents" :level="level.level" :game="player.game" />
+    <EventsListing
+      :events="displayEvents"
+      :level="level.level"
+      :game="player.game"
+    />
 
     <template v-if="peers && peers.length > 0">
       <hr />
 
-      <div class="peers flex">
+      <div class="peers" :class="{ flex: !isMobile }">
         <div style="margin-right: 30px; flex-shrink: 0;">
           <b>Related Players</b>
         </div>
         <div>
           <span v-for="peer in peers">
-            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`">{{ peer.tag }}</nuxt-link>&nbsp;
+            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`">{{
+              peer.tag
+            }}</nuxt-link
+            >&nbsp;
           </span>
         </div>
       </div>
     </template>
-  </section>
-</template>
   </section>
 </template>
 
@@ -108,6 +124,9 @@ export default {
     }
   },
   computed: {
+    isMobile() {
+      return this.$store.state.isMobile
+    },
     displayEvents() {
       return this.player.participatedInEvents
         ? this.player.participatedInEvents.slice().reverse()
@@ -128,7 +147,10 @@ export default {
   watch: {
     checkForUpdates(willCheck, wasChecking) {
       if (willCheck !== wasChecking && willCheck) {
-        this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 8000)
+        this.checkForUpdatesInterval = setInterval(
+          this.reCheckPoints,
+          8000
+        )
       } else {
         clearInterval(this.checkForUpdatesInterval)
       }
@@ -185,6 +207,10 @@ export default {
       margin-bottom: 10px;
     }
   }
+
+  @media (max-width: 768px) {
+    margin-top: 0em;
+  }
 }
 .level {
   margin-top: 0.5em;
@@ -236,25 +262,5 @@ export default {
 
 h3 {
   line-height: 1.1;
-}
-
-.point {
-  line-height: 1.05;
-  max-width: 600px;
-  display: grid;
-  grid-template-columns: 20px 0.9fr 1fr;
-  grid-gap: 10px;
-
-  &.padtop {
-    padding-top: 10px;
-  }
-
-  .pointvalue {
-    font-weight: bold;
-  }
-
-  // & > * {
-  //   padding: 3px 5px;
-  // }
 }
 </style>

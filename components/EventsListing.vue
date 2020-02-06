@@ -112,7 +112,8 @@ h3 {
     padding-top: 10px;
 
     @media (max-width: 768px) {
-      padding-top: 20px;
+      line-height: 1;
+      padding-top: 10px;
     }
   }
 
@@ -122,7 +123,7 @@ h3 {
 
     @media (max-width: 768px) {
       margin-bottom: 4px;
-      grid-template-columns: 1fr;
+      display: block;
     }
   }
 

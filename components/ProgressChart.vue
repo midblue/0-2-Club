@@ -286,6 +286,7 @@ function generateData(points) {
 
 .chartholder {
   position: relative;
+  padding: 30px 30px 0 30px;
 
   @media (max-width: 768px) {
     padding: 20px 20px 0 20px;

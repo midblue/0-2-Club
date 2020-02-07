@@ -2,9 +2,9 @@ module.exports = {
   async get(player, allPlayers, onlyTouchEventId) {
     let points = []
 
-    const chronologicalEvents = player.participatedInEvents.sort(
-      (a, b) => a.date - b.date
-    )
+    const chronologicalEvents = (
+      player.participatedInEvents || []
+    ).sort((a, b) => a.date - b.date)
 
     points.push(
       ...(await eventPoints(
@@ -238,6 +238,7 @@ async function matchPoints(
           opponent: {
             tag: match.loserTag,
             id: match.loserId,
+            img: match.loserImg,
           },
           value: 4,
         })
@@ -249,6 +250,7 @@ async function matchPoints(
           opponent: {
             tag: match.loserTag,
             id: match.loserId,
+            img: match.loserImg,
           },
           value: 4,
         })
@@ -260,6 +262,7 @@ async function matchPoints(
           opponent: {
             tag: match.winnerTag,
             id: match.winnerId,
+            img: match.winnerImg,
           },
           value: 3,
         })
@@ -270,6 +273,7 @@ async function matchPoints(
           opponent: {
             tag: match.winnerTag,
             id: match.winnerId,
+            img: match.winnerImg,
           },
           value: 2,
         })

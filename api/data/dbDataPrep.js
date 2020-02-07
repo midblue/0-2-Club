@@ -74,4 +74,15 @@ module.exports = {
       )
     }
   },
+
+  pruneUndefined(obj) {
+    if (Array.isArray(obj)) {
+      return obj.filter(el => el !== undefined)
+    } else if (typeof obj === 'object')
+      Object.keys(obj).map(key => {
+        if (obj[key] === undefined) delete obj[key]
+        else obj[key] = this.pruneUndefined(obj[key])
+      })
+    return obj
+  },
 }

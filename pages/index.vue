@@ -43,8 +43,8 @@
         <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/H0P"
           >H0P</nuxt-link
         >・
-        <nuxt-link to="/g/Super%20Smash%20Bros.%20Ultimate/i/1035057"
-          >error_ssb</nuxt-link
+        <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/DoodleDork"
+          >DoodleDork</nuxt-link
         >・
         <nuxt-link to="/g/Super%20Smash%20Bros.%20Ultimate/t/Fluffy"
           >Fluffy</nuxt-link

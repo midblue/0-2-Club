@@ -10,9 +10,12 @@ const logAdd = logger('updater', 'green')
 const logInfo = logger('updater', 'blue')
 const logError = logger('updater', 'yellow')
 
+const { gameTitle } = require('../../common/f').default
+
 module.exports = {
   addEventWithNoContext,
   combinePlayers,
+  daily,
 }
 
 const aDayInSeconds = 24 * 60 * 60
@@ -20,24 +23,7 @@ const aDayInMilliseconds = aDayInSeconds * 1000
 let games = []
 
 // setInterval(daily, aDayInMilliseconds)
-// setTimeout(daily, 5000)
-// daily()
 
-setTimeout(async () => {
-  // console.log(await db.getStats())
-  // await require('./getters/smashgg').event({
-  //   service: 'smashgg',
-  //   slug: 'dx-melee-singles-1-vs-1',
-  //   tournamentSlug: 'battlegateway-29-1',
-  //   game: 'Super Smash Bros. Melee',
-  // })
-  // await require('./get').event({
-  //   service: 'smashgg',
-  //   slug: 'melee-singles-vs',
-  //   tournamentSlug: 'battlegateway-26',
-  //   game: 'Super Smash Bros. Melee',
-  // })
-}, 2000)
 // user 640241
 
 function daily() {
@@ -49,7 +35,7 @@ function daily() {
     for (let game of games) {
       // todo if there are players that need regenerating, might want to have a list in the DB for that (and code here to regen that player)
 
-      const allPlayers = await db.getPlayers(game)
+      const allPlayers = await db.getPlayers(gameTitle(game))
       const activeCutoff = Date.now() / 1000 - 14 * aDayInSeconds
       const activePlayers = allPlayers.filter(
         p => p.lastActive > activeCutoff
@@ -57,19 +43,26 @@ function daily() {
       const passivePlayers = allPlayers.filter(
         p => !p.lastActive || p.lastActive <= activeCutoff
       )
-      const allEvents = await db.getEvents(game)
+      const allEvents = await db.getEvents(gameTitle(game))
       logInfo(
-        `${activePlayers.length} active and ${passivePlayers.length} passive players found in ${allEvents.length} events for game ${game}`
+        `${activePlayers.length} active and ${
+          passivePlayers.length
+        } passive players found in ${
+          allEvents.length
+        } events for game ${gameTitle(game)}`
       )
       db.setStat(
-        `playerCounts.${encodeURIComponent(game).replace(
+        `playerCounts.${encodeURIComponent(gameTitle(game)).replace(
           /\./g,
           '+'
         )}`,
         allPlayers.length
       )
       db.setStat(
-        `eventCounts.${encodeURIComponent(game).replace(/\./g, '+')}`,
+        `eventCounts.${encodeURIComponent(gameTitle(game)).replace(
+          /\./g,
+          '+'
+        )}`,
         allEvents.length
       )
 
@@ -92,7 +85,9 @@ function daily() {
 
       allPlayers.push(...newUnsavedPlayers)
       ;(newUnsavedPlayers.length > 0 ? log : low)(
-        `${newUnsavedPlayers.length} new players found for ${game}`
+        `${
+          newUnsavedPlayers.length
+        } new players found for ${gameTitle(game)}`
       )
 
       // at this point all new events are saved into the db AND exist nicely in our allEvents object,
@@ -150,10 +145,10 @@ function daily() {
             playersToUpdate.length} player/s`
         )
       } else low(`no new player data to save`)
-
-      resolve()
     }
+
     logInfo(`daily full update complete!`)
+    resolve()
   })
 }
 
@@ -236,7 +231,7 @@ async function getMoreEventStubs(player, ownerIdsToCheck, allEvents) {
         player,
         ownerIdsToCheck,
         allEvents,
-        player.game
+        gameTitle(player.game)
       )
     })
   )
@@ -259,7 +254,7 @@ async function loadNewEvents(eventStubs) {
 
 async function recalculatePoints(player, allPlayers) {
   return new Promise(async resolve => {
-    const startingPointsLength = player.points.length
+    const startingPointsLength = (player.points || []).length
     player.points = await points.get(player, allPlayers)
     const wereNewPoints =
       startingPointsLength !== player.points.length
@@ -278,10 +273,11 @@ async function recalculatePeers(player, allEvents) {
         e.id === partialEvent.id && e.service === partialEvent.service
     )
     if (!event || !event.participants) return
-    event.participants.forEach(({ id, tag }) => {
+    event.participants.forEach(({ id, tag, img }) => {
       if (tag !== player.tag)
         idsByFrequency[id] = {
           tag,
+          img,
           common:
             (idsByFrequency[id] ? idsByFrequency[id].common : 0) + 1,
         }
@@ -313,8 +309,16 @@ async function recalculatePeers(player, allEvents) {
 
 async function combinePlayers({ game, tag, id }) {
   if (!game || !id || !tag)
-    return logError('unable to combine players!', game, id, tag)
-  const playersToCombine = await db.getPlayerByTag(game, tag)
+    return logError(
+      'unable to combine players!',
+      gameTitle(game),
+      id,
+      tag
+    )
+  const playersToCombine = await db.getPlayerByTag(
+    gameTitle(game),
+    tag
+  )
   if (
     !playersToCombine ||
     !Array.isArray(playersToCombine) ||
@@ -358,7 +362,7 @@ async function addEventWithNoContext(event) {
   let players = await Promise.all(
     event.participants.map(async participant => {
       const playerData = await db.getPlayer({
-        game: event.game,
+        game: gameTitle(event.game),
         id: participant.id,
       })
       return {

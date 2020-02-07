@@ -75,7 +75,7 @@
   --actived: var(--l3d);
 
   --text: #3e3e3e;
-  --textl: #575757;
+  --textl: #a8a8a8;
 
   --grayl: hsla(0, 0%, 0%, 2%);
   --gray: hsla(0, 0%, 0%, 4%);
@@ -303,6 +303,8 @@ h3 {
   height: 15px;
   width: 15px;
   position: relative;
+  top: 2px;
+  margin-right: 3px;
   display: inline-block;
   background-color: var(--grayd);
   background-size: cover;

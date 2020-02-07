@@ -40,6 +40,10 @@ module.exports = {
   build: {
     vendor: ['axios'],
   },
+  axios: {
+    progress: true,
+    retry: false,
+  },
   serverMiddleware: ['~/api/index.js'],
   watch: [
     '~/api/*.js',

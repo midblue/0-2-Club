@@ -1,6 +1,9 @@
 const axios = require('axios')
 
-const { parseParticipantTag } = require('../../../common/f').default
+const {
+  parseParticipantTag,
+  gameTitle,
+} = require('../../../common/f').default
 
 const silent = () => {}
 const logger = require('../scripts/log')
@@ -117,11 +120,11 @@ module.exports = {
 
     // log(currentlyLoadingNewEvents)
 
-    return {
+    const eventDataToReturn = {
       id: eventData.id,
       name: eventData.name,
       slug: slug,
-      game: eventData.videogame.name,
+      game: gameTitle(eventData.videogame.name),
       date: eventData.startAt,
       service: 'smashgg',
       tournamentSlug,
@@ -130,6 +133,9 @@ module.exports = {
       participants,
       sets,
     }
+    if (eventData.images.length > 0)
+      eventDataToReturn.img = eventData.images[0].url
+    return eventDataToReturn
   },
 
   async moreEventsForPlayer(
@@ -194,7 +200,8 @@ module.exports = {
               !set.event ||
               set.event.state !== 'COMPLETED' ||
               (onlyFromGame &&
-                set.event.videogame.name !== onlyFromGame) ||
+                gameTitle(set.event.videogame.name) !==
+                  gameTitle(onlyFromGame)) ||
               set.slots.length > 2
             )
               return resolve()
@@ -217,7 +224,7 @@ module.exports = {
                 service: 'smashgg',
                 tournamentSlug,
                 eventSlug,
-                game: set.event.videogame.name,
+                game: gameTitle(set.event.videogame.name),
               })
             } else resolve()
           })
@@ -317,6 +324,7 @@ module.exports = {
             return false
           })
         )
+
         newEvents = newEvents
           .filter(e => e)
           .filter(isSingles)
@@ -340,6 +348,7 @@ module.exports = {
     //   logAdd(
     //     'found additional events:\n                        ',
     //     foundEvents
+    // )
     //       .map(e => e.tournamentSlug + ' - ' + e.eventSlug)
     //       .join('\n                         ')
     //   )
@@ -378,6 +387,7 @@ async function getEvent(tournamentSlug, eventSlug) {
       data = null
     } else data = data.data.data.event
   }
+  if (!isComplete(data)) return { error: 'not complete' }
   if (!isSingles(data)) return { error: 'not singles' }
 
   data.sets.nodes = []
@@ -509,8 +519,20 @@ async function makeQuery(query, variables) {
   })
 }
 
+function isComplete(event) {
+  if (event.state !== 'COMPLETED') return false
+  if (event.sets && event.sets.nodes && event.sets.nodes.length > 0) {
+    for (let set of event.sets.nodes) {
+      if (!set.winnerId) {
+        return false
+      }
+    }
+  }
+  return true
+}
+
 function isSingles(event) {
-  const hasNumbers = /(?:[２３４234][ -]?(?:vs?|on)[ -]?[２３４234]|doubles)/gi
+  const hasNumbers = /(?:[２３４234][ -]?(?:vs?|on)[ -]?[２３４234]|double[sz])/gi
   if (hasNumbers.exec(event.slug || event.eventSlug)) return false
   if (hasNumbers.exec(event.name || '')) return false
   if (
@@ -525,9 +547,6 @@ function isSingles(event) {
         event.sets.nodes[
           Math.floor(Math.random() * event.sets.nodes.length)
         ]
-      if (!set.winnerId) {
-        return false
-      }
       if (
         parseParticipantTag(
           set.slots[0].entrant.participants[0].player.gamerTag
@@ -556,7 +575,9 @@ async function parseEventStubsFromTournaments(tournaments, game) {
         ? tournament.events
             .filter(
               event =>
-                (!game || event.videogame.name === game) &&
+                (!game ||
+                  gameTitle(event.videogame.name) ===
+                    gameTitle(game)) &&
                 event.state === 'COMPLETED' &&
                 event.sets.nodes &&
                 event.sets.nodes.length > 0
@@ -573,7 +594,7 @@ async function parseEventStubsFromTournaments(tournaments, game) {
                 service: 'smashgg',
                 eventSlug,
                 tournamentSlug,
-                game: event.videogame.name,
+                game: gameTitle(event.videogame.name),
               }
             })
         : []
@@ -589,6 +610,9 @@ query EventInfo($slug: String, $page: Int!) {
     slug
     state
     startAt
+    images {
+      url
+    }
     videogame {
       images {
         url

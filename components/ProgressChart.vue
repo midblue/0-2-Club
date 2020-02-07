@@ -26,7 +26,14 @@
             rivalSearchTag = null
             rivalId = peer.id
           "
-          >{{ peer.tag }}</span
+          ><div
+            v-if="peer.img"
+            :style="{
+              'background-image': `url('${peer.img}')`,
+            }"
+            class="playericon"
+          ></div>
+          {{ peer.tag }}</span
         >
 
         <form class="search" @submit.prevent>

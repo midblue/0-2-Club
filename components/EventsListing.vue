@@ -54,6 +54,16 @@
                   <nuxt-link
                     v-if="point.opponent"
                     :to="`/g/${game}/i/${point.opponent.id}`"
+                    ><div
+                      v-if="point.opponent.img"
+                      :style="{
+                        'background-image': `url('${point.opponent.img}')`,
+                      }"
+                      class="playericon"
+                    ></div></nuxt-link
+                  ><nuxt-link
+                    v-if="point.opponent"
+                    :to="`/g/${game}/i/${point.opponent.id}`"
                     >{{ point.opponent.tag }}</nuxt-link
                   >
                   {{
@@ -129,6 +139,15 @@ h3 {
 
   .pointvalue {
     font-weight: bold;
+  }
+}
+
+.context {
+  opacity: 1;
+  color: var(--textl);
+
+  a {
+    color: inherit;
   }
 }
 

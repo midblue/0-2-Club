@@ -169,20 +169,22 @@ module.exports = {
   },
 
   async addPlayer(player) {
+    const playerData = prep.pruneUndefined(player)
     const gameRef = await getGameRef(player.game)
     let playerRef = gameRef.collection('players').doc(`${player.id}`)
     await playerRef.set({
-      ...player,
+      ...playerData,
       lastUpdated: parseInt(Date.now() / 1000),
     })
   },
 
   async updatePlayer(player) {
+    const playerData = prep.pruneUndefined(player)
     const gameRef = await getGameRef(player.game)
     let playerRef = gameRef.collection('players').doc(`${player.id}`)
     await playerRef.update(
       {
-        ...player,
+        ...playerData,
         lastUpdated: parseInt(Date.now() / 1000),
       },
       { merge: true }
@@ -195,11 +197,12 @@ module.exports = {
   },
 
   async addEvent(event) {
+    const eventData = prep.pruneUndefined(event)
     const gameRef = await getGameRef(event.game)
     let eventRef = gameRef
       .collection('events')
       .doc(event.service + event.id)
-    await eventRef.set(event, { merge: true })
+    await eventRef.set(eventData, { merge: true })
     logAdd(
       'added event ' +
         `${event.name} @ ${event.tournamentName}` +

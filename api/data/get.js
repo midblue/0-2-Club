@@ -7,16 +7,21 @@ const low = logger('get', 'gray')
 const log = logger('get', 'white')
 const logAdd = logger('get', 'green')
 const logError = logger('get', 'yellow')
+const { gameTitle } = require('../../common/f').default
 
 module.exports = {
   async dbStats() {
     return await db.getStats()
   },
 
+  async daily() {
+    return await dbInterface.daily()
+  },
+
   event({ service, id, tournamentSlug, slug, game, retries = 0 }) {
     if (!service)
       return logError('A service is required to get an event.')
-    if (!id && !tournamentSlug && !slug)
+    if (!(id || (tournamentSlug && slug)))
       return logError(
         'An id, tournamentSlug, or slug is required to get an event.'
       )
@@ -28,7 +33,7 @@ module.exports = {
           tournamentSlug,
           id,
           slug,
-          game,
+          game: gameTitle(game),
         })
         if (loadedEntry) {
           low(
@@ -85,7 +90,7 @@ module.exports = {
   async player({ game, id, tag }) {
     if (!game || (!id && !tag)) return
     const loadedPlayer = await db.getPlayer({
-      game,
+      game: gameTitle(game),
       id,
       tag,
     })
@@ -96,7 +101,7 @@ module.exports = {
 
   async players({ game }) {
     if (!game) return
-    return await db.getPlayers({ game })
+    return await db.getPlayers({ game: gameTitle(game) })
   },
 
   async logToDb(event) {
@@ -104,13 +109,18 @@ module.exports = {
   },
 
   async setActive({ game, id, tag, player }) {
-    if (!player) player = await this.player({ game, id, tag })
+    if (!player)
+      player = await this.player({ game: gameTitle(game), id, tag })
     if (!player || player.disambiguation) return
     db.setPlayerActive(player)
   },
 
   async points({ game, id, tag, setActive = false }) {
-    const loadedPlayer = await this.player({ game, id, tag })
+    const loadedPlayer = await this.player({
+      game: gameTitle(game),
+      id,
+      tag,
+    })
     if (!loadedPlayer) return
     if (loadedPlayer.disambiguation) return loadedPlayer
 
@@ -123,21 +133,25 @@ module.exports = {
   },
 
   async moreEventsForPlayer({ game, id, tag }) {
-    if (!game || (!id && !tag)) return
-    const loadedPlayer = await this.player({ game, id, tag })
-    if (!loadedPlayer) return
+    if (!game || (!id && !tag)) return []
+    const loadedPlayer = await this.player({
+      game: gameTitle(game),
+      id,
+      tag,
+    })
+    if (!loadedPlayer) return []
     if (
       !loadedPlayer ||
       !loadedPlayer.participatedInEvents ||
       !loadedPlayer.participatedInEvents.length
     ) {
-      logError('no player found for', game, id, tag)
+      logError('no player found for', gameTitle(game), id, tag)
       return []
     }
     if (loadedPlayer.disambiguation) {
       logError(
         'disambiguation required to get more events for',
-        game,
+        gameTitle(game),
         id,
         tag
       )
@@ -155,15 +169,22 @@ module.exports = {
       ]
     const eventStubs = await services[
       randomEvent.service
-    ].moreEventsForPlayer(loadedPlayer, null, null, loadedPlayer.game)
-    // if (!eventStubs.err)
-    // db.events.add(loadedEntry)
+    ].moreEventsForPlayer(
+      loadedPlayer,
+      null,
+      null,
+      gameTitle(loadedPlayer.game)
+    )
 
-    return eventStubs
+    return eventStubs || []
   },
 
   async combineTag({ game, tag, id }) {
-    return await dbInterface.combinePlayers({ game, tag, id })
+    return await dbInterface.combinePlayers({
+      game: gameTitle(game),
+      tag,
+      id,
+    })
   },
 }
 

@@ -125,6 +125,21 @@ router.get('/combine/:game/:tag/:id/', async (req, res, next) => {
   res.json({ id: didRedirect })
 })
 
+/* GET run daily full update from admin panel */
+let lastDaily = 0
+const minimumDailyInterval = 3 * 60 * 60 * 1000
+router.get('/daily/', async (req, res, next) => {
+  if (Date.now() - lastDaily < minimumDailyInterval) {
+    res.json({ complete: false })
+    return log('skipping daily (last was too recent)')
+  }
+  log('starting daily')
+  lastDaily = Date.now()
+  get.logToDb('daily')
+  await get.daily()
+  res.json({ complete: true })
+})
+
 // setTimeout(test, 6000)
 
 // async function test() {

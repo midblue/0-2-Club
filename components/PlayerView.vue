@@ -3,6 +3,11 @@
     <div class="tag">
       <h1 class="inline">
         <div class="sub">{{ player.game }}</div>
+        <div
+          v-if="player.img"
+          :style="{ 'background-image': `url('${player.img}')` }"
+          class="playericon big"
+        />
         {{ player.tag || 'Id #' + player.id }}
       </h1>
     </div>

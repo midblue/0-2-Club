@@ -70,9 +70,14 @@ export default {
           )
           .then(res => {
             this.$store.commit('setIsLoading', false)
-            if (res.data && !res.data.err)
+
+            if (res.data && !res.data.err) {
+              this.$store.dispatch(
+                'notifications/notify',
+                `Added that event!`
+              )
               this.$emit('events', [res.data])
-            else
+            } else
               this.$store.dispatch(
                 'notifications/notify',
                 `We didn't find an event at that URL! Check to make sure that it has /tournament/ AND /event/ in it.`
@@ -95,6 +100,10 @@ export default {
         .then(res => {
           if (res.data && !res.data.err) {
             this.$store.commit('setIsLoading', false)
+            this.$store.dispatch(
+              'notifications/notify',
+              `Up to date!`
+            )
             this.$emit('events', [res.data])
           }
         })

@@ -25,7 +25,7 @@ let games = []
 
 setTimeout(async () => {
   // console.log(await db.getStats())
-  // await require('./get').event({
+  // await require('./getters/smashgg').event({
   //   service: 'smashgg',
   //   slug: 'dx-melee-singles-1-vs-1',
   //   tournamentSlug: 'battlegateway-29-1',

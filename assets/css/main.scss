@@ -297,6 +297,25 @@ h3 {
   }
 }
 
+.playericon {
+  border-radius: 50%;
+  overflow: hidden;
+  height: 15px;
+  width: 15px;
+  position: relative;
+  display: inline-block;
+  background-color: var(--grayd);
+  background-size: cover;
+  background-position: center center;
+  border: 1px solid var(--gray);
+
+  &.big {
+    top: 4px;
+    height: 65px;
+    width: 65px;
+  }
+}
+
 .box {
   display: inline-block;
   padding: 50px 70px;

@@ -5,39 +5,12 @@ const logAdd = logger('prep', 'green')
 const logError = logger('prep', 'yellow')
 
 module.exports = {
-  // todo check if already exists in db
-  makePlayersToSaveFromEvent(event) {
-    return event.participants.map(p => ({
-      game: event.game,
-      id: p.id,
-      tag: p.tag,
-      redirect: false,
-      // todo check redirects...
-      participatedInEvents: [
-        {
-          date: event.date,
-          standing: p.standing,
-          totalParticipants: p.of,
-          service: event.service,
-          id: event.id,
-          name: event.name,
-          slug: event.slug,
-          tournamentSlug: event.tournamentSlug,
-          tournamentName: event.tournamentName,
-          ownerId: event.ownerId,
-          matchesWithUser: event.sets.filter(
-            s => s.winnerTag === p.tag || s.loserTag === p.tag
-          ),
-        },
-      ],
-    }))
-  },
-
   makeNewPlayerToSaveFromEvent(event, participant) {
     return {
       game: event.game,
       id: participant.id,
       tag: participant.tag,
+      img: participant.img,
       redirect: false,
       peers: [],
       points: [],

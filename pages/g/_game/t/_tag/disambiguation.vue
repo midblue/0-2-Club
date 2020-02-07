@@ -13,7 +13,14 @@
       :key="p.id"
       @click="userIs(index)"
     >
-      <h3>{{ p.tag }}</h3>
+      <h3>
+        <div
+          v-if="p.img"
+          :style="{ 'background-image': `url('${p.img}')` }"
+          class="playericon big"
+        />
+        {{ p.tag }}
+      </h3>
       <div v-if="p.participatedInEvents">
         <div v-for="event in p.participatedInEvents" :key="event.id">
           Placed {{ event.standing }}/{{ event.totalParticipants }} in

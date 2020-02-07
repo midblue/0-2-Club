@@ -45,6 +45,10 @@ module.exports = {
       ),
       id: s.entrant.participants[0].player.id,
       entrantId: s.entrant.id,
+      img:
+        s.entrant.participants[0].player.images.length > 0
+          ? s.entrant.participants[0].player.images[0].url
+          : false,
     }))
 
     const sets = (eventData.sets.nodes || [])
@@ -56,6 +60,12 @@ module.exports = {
               s.slots[0].entrant.participants[0].player.gamerTag
             ),
             score: s.entrant1Score,
+            img:
+              s.slots[0].entrant.participants[0].player.images
+                .length > 0
+                ? s.slots[0].entrant.participants[0].player.images[0]
+                    .url
+                : false,
           },
           player2 = {
             id: s.slots[1].entrant.participants[0].player.id,
@@ -64,6 +74,12 @@ module.exports = {
               s.slots[1].entrant.participants[0].player.gamerTag
             ),
             score: s.entrant2Score,
+            img:
+              s.slots[1].entrant.participants[0].player.images
+                .length > 0
+                ? s.slots[1].entrant.participants[0].player.images[0]
+                    .url
+                : false,
           }
         const winner =
           player1.entrantId === s.winnerId ? player1 : player2
@@ -79,6 +95,8 @@ module.exports = {
           loserTag: loser.tag,
           winnerScore: winner.score,
           loserScore: loser.score,
+          winnerImg: winner.img,
+          loserImg: loser.img,
         }
       })
       .filter(s => s)
@@ -507,6 +525,9 @@ function isSingles(event) {
         event.sets.nodes[
           Math.floor(Math.random() * event.sets.nodes.length)
         ]
+      if (!set.winnerId) {
+        return false
+      }
       if (
         parseParticipantTag(
           set.slots[0].entrant.participants[0].player.gamerTag
@@ -683,6 +704,9 @@ query EventSets($slug: String, $page: Int!) {
               player {
                 id
                 gamerTag
+                images {
+                  url
+                }
               }
             }
           }
@@ -708,6 +732,9 @@ query EventStandings($slug: String, $page: Int!) {
             player {
               id
               gamerTag
+              images {
+                url
+              }
             }
           }
         }

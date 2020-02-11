@@ -121,6 +121,10 @@ nav {
 
 .left a {
   margin-right: 20px;
+
+  @media (max-width: 768px) {
+    margin-right: -90px;
+  }
 }
 
 .logo {

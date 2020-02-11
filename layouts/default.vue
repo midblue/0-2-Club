@@ -22,6 +22,13 @@ export default {
     },
   },
   mounted() {
+    window.dataLayer = window.dataLayer || []
+    function gtag() {
+      dataLayer.push(arguments)
+    }
+    gtag('js', new Date())
+    gtag('config', 'G-4QVMMRTV5R')
+
     this.checkWidth()
     window.addEventListener('resize', this.checkWidth)
   },

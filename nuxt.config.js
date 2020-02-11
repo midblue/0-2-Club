@@ -35,6 +35,13 @@ module.exports = {
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
     ],
+    script: [
+      {
+        src:
+          'https://www.googletagmanager.com/gtag/js?id=G-4QVMMRTV5R',
+        async: true,
+      },
+    ],
   },
   css: ['~/assets/css/main.scss'],
   build: {

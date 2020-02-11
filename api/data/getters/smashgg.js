@@ -362,7 +362,9 @@ async function getEvent(tournamentSlug, eventSlug) {
     attempts = 0
   while (!data) {
     if (attempts > 4) return { error: 'tried too many times' }
-    log(`getting new event data for ${tournamentSlug} - ${eventSlug}`)
+    log(
+      `getting new event data for ${tournamentSlug} - ${eventSlug}...`
+    )
     data = await makeQuery(queryEvent, {
       page: 1,
       slug: `tournament/${tournamentSlug}/event/${eventSlug}`,

@@ -23,6 +23,51 @@
     >
       More for {{ player.tag }}
     </div>
+
+    <br />
+
+    <div class="color" style="background: var(--l0l)"></div>
+    <div class="color" style="background: var(--l1l)"></div>
+    <div class="color" style="background: var(--l2l)"></div>
+    <div class="color" style="background: var(--l3l)"></div>
+    <div class="color" style="background: var(--l4l)"></div>
+    <div class="color" style="background: var(--l5l)"></div>
+    <div class="color" style="background: var(--l6l)"></div>
+    <div class="color" style="background: var(--l7l)"></div>
+    <div class="color" style="background: var(--l8l)"></div>
+    <div class="color" style="background: var(--l9l)"></div>
+    <div class="color" style="background: var(--l10l)"></div>
+    <div class="color" style="background: var(--l11l)"></div>
+
+    <br />
+
+    <div class="color" style="background: var(--l0)"></div>
+    <div class="color" style="background: var(--l1)"></div>
+    <div class="color" style="background: var(--l2)"></div>
+    <div class="color" style="background: var(--l3)"></div>
+    <div class="color" style="background: var(--l4)"></div>
+    <div class="color" style="background: var(--l5)"></div>
+    <div class="color" style="background: var(--l6)"></div>
+    <div class="color" style="background: var(--l7)"></div>
+    <div class="color" style="background: var(--l8)"></div>
+    <div class="color" style="background: var(--l9)"></div>
+    <div class="color" style="background: var(--l10)"></div>
+    <div class="color" style="background: var(--l11)"></div>
+
+    <br />
+
+    <div class="color" style="background: var(--l0d)"></div>
+    <div class="color" style="background: var(--l1d)"></div>
+    <div class="color" style="background: var(--l2d)"></div>
+    <div class="color" style="background: var(--l3d)"></div>
+    <div class="color" style="background: var(--l4d)"></div>
+    <div class="color" style="background: var(--l5d)"></div>
+    <div class="color" style="background: var(--l6d)"></div>
+    <div class="color" style="background: var(--l7d)"></div>
+    <div class="color" style="background: var(--l8d)"></div>
+    <div class="color" style="background: var(--l9d)"></div>
+    <div class="color" style="background: var(--l10d)"></div>
+    <div class="color" style="background: var(--l11d)"></div>
   </section>
 </template>
 
@@ -151,5 +196,12 @@ export default {
 <style scoped lang="scss">
 .button {
   display: block;
+}
+
+.color {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  margin: 20px 20px 0 0;
 }
 </style>

@@ -34,7 +34,22 @@
         </template>
       </PanelButton>
 
-      <!-- <div class="sub negmartop">{{ players }} players and {{ events }} events analyzed so far.</div> -->
+      <div class="sub negmartop">
+        {{
+          (Object.values(playerCounts) || []).reduce(
+            (total, p) => total + (p || 0),
+            0
+          )
+        }}
+        players and
+        {{
+          (Object.values(eventCounts) || []).reduce(
+            (total, e) => total + (e || 0),
+            0
+          )
+        }}
+        events analyzed so far.
+      </div>
 
       <br v-if="!isMobile" />
       <br v-if="!isMobile" />

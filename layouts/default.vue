@@ -27,7 +27,6 @@ export default {
   },
   methods: {
     checkWidth() {
-      console.log(window.outerWidth)
       if (!this.isMobile && window.outerWidth <= 768)
         this.$store.commit('setIsMobile', true)
       else if (this.isMobile && window.outerWidth > 768)

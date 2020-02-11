@@ -24,20 +24,6 @@ router.get('/players/:game', async (req, res, next) => {
   res.json(players)
 })
 
-// todo obsolete but one thing uses it i think
-/* GET player by game and tag. */
-router.get('/player/:game/:tag', async (req, res, next) => {
-  const game = decodeURIComponent(req.params.game)
-  const tag = decodeURIComponent(req.params.tag)
-  log('player:', tag)
-  const foundPlayer = await get.player({ game, tag })
-  if (foundPlayer) {
-    res.json(foundPlayer)
-  } else {
-    res.json({ err: 'No player in database by that tag.' })
-  }
-})
-
 /* GET player with points by game and tag. */
 router.get('/points/:game/tag/:tag', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)

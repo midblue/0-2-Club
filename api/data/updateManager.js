@@ -34,6 +34,8 @@ function daily() {
 
     for (let game of games) {
       // todo if there are players that need regenerating, might want to have a list in the DB for that (and code here to regen that player)
+      // todo check for accuracy — all players that should have event data do, and vice versa
+      // todo manually delete event/s from db
 
       const allPlayers = await db.getPlayers(gameTitle(game))
       const activeCutoff = Date.now() / 1000 - 14 * aDayInSeconds
@@ -51,29 +53,17 @@ function daily() {
           allEvents.length
         } events for game ${gameTitle(game)}`
       )
-      db.setStat(
-        `playerCounts.${encodeURIComponent(gameTitle(game)).replace(
-          /\./g,
-          '+'
-        )}`,
-        allPlayers.length
-      )
-      db.setStat(
-        `eventCounts.${encodeURIComponent(gameTitle(game)).replace(
-          /\./g,
-          '+'
-        )}`,
-        allEvents.length
-      )
 
       // get new event info for all active players
       const alreadyCheckedOwnerIds = []
       const newUnsavedPlayers = []
+      const newUnsavedEvents = []
       for (let player of activePlayers) {
         const {
           newOwnerIds,
           newPlayers,
-        } = await findAndSaveNewEventsForPlayer(
+          newEvents,
+        } = await getNewEventsForPlayer(
           player,
           alreadyCheckedOwnerIds,
           allEvents,
@@ -81,9 +71,15 @@ function daily() {
         )
         alreadyCheckedOwnerIds.push(...newOwnerIds)
         newUnsavedPlayers.push(...newPlayers)
+        newUnsavedEvents.push(...newEvents)
       }
 
-      allPlayers.push(...newUnsavedPlayers)
+      if (newUnsavedEvents.length)
+        logInfo(
+          `${
+            newUnsavedEvents.length
+          } new events found for game ${gameTitle(game)}`
+        )
       ;(newUnsavedPlayers.length > 0 ? log : low)(
         `${
           newUnsavedPlayers.length
@@ -135,7 +131,6 @@ function daily() {
           `saving data for ${newUnsavedPlayers.length +
             playersToUpdate.length} player/s...`
         )
-        // todo might be simpler to just add all here, we have the newest data anyway
         await Promise.all(newUnsavedPlayers.map(p => db.addPlayer(p)))
         await Promise.all(
           playersToUpdate.map(p => db.updatePlayer(p))
@@ -145,6 +140,28 @@ function daily() {
             playersToUpdate.length} player/s`
         )
       } else low(`no new player data to save`)
+
+      // then, save all new events (done here to avoid a half-updated db if it hangs mid-daily)
+      if (newUnsavedEvents.length > 0) {
+        log(`saving data for ${newUnsavedEvents.length} event/s...`)
+        await Promise.all(newUnsavedEvents.map(e => db.addEvent(e)))
+        logAdd(`saved data for ${newUnsavedEvents.length} event/s`)
+      } else low(`no new event data to save`)
+
+      db.setStat(
+        `playerCounts.${encodeURIComponent(gameTitle(game)).replace(
+          /\./g,
+          '+'
+        )}`,
+        allPlayers.length + newUnsavedPlayers.length
+      )
+      db.setStat(
+        `eventCounts.${encodeURIComponent(gameTitle(game)).replace(
+          /\./g,
+          '+'
+        )}`,
+        allEvents.length + newUnsavedEvents.length
+      )
     }
 
     logInfo(`daily full update complete!`)
@@ -158,7 +175,7 @@ async function saveNewEventsToDb(events) {
   return
 }
 
-async function findAndSaveNewEventsForPlayer(
+async function getNewEventsForPlayer(
   player,
   skipOwnerIds = [],
   allEvents,
@@ -168,11 +185,12 @@ async function findAndSaveNewEventsForPlayer(
   const newOwnerIds = playerEventOwnerIds.filter(
     id => !skipOwnerIds.find(skipId => skipId === id)
   )
-  low(
-    `${newOwnerIds.length} new owner/s found related to player ${
-      player.tag
-    } (${playerEventOwnerIds.length - newOwnerIds.length} skipped)`
-  )
+  if (newOwnerIds.length)
+    low(
+      `${newOwnerIds.length} new owner/s found related to player ${
+        player.tag
+      } (${playerEventOwnerIds.length - newOwnerIds.length} skipped)`
+    )
 
   let stubs = await getMoreEventStubs(player, newOwnerIds, allEvents)
 
@@ -191,19 +209,36 @@ async function findAndSaveNewEventsForPlayer(
     allEvents.push(...newEvents)
 
     for (let e of newEvents) {
-      db.addEvent(e)
       e.participants.forEach(p => {
         const existingPlayer = allPlayers.find(ep => ep.id === p.id)
-        if (!existingPlayer)
-          newPlayers.push(prep.makeNewPlayerToSaveFromEvent(e, p))
-        else
-          existingPlayer.participatedInEvents.push(
-            prep.makeParticipantDataToSaveFromEvent(e, p)
+        if (!existingPlayer) {
+          const newPlayer = prep.makeNewPlayerToSaveFromEvent(e, p)
+          newPlayers.push(newPlayer)
+          allPlayers.push(newPlayer)
+        } else {
+          const newParticipantData = prep.makeParticipantDataToSaveFromEvent(
+            e,
+            p
           )
+          if (
+            existingPlayer.participatedInEvents.find(
+              e => e.id === newParticipantData.id
+            )
+          )
+            logError(
+              'skipped double adding participant data for',
+              existingPlayer.tag,
+              `(event ${newParticipantData.name} @ ${newParticipantData.tournamentName})`
+            )
+          else
+            existingPlayer.participatedInEvents.push(
+              newParticipantData
+            )
+        }
       })
     }
   }
-  return { newOwnerIds, newPlayers }
+  return { newOwnerIds, newPlayers, newEvents }
 }
 
 function getOwnerIds(events) {
@@ -371,6 +406,10 @@ async function addEventWithNoContext(event) {
       }
     })
   )
+  if (players.find(p => p.error))
+    return logError(
+      `Failed to add event ${event.name} @ ${event.tournamentName}, firebase error (likely quota)`
+    )
 
   // make full player data out of participants
   players = players.map(p => {

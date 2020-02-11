@@ -76,7 +76,7 @@ module.exports = {
       }
       if (loadedEntry && !loadedEntry.err) {
         await dbInterface.addEventWithNoContext(loadedEntry)
-        log(
+        low(
           `returning newly loaded event from ${loadedEntry.service}:`,
           loadedEntry.name,
           '-',
@@ -160,23 +160,26 @@ module.exports = {
 
     db.setPlayerActive(loadedPlayer)
 
-    // todo check all services
-    const randomEvent =
-      loadedPlayer.participatedInEvents[
-        Math.floor(
-          Math.random() * loadedPlayer.participatedInEvents.length
-        )
-      ]
-    const eventStubs = await services[
-      randomEvent.service
-    ].moreEventsForPlayer(
-      loadedPlayer,
-      null,
-      null,
-      gameTitle(loadedPlayer.game)
+    const servicesList = loadedPlayer.participatedInEvents.reduce(
+      (list, event) => {
+        if (!list.find(s => s === event.service))
+          return [...list, event.service]
+        return list
+      },
+      []
     )
-
-    return eventStubs || []
+    const newStubs = await Promise.all(
+      servicesList.map(s => {
+        return services[s].moreEventsForPlayer(
+          loadedPlayer,
+          null,
+          null,
+          gameTitle(loadedPlayer.game)
+        )
+      })
+    )
+    const eventStubs = [].concat.apply([], newStubs || [])
+    return eventStubs
   },
 
   async combineTag({ game, tag, id }) {

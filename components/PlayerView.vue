@@ -48,10 +48,7 @@
       class="chart"
     />
 
-    <!-- <h2
-      v-if="awards.length > 0"
-      class="awardslabel"
-    >{{awards.length}} Award{{awards.length === 1 ? '' : 's' }}</h2>  <Awards :awards="awards" class="awards" /> -->
+    <!-- <Awards :player="player" class="awardspane" /> -->
 
     <div class="eventslabel">
       <h2 v-if="displayEvents">
@@ -82,7 +79,17 @@
         </div>
         <div>
           <span v-for="peer in peers">
-            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`">{{
+            <nuxt-link
+              v-if="peer"
+              :to="`/g/${player.game}/i/${peer.id}`"
+              ><div
+                v-if="peer.img"
+                :style="{
+                  'background-image': `url('${peer.img}')`,
+                }"
+                class="playericon"
+              ></div></nuxt-link
+            ><nuxt-link :to="`/g/${player.game}/i/${peer.id}`">{{
               peer.tag
             }}</nuxt-link
             >&nbsp;
@@ -122,7 +129,6 @@ export default {
       player: {},
       peers: [],
       points: [],
-      awards: [1, 2, 3, 4],
       levels,
       checkForUpdates: false,
       checkForUpdatesInterval: null,
@@ -229,8 +235,8 @@ export default {
 .stats {
   margin-bottom: 2em;
 }
-.awards {
-  margin-bottom: 4em;
+.awardspane {
+  margin-bottom: 3em;
 }
 
 .chart {
@@ -241,10 +247,6 @@ export default {
   h3 {
     margin-top: 0;
   }
-}
-
-.awardslabel {
-  margin: 0 0 0 0;
 }
 
 .eventslabel {

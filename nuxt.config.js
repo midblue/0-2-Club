@@ -43,6 +43,7 @@ module.exports = {
   axios: {
     progress: true,
     retry: false,
+    timeout: 360000,
   },
   serverMiddleware: ['~/api/index.js'],
   watch: [

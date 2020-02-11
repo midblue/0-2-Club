@@ -8,7 +8,7 @@ const {
 const silent = () => {}
 const logger = require('../scripts/log')
 const log = logger('smashgg', 'white')
-const low = logger('smashgg', 'gray')
+const low = silent //logger('smashgg', 'gray')
 const logAdd = logger('smashgg', 'green')
 const logError = logger('smashgg', 'yellow')
 
@@ -257,7 +257,7 @@ module.exports = {
       ownersFoundFromRecentSets = Array.from(
         new Set(ownersFoundFromRecentSets)
       )
-      if (ownersFoundFromRecentSets.length > 0)
+      if (ownersFoundFromRecentSets.length > 0 && !ownerIdsToCheck)
         log(
           `found ${ownersFoundFromRecentSets.length} owner/s from recent sets`
         )
@@ -277,8 +277,9 @@ module.exports = {
       )
 
     log(
+      'will check',
       ownerIds.length,
-      'owner/s found to check —',
+      'owner/s —',
       ownerIdsToCheck ? 'preset' : 'organic'
     )
     const eventsFromOwnerIds = await Promise.all(
@@ -407,14 +408,10 @@ async function getEvent(tournamentSlug, eventSlug) {
   ) {
     allSets.push(
       new Promise(async resolve => {
-        low(
-          'getting sets page',
-          currentSetsPage,
-          'for',
-          `${tournamentSlug} - ${eventSlug}`
-        )
-        let moreSets
-        while (!moreSets) {
+        let moreSets,
+          attempts = 0
+        while (!moreSets && attempts < 5) {
+          attempts++
           moreSets = await makeQuery(queryEventSets, {
             page: currentSetsPage,
             slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
@@ -430,7 +427,7 @@ async function getEvent(tournamentSlug, eventSlug) {
             logError(
               `Failed to get sets page`,
               currentSetsPage,
-              `for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`,
+              `for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts})`,
               `(${JSON.stringify(
                 (!moreSets ? 'no data at all!' : null) ||
                   moreSets.data.error ||
@@ -443,7 +440,14 @@ async function getEvent(tournamentSlug, eventSlug) {
             moreSets = null
           }
         }
+        if (!moreSets) return resolve({ error: 'no sets data!' })
         moreSets = moreSets.data.data.event.sets.nodes
+        low(
+          'got sets page',
+          currentSetsPage,
+          'for',
+          `${tournamentSlug} - ${eventSlug}`
+        )
         return resolve(moreSets)
       })
     )
@@ -457,14 +461,10 @@ async function getEvent(tournamentSlug, eventSlug) {
   ) {
     allStandings.push(
       new Promise(async resolve => {
-        low(
-          'getting standings page',
-          currentStandingsPage,
-          'for',
-          `${tournamentSlug} - ${eventSlug}`
-        )
-        let moreStandings
-        while (!moreStandings) {
+        let moreStandings,
+          attempts = 0
+        while (!moreStandings && attempts < 5) {
+          attempts++
           moreStandings = await makeQuery(queryEventStandings, {
             page: currentStandingsPage,
             slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
@@ -475,12 +475,20 @@ async function getEvent(tournamentSlug, eventSlug) {
             moreStandings.error
           ) {
             logError(
-              `Failed to get more standings for ${tournamentSlug} - ${eventSlug} on smashgg, retrying...`
+              `Failed to get more standings for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts})`
             )
             moreStandings = null
           }
         }
+        if (!moreStandings)
+          return resolve({ error: 'no standings data!' })
         moreStandings = moreStandings.data.data.event.standings.nodes
+        low(
+          'got standings page',
+          currentStandingsPage,
+          'for',
+          `${tournamentSlug} - ${eventSlug}`
+        )
         return resolve(moreStandings)
       })
     )
@@ -488,10 +496,14 @@ async function getEvent(tournamentSlug, eventSlug) {
 
   allSets = await Promise.all(allSets)
   allSets = [].concat.apply([], allSets)
+  if (allSets.find(s => s.error))
+    return { error: allSets.find(s => s.error).error }
   data.sets.nodes = allSets
 
   allStandings = await Promise.all(allStandings)
   allStandings = [].concat.apply([], allStandings)
+  if (allStandings.find(s => s.error))
+    return { error: allStandings.find(s => s.error).error }
   data.standings.nodes = allStandings
 
   return data
@@ -532,7 +544,7 @@ function isComplete(event) {
 }
 
 function isSingles(event) {
-  const hasNumbers = /(?:[２３４234][ -]?(?:vs?|on)[ -]?[２３４234]|double[sz])/gi
+  const hasNumbers = /(?:[２３４234][ -]?(?:vs?|on)[ -]?[２３４234]|do?ub(?:le)?[sz]|team[sz])/gi
   if (hasNumbers.exec(event.slug || event.eventSlug)) return false
   if (hasNumbers.exec(event.name || '')) return false
   if (

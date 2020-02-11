@@ -77,6 +77,7 @@ module.exports = {
       })
       .catch(err => {
         logError('Error getting player by id', err)
+        return { error: err }
       })
   },
 
@@ -100,6 +101,7 @@ module.exports = {
       })
       .catch(err => {
         logError('Error getting player by tag', err)
+        return { error: err }
       })
   },
 

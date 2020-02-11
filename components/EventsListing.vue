@@ -79,9 +79,14 @@
           </div>
         </div>
         <div class="sub disclaimer">
-          See something wrong? Check back in a day or two — we fully
-          update all points on a rotating basis. If something still
-          seems wrong a few days later, please send us a screenshot!
+          <b>See something wrong?</b> Check back in a day or two — we
+          fully update all points on a rotating basis. If something
+          still seems wrong a few days later, please send us a
+          screenshot!
+        </div>
+        <div class="sub disclaimer">
+          <b>Something missing?</b> Feel free to add events by
+          smash.gg url above!
         </div>
       </div>
     </template>
@@ -119,11 +124,11 @@ h3 {
   grid-gap: 10px;
 
   &.padtop {
-    padding-top: 10px;
+    padding-top: 15px;
 
     @media (max-width: 768px) {
       line-height: 1;
-      padding-top: 10px;
+      padding-top: 15px;
     }
   }
 

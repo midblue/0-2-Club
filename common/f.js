@@ -3,6 +3,20 @@ export default {
     const minusTeam = /^(?:[^|]*(?: *[|]+ *)+)?(.*)$/gi.exec(name)
     return minusTeam ? minusTeam[1] : null
   },
+
+  getPlacingRatio(events) {
+    const eventsToUse = events.participatedInEvents
+      ? events.participatedInEvents
+      : events
+    return (
+      eventsToUse.reduce(
+        (total, event) =>
+          total + event.standing / event.totalParticipants,
+        0
+      ) / eventsToUse.length
+    )
+  },
+
   gameTitle,
 }
 

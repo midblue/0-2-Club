@@ -2,12 +2,16 @@
   <div class="stats">
     <div class="stat" v-if="eventsThisYear > 0">
       <div class="bignumber">{{ eventsThisYear }}</div>
-      <div class="sub">Event{{eventsThisYear === 1 ? '' : 's'}} This Year</div>
+      <div class="sub">
+        Event{{ eventsThisYear === 1 ? '' : 's' }} This Year
+      </div>
     </div>
 
     <div class="stat" v-if="majors > 0">
       <div class="bignumber">{{ majors }}</div>
-      <div class="sub">Major{{majors === 1 ? '' : 's'}} Attended</div>
+      <div class="sub">
+        Major{{ majors === 1 ? '' : 's' }} Attended
+      </div>
     </div>
 
     <div class="stat" v-if="bestStreak > 2">
@@ -20,10 +24,15 @@
       <div class="sub">Total Matches</div>
     </div>-->
 
-    <div class="stat" v-if="totalTakedowns > 0">
+    <div class="stat" v-if="totalGameWins > 0">
+      <div class="bignumber">{{ totalGameWins }}</div>
+      <div class="sub">Total Game Wins</div>
+    </div>
+
+    <!-- <div class="stat" v-if="totalTakedowns > 0">
       <div class="bignumber">{{ totalTakedowns }}</div>
       <div class="sub">Total Match Wins</div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -43,29 +52,55 @@ export default {
   },
   computed: {
     eventsThisYear() {
-      return this.player.participatedInEvents.reduce((total, event) => {
-        if (
-          new Date(event.date * 1000).getFullYear() === new Date().getFullYear()
-        )
-          return total + 1
-        return total
-      }, 0)
+      return this.player.participatedInEvents.reduce(
+        (total, event) => {
+          if (
+            new Date(event.date * 1000).getFullYear() ===
+            new Date().getFullYear()
+          )
+            return total + 1
+          return total
+        },
+        0
+      )
     },
     totalSets() {
-      return this.player.participatedInEvents.reduce((total, event) => {
-        return total + event.matchesWithUser.length
-      }, 0)
+      return this.player.participatedInEvents.reduce(
+        (total, event) => {
+          return total + event.matchesWithUser.length
+        },
+        0
+      )
     },
     totalTakedowns() {
-      return this.player.participatedInEvents.reduce((total, event) => {
-        return (
-          total +
-          event.matchesWithUser.reduce((total, match) => {
-            if (match.winnerId === this.player.id) return total + 1
-            return total
-          }, 0)
-        )
-      }, 0)
+      return this.player.participatedInEvents.reduce(
+        (total, event) => {
+          return (
+            total +
+            event.matchesWithUser.reduce((total, match) => {
+              if (match.winnerId === this.player.id) return total + 1
+              return total
+            }, 0)
+          )
+        },
+        0
+      )
+    },
+    totalGameWins() {
+      return this.player.participatedInEvents.reduce(
+        (total, event) => {
+          return (
+            total +
+            event.matchesWithUser.reduce((total, match) => {
+              if (match.winnerId === this.player.id)
+                return total + (match.winnerScore || 0)
+              else return total + (match.loserScore || 0)
+              return total
+            }, 0)
+          )
+        },
+        0
+      )
     },
     bestStreak() {
       return (this.points || []).reduce((highest, point) => {
@@ -79,9 +114,12 @@ export default {
       }, 0)
     },
     majors() {
-      return this.player.participatedInEvents.reduce((total, event) => {
-        return total + event.totalParticipants > 200 ? 1 : 0
-      }, 0)
+      return this.player.participatedInEvents.reduce(
+        (total, event) => {
+          return total + event.totalParticipants > 200 ? 1 : 0
+        },
+        0
+      )
     },
   },
 }

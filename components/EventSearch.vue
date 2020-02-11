@@ -107,6 +107,7 @@ export default {
             this.$emit('events', [res.data])
           }
         })
+        .catch(console.log)
     },
   },
 }

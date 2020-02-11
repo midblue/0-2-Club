@@ -1,3 +1,5 @@
+const { getPlacingRatio } = require('../../../common/f').default
+
 module.exports = {
   async get(player, allPlayers, onlyTouchEventId) {
     let points = []
@@ -36,7 +38,7 @@ async function eventPoints(
       const points = []
       const p = makePointElementGenerator(points, event)
 
-      // todo test
+      // todo test this. doesn't seem to work?
       if (event.ownerId === player.id)
         p({
           title: `Hosted a Tournament`,
@@ -277,7 +279,6 @@ async function matchPoints(
           },
           value: 2,
         })
-      // todo losers run
       if (didWin) winStreak++
       else {
         winStreak = 0
@@ -301,7 +302,31 @@ async function matchPoints(
       const opponentData = allPlayers.find(p => p.id === opponentId)
       if (!opponentData) return [...(await pointsArray), ...points]
       const opponentRatio = getPlacingRatio(opponentData)
-      // todo opponent was on fire this tournament
+      const opponentInThisTournament = opponentData.participatedInEvents.find(
+        e => e.id === event.id
+      )
+      if (!opponentInThisTournament)
+        console.log(
+          'no data found for this tournament!',
+          opponentTag,
+          opponentId,
+          '@',
+          event.name,
+          event.tournamentName,
+          event.id
+        )
+      if (
+        opponentInThisTournament &&
+        (opponentInThisTournament.standing <= 2 ||
+          opponentInThisTournament.standing /
+            opponentInThisTournament.totalParticipants <
+            opponentRatio - 0.15)
+      )
+        p({
+          title: `Opponent Was On Fire`,
+          context: `${opponentTag} placed much better than normal`,
+          value: 2,
+        })
       if (
         opponentRatio < getPlacingRatio(player) - 0.15 &&
         opponentData.participatedInEvents.length > 2
@@ -309,7 +334,7 @@ async function matchPoints(
         p({
           category: `Progression`,
           title: `Up a Weight Class`,
-          context: `${opponentTag} usually places better than you`,
+          context: `${opponentTag} usually places higher than you`,
           value: 2,
         })
         if (didWin) {
@@ -381,16 +406,6 @@ async function matchPoints(
       return [...(await pointsArray), ...points]
     },
     []
-  )
-}
-
-function getPlacingRatio(player) {
-  return (
-    player.participatedInEvents.reduce(
-      (total, event) =>
-        total + event.standing / event.totalParticipants,
-      0
-    ) / player.participatedInEvents.length
   )
 }
 

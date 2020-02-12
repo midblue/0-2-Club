@@ -59,12 +59,28 @@ function daily() {
         allPlayers,
         allEvents
       )
-      if (inaccurateEvents.length)
+      const toFix = []
+      inaccurateEvents.forEach(e => {
+        if (
+          !toFix.find(
+            known =>
+              known.service === e.service &&
+              known.eventSlug === e.eventSlug &&
+              known.tournamentSlug === e.tournamentSlug &&
+              known.game === e.game
+          )
+        )
+          toFix.push(e)
+      })
+
+      if (toFix.length) {
         logError(
           'Found error in data for',
-          inaccurateEvents.length,
+          toFix.length,
           'events, resolving...'
         )
+        fixDataErrors(toFix, allEvents, allPlayers)
+      }
 
       // get new event info for all active players
       const alreadyCheckedOwnerIds = []
@@ -188,9 +204,10 @@ async function checkForAccuracy(allPlayers, allEvents) {
     for (let participant of event.participants) {
       const player = allPlayers.find(p => p.id === participant.id)
       if (!player) {
-        logError('Missing player', participant.tag)
+        logError('Missing player', participant.tag, participant.id)
         toDeleteAndReadd.push({
           game: event.game,
+          id: event.id,
           eventSlug: event.slug,
           tournamentSlug: event.tournamentSlug,
           service: event.service,
@@ -204,11 +221,15 @@ async function checkForAccuracy(allPlayers, allEvents) {
         logError(
           'Missing event',
           event.tournamentName,
+          event.id,
+          event.service,
           'entry for',
-          participant.tag
+          participant.tag,
+          participant.id
         )
         toDeleteAndReadd.push({
           game: event.game,
+          id: event.id,
           eventSlug: event.slug,
           tournamentSlug: event.tournamentSlug,
           service: event.service,
@@ -218,6 +239,40 @@ async function checkForAccuracy(allPlayers, allEvents) {
     }
   }
   return toDeleteAndReadd
+}
+
+async function fixDataErrors(toFix, allEvents, allPlayers) {
+  const affectedPlayers = {}
+  for (let eventStub of toFix) {
+    const event = allEvents.find(
+      e => e.id === eventStub.id && e.service === eventStub.service
+    )
+    db.deleteEvent(event.id, event.service)
+    for (let player of event.participants)
+      if (!affectedPlayers[player.id]) affectedPlayers[player.id] = []
+    affectedPlayers[player.id].push(event.id)
+    const index = allEvents.findIndex(
+      e => e.id === eventStub.id && e.service === eventStub.service
+    )
+    allEvents.splice(index, 1)
+    log('deleted event', event.name, event.tournamentName)
+  }
+  for (let id of Object.keys(affectedPlayers)) {
+    const player = allPlayers.find(e => e.id === id)
+    const participatedInEvents = (
+      player.participatedInEvents || []
+    ).filter(e => !affectedPlayers[id].find(id => id === e.id))
+    player.participatedInEvents = participatedInEvents
+    db.addPlayer(player)
+  }
+  log(
+    'deleted record of event',
+    event.name,
+    event.tournamentName,
+    'from',
+    Object.keys(affectedPlayers).length,
+    'players'
+  )
 }
 
 async function getNewEventsForPlayer(
@@ -437,27 +492,30 @@ async function combinePlayers({ game, tag, id }) {
 }
 
 let loadedPlayers = {},
-  saveTimeout = null
+  clearLoadedPlayers = null
 
 async function addEventWithNoContext(event) {
-  clearTimeout(saveTimeout)
+  clearTimeout(clearLoadedPlayers)
 
   // load players or lack thereof from db and place in-memory
   let players = await Promise.all(
     event.participants.map(async participantData => {
+      let fromDb = null
       if (!loadedPlayers[participantData.id])
-        loadedPlayers[participantData.id] = await db.getPlayer({
+        fromDb = await db.getPlayer({
           game: gameTitle(event.game),
           id: participantData.id,
         })
-      if (!loadedPlayers[participantData.id])
+      if (!loadedPlayers[participantData.id] && !fromDb)
         loadedPlayers[participantData.id] = {}
+      else if (!loadedPlayers[participantData.id] && fromDb)
+        loadedPlayers[participantData.id] = fromDb
       if (loadedPlayers[participantData.id].error) {
         return delete loadedPlayers[participantData.id]
       }
-      loadedPlayers[
-        participantData.id
-      ].participantData = participantData
+      loadedPlayers[participantData.id][
+        'participantData' + event.id
+      ] = participantData
       return loadedPlayers[participantData.id]
     })
   )
@@ -466,26 +524,38 @@ async function addEventWithNoContext(event) {
       `Failed to add event ${event.name} @ ${event.tournamentName}, firebase error (likely quota)`
     )
   }
+  clearTimeout(clearLoadedPlayers)
 
-  clearTimeout(saveTimeout)
   // make full player data out of participants
   players = players.map(p => {
     if (!p.id) {
       // is new
-      p = prep.makeNewPlayerToSaveFromEvent(event, p.participantData)
+      p = prep.makeNewPlayerToSaveFromEvent(
+        event,
+        p['participantData' + event.id]
+      )
       loadedPlayers[p.id] = p
     } else {
       const eventParticipantData = prep.makeParticipantDataToSaveFromEvent(
         event,
-        p.participantData
+        p['participantData' + event.id]
       )
+      if (!loadedPlayers[p.id].participatedInEvents) {
+        logError(
+          `should have participatedInEvents but don't for`,
+          loadedPlayers[p.id].tag,
+          loadedPlayers[p.id].id,
+          loadedPlayers[p.id]
+        )
+      }
       loadedPlayers[p.id].participatedInEvents.push(
         eventParticipantData
       )
     }
+    delete loadedPlayers[p.id]['participantData' + event.id]
     return loadedPlayers[p.id]
   })
-  clearTimeout(saveTimeout)
+  clearTimeout(clearLoadedPlayers)
 
   // calculate points, as far as possible
   // * without access to All Players, only opponent points from THIS event are possible... so we only calculate ones from this event. the rest will be handled by the daily sweep.
@@ -495,37 +565,27 @@ async function addEventWithNoContext(event) {
       player.points.push(...newPoints)
     })
   )
+  clearTimeout(clearLoadedPlayers)
 
   // * no peers for now, that'll also be handled in the daily sweep. if they already had them, they stay the same for now.
 
-  clearTimeout(saveTimeout)
-  saveTimeout = setTimeout(saveInMemoryPlayers, 1000)
-  await db.addEvent(event)
-  log(
-    `saved event data and queued saving player data for ${event.slug} @ ${event.tournamentSlug}`
-  )
-}
-
-async function saveInMemoryPlayers() {
-  clearTimeout(saveTimeout)
-  const idsToSave = Object.values(loadedPlayers)
-    .map(p => p.id)
-    .filter(i => i)
-  // save all
-  Promise.all([
-    ...idsToSave
+  await Promise.all([
+    db.addEvent(event),
+    ...players
       .filter(
-        id => loadedPlayers[id].participatedInEvents.length <= 1
+        p => loadedPlayers[p.id].participatedInEvents.length <= 1
       )
-      .map(id => db.addPlayer(loadedPlayers[id])),
-    ...idsToSave
-      .filter(id => loadedPlayers[id].participatedInEvents.length > 1)
-      .map(id => db.updatePlayer(loadedPlayers[id])),
-  ]).then(() => {
-    logAdd(
-      `done saving all player data for ${idsToSave.length} players`
-    )
-  })
+      .map(p => db.addPlayer(loadedPlayers[p.id])),
+    ...players
+      .filter(
+        p => loadedPlayers[p.id].participatedInEvents.length > 1
+      )
+      .map(p => db.updatePlayer(loadedPlayers[p.id])),
+  ])
+  logAdd(
+    `done saving ${players.length} players' data for ${event.slug} @ ${event.tournamentSlug}`
+  )
 
-  loadedPlayers = {}
+  clearTimeout(clearLoadedPlayers)
+  clearLoadedPlayers = setTimeout(() => (loadedPlayers = {}), 600000)
 }

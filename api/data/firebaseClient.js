@@ -214,6 +214,13 @@ module.exports = {
     )
   },
 
+  async deleteEvent(id, service) {
+    const gameRef = await getGameRef(event.game)
+    let eventRef = gameRef.collection('events').doc(service + id)
+    await eventRef.delete()
+    logAdd('deleted event ' + id)
+  },
+
   log(event) {
     if (typeof event !== 'string') return
     statsRef.update({

@@ -120,7 +120,7 @@ import axios from '~/plugins/axios'
 import PanelButton from '~/components/PanelButton'
 import { ModelSelect } from 'vue-search-select'
 const { parseParticipantTag } = require('~/common/f').default
-import patchNotes from '~/assets/patchNotes'
+const patchNotes = require('~/assets/patchNotes')
 
 export default {
   scrollToTop: true,

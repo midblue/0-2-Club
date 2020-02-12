@@ -48,13 +48,11 @@
       class="chart"
     />
 
-    <!-- <Awards :player="player" class="awardspane" /> -->
+    <Awards :player="player" class="awardspane" />
 
     <div class="eventslabel">
       <h2 v-if="displayEvents">
-        {{ displayEvents.length }} Event{{
-          displayEvents.length === 1 ? '' : 's'
-        }}
+        Events <span class="sub">({{ displayEvents.length }})</span>
       </h2>
 
       <EventSearch
@@ -107,7 +105,7 @@ import EventsListing from '~/components/EventsListing'
 import ProgressChart from '~/components/ProgressChart'
 import XPBar from '~/components/XPBar'
 import Stats from '~/components/Stats'
-import Awards from '~/components/Awards'
+import Awards from '~/components/Awards/Awards'
 import levels from '~/common/levels'
 import axios from 'axios'
 

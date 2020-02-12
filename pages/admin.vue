@@ -38,6 +38,8 @@
     <div class="color" style="background: var(--l9l)"></div>
     <div class="color" style="background: var(--l10l)"></div>
     <div class="color" style="background: var(--l11l)"></div>
+    <div class="color" style="background: var(--l12l)"></div>
+    <div class="color" style="background: var(--l13l)"></div>
 
     <br />
 
@@ -53,6 +55,8 @@
     <div class="color" style="background: var(--l9)"></div>
     <div class="color" style="background: var(--l10)"></div>
     <div class="color" style="background: var(--l11)"></div>
+    <div class="color" style="background: var(--l12)"></div>
+    <div class="color" style="background: var(--l13)"></div>
 
     <br />
 
@@ -68,6 +72,8 @@
     <div class="color" style="background: var(--l9d)"></div>
     <div class="color" style="background: var(--l10d)"></div>
     <div class="color" style="background: var(--l11d)"></div>
+    <div class="color" style="background: var(--l12d)"></div>
+    <div class="color" style="background: var(--l13d)"></div>
   </section>
 </template>
 

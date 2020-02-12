@@ -7,7 +7,7 @@ const {
 
 const silent = () => {}
 const logger = require('../scripts/log')
-const log = logger('smashgg', 'white')
+const log = logger('smashgg', 'gray')
 const low = silent //logger('smashgg', 'gray')
 const logAdd = logger('smashgg', 'green')
 const logError = logger('smashgg', 'yellow')

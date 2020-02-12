@@ -34,7 +34,7 @@ function daily() {
 
     for (let game of games) {
       // todo if there are players that need regenerating, might want to have a list in the DB for that (and code here to regen that player)
-      // todo check for accuracy — all players that should have event data do, and vice versa
+
       // todo manually delete event/s from db
 
       const allPlayers = await db.getPlayers(gameTitle(game))
@@ -53,6 +53,18 @@ function daily() {
           allEvents.length
         } events for game ${gameTitle(game)}`
       )
+
+      // check for accuracy — all players that should have event data do, and vice versa
+      const inaccurateEvents = await checkForAccuracy(
+        allPlayers,
+        allEvents
+      )
+      if (inaccurateEvents.length)
+        logError(
+          'Found error in data for',
+          inaccurateEvents.length,
+          'events, resolving...'
+        )
 
       // get new event info for all active players
       const alreadyCheckedOwnerIds = []
@@ -127,7 +139,7 @@ function daily() {
       })
 
       if (newUnsavedPlayers.length + playersToUpdate.length > 0) {
-        log(
+        low(
           `saving data for ${newUnsavedPlayers.length +
             playersToUpdate.length} player/s...`
         )
@@ -143,7 +155,7 @@ function daily() {
 
       // then, save all new events (done here to avoid a half-updated db if it hangs mid-daily)
       if (newUnsavedEvents.length > 0) {
-        log(`saving data for ${newUnsavedEvents.length} event/s...`)
+        low(`saving data for ${newUnsavedEvents.length} event/s...`)
         await Promise.all(newUnsavedEvents.map(e => db.addEvent(e)))
         logAdd(`saved data for ${newUnsavedEvents.length} event/s`)
       } else low(`no new event data to save`)
@@ -169,10 +181,43 @@ function daily() {
   })
 }
 
-async function saveNewEventsToDb(events) {
-  const savePromises = events.map(db.addEvent)
-  await Promise.all(savePromises)
-  return
+// check for accuracy — all players that should have event data do, and vice versa
+async function checkForAccuracy(allPlayers, allEvents) {
+  const toDeleteAndReadd = []
+  for (let event of allEvents) {
+    for (let participant of event.participants) {
+      const player = allPlayers.find(p => p.id === participant.id)
+      if (!player) {
+        logError('Missing player', participant.tag)
+        toDeleteAndReadd.push({
+          game: event.game,
+          eventSlug: event.slug,
+          tournamentSlug: event.tournamentSlug,
+          service: event.service,
+        })
+        // todo delete and re-add event to fix broken data
+      }
+      const playerInEvent = (player.participatedInEvents || []).find(
+        e => e.id === event.id
+      )
+      if (!playerInEvent) {
+        logError(
+          'Missing event',
+          event.tournamentName,
+          'entry for',
+          participant.tag
+        )
+        toDeleteAndReadd.push({
+          game: event.game,
+          eventSlug: event.slug,
+          tournamentSlug: event.tournamentSlug,
+          service: event.service,
+        })
+        // todo delete and re-add event to fix broken data
+      }
+    }
+  }
+  return toDeleteAndReadd
 }
 
 async function getNewEventsForPlayer(
@@ -391,73 +436,96 @@ async function combinePlayers({ game, tag, id }) {
   )
 }
 
+let loadedPlayers = {},
+  saveTimeout = null
+
 async function addEventWithNoContext(event) {
-  // todo these often happen in batches, we could save all players at the end to slightly reduce calls & also stop race conditions
-  // get players or lack thereof from db
+  clearTimeout(saveTimeout)
+
+  // load players or lack thereof from db and place in-memory
   let players = await Promise.all(
-    event.participants.map(async participant => {
-      const playerData = await db.getPlayer({
-        game: gameTitle(event.game),
-        id: participant.id,
-      })
-      return {
-        participant,
-        ...playerData,
+    event.participants.map(async participantData => {
+      if (!loadedPlayers[participantData.id])
+        loadedPlayers[participantData.id] = await db.getPlayer({
+          game: gameTitle(event.game),
+          id: participantData.id,
+        })
+      if (!loadedPlayers[participantData.id])
+        loadedPlayers[participantData.id] = {}
+      if (loadedPlayers[participantData.id].error) {
+        return delete loadedPlayers[participantData.id]
       }
+      loadedPlayers[
+        participantData.id
+      ].participantData = participantData
+      return loadedPlayers[participantData.id]
     })
   )
-  if (players.find(p => p.error))
+  if (players.find(p => !p)) {
     return logError(
       `Failed to add event ${event.name} @ ${event.tournamentName}, firebase error (likely quota)`
     )
+  }
 
+  clearTimeout(saveTimeout)
   // make full player data out of participants
   players = players.map(p => {
-    if (!p.tag)
+    if (!p.id) {
       // is new
-      return prep.makeNewPlayerToSaveFromEvent(event, p.participant)
-    else {
-      const updatedPlayerData = {
-        ...p,
-        participatedInEvents: [
-          ...p.participatedInEvents,
-          prep.makeParticipantDataToSaveFromEvent(
-            event,
-            p.participant
-          ),
-        ],
-      }
-      delete updatedPlayerData.participant
-      return updatedPlayerData
+      p = prep.makeNewPlayerToSaveFromEvent(event, p.participantData)
+      loadedPlayers[p.id] = p
+    } else {
+      const eventParticipantData = prep.makeParticipantDataToSaveFromEvent(
+        event,
+        p.participantData
+      )
+      loadedPlayers[p.id].participatedInEvents.push(
+        eventParticipantData
+      )
     }
+    return loadedPlayers[p.id]
   })
+  clearTimeout(saveTimeout)
 
   // calculate points, as far as possible
   // * without access to All Players, only opponent points from THIS event are possible... so we only calculate ones from this event. the rest will be handled by the daily sweep.
-  const playersWithPoints = await Promise.all(
+  await Promise.all(
     players.map(async player => {
       let newPoints = await points.get(player, players, event.id)
-      return {
-        ...player,
-        points: [...player.points, ...newPoints],
-      }
+      player.points.push(...newPoints)
     })
   )
-  // low(`updating ${playersWithPoints.length} players...`)
 
   // * no peers for now, that'll also be handled in the daily sweep. if they already had them, they stay the same for now.
 
-  // save all
-  await Promise.all([
-    db.addEvent(event),
-    ...playersWithPoints
-      .filter(p => p.participatedInEvents.length <= 1)
-      .map(player => db.addPlayer(player)),
-    ...playersWithPoints
-      .filter(p => p.participatedInEvents.length > 1)
-      .map(player => db.updatePlayer(player)),
-  ])
+  clearTimeout(saveTimeout)
+  saveTimeout = setTimeout(saveInMemoryPlayers, 1000)
+  await db.addEvent(event)
   log(
-    `done saving all data for ${event.slug} @ ${event.tournamentSlug}`
+    `saved event data and queued saving player data for ${event.slug} @ ${event.tournamentSlug}`
   )
+}
+
+async function saveInMemoryPlayers() {
+  clearTimeout(saveTimeout)
+  const idsToSave = Object.values(loadedPlayers)
+    .map(p => p.id)
+    .filter(i => i)
+  // save all
+  Promise.all([
+    ...idsToSave
+      .filter(
+        id => loadedPlayers[id].participatedInEvents.length <= 1
+      )
+      .map(id => db.addPlayer(loadedPlayers[id])),
+    ...idsToSave
+      .filter(id => loadedPlayers[id].participatedInEvents.length > 1)
+      .map(id => db.updatePlayer(loadedPlayers[id])),
+  ]).then(() => {
+    logAdd(
+      `done saving all player data for ${idsToSave.length} players`
+    )
+  })
+
+  loadedPlayers = {}
 }

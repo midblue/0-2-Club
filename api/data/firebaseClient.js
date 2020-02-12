@@ -243,7 +243,7 @@ function getGameRef(game) {
       if (memoedGameRefs[game]) return memoedGameRefs[game]
       memoedGameRefs[game] = doc.ref
       if (!doc.exists) {
-        low(`game ${game} not found in database, creating...`)
+        logAdd(`game ${game} not found in database, creating...`)
         await gamesRef.doc(game).create({})
       }
       return doc.ref

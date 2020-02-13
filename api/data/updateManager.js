@@ -71,7 +71,6 @@ function daily() {
         )
           toFix.push(e)
       })
-
       if (toFix.length) {
         logError(
           'Found error in data for',
@@ -79,7 +78,21 @@ function daily() {
           'events, resolving...'
         )
         fixDataErrors(toFix, allEvents, allPlayers)
-      } else low('data for', game, 'seems complete and accurate')
+      } else
+        low('event data for', game, 'seems complete and accurate')
+
+      const playersWithFixedErroneousData = fixPlayersWithBrokenEventStubs(
+        allEvents,
+        allPlayers
+      )
+      if (playersWithFixedErroneousData.length) {
+        logError(
+          'Found and removed event references to missing events in data for',
+          playersWithFixedErroneousData.length,
+          'players'
+        )
+      } else
+        low('player data for', game, 'seems complete and accurate')
 
       allPlayers = allPlayers.filter(p => !p.redirect)
 
@@ -155,6 +168,14 @@ function daily() {
       // then, save all updated players
       const playersToUpdate = playersWithUnsavedUpdatedPeers
       playersWithUnsavedUpdatedPoints.forEach(mightUpdate => {
+        if (
+          !playersToUpdate.find(
+            alreadySaving => mightUpdate.id === alreadySaving.id
+          )
+        )
+          playersToUpdate.push(mightUpdate)
+      })
+      playersWithFixedErroneousData.forEach(mightUpdate => {
         if (
           !playersToUpdate.find(
             alreadySaving => mightUpdate.id === alreadySaving.id
@@ -246,16 +267,30 @@ async function checkForAccuracy(allPlayers, allEvents) {
       }
     }
   }
-  for (let player of allPlayers)
+
+  return eventsToDeleteAndReadd
+}
+
+async function fixPlayersWithBrokenEventStubs(allEvents, allPlayers) {
+  // if a player has a ref to an event that doesn't exist, clear it out.
+  const updated = []
+  for (let player of allPlayers) {
+    let didUpdate = false
     for (let index in player.participatedInEvents)
       if (
         !allEvents.find(
           e => e.id === player.participatedInEvents[index].id
         )
-      )
+      ) {
         player.participatedInEvents.splice(index, 1)
-
-  return eventsToDeleteAndReadd
+        didUpdate = true
+      }
+    if (didUpdate) {
+      updated.push(player)
+      db.addPlayer(player)
+    }
+  }
+  return updated
 }
 
 async function fixDataErrors(toFix, allEvents, allPlayers) {

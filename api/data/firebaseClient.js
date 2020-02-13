@@ -112,9 +112,8 @@ module.exports = {
       .collection('players')
       .get()
       .then(snapshot => {
-        return snapshot.docs
-          .map(d => d.data())
-          .filter(p => !p.redirect)
+        return snapshot.docs.map(d => d.data())
+        // .filter(p => !p.redirect)
       })
       .catch(err => {
         logError('Error getting players', err)
@@ -214,8 +213,8 @@ module.exports = {
     )
   },
 
-  async deleteEvent(id, service) {
-    const gameRef = await getGameRef(event.game)
+  async deleteEvent(id, service, game) {
+    const gameRef = await getGameRef(game)
     let eventRef = gameRef.collection('events').doc(service + id)
     await eventRef.delete()
     logAdd('deleted event ' + id)

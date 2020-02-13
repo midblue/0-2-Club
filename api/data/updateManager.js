@@ -34,10 +34,9 @@ function daily() {
 
     for (let game of games) {
       // todo if there are players that need regenerating, might want to have a list in the DB for that (and code here to regen that player)
-
       // todo manually delete event/s from db
 
-      const allPlayers = await db.getPlayers(gameTitle(game))
+      let allPlayers = await db.getPlayers(gameTitle(game))
       const activeCutoff = Date.now() / 1000 - 14 * aDayInSeconds
       const activePlayers = allPlayers.filter(
         p => p.lastActive > activeCutoff
@@ -80,7 +79,9 @@ function daily() {
           'events, resolving...'
         )
         fixDataErrors(toFix, allEvents, allPlayers)
-      }
+      } else low('data for', game, 'seems complete and accurate')
+
+      allPlayers = allPlayers.filter(p => !p.redirect)
 
       // get new event info for all active players
       const alreadyCheckedOwnerIds = []
@@ -212,12 +213,12 @@ async function checkForAccuracy(allPlayers, allEvents) {
           tournamentSlug: event.tournamentSlug,
           service: event.service,
         })
-        // todo delete and re-add event to fix broken data
+        return
       }
       const playerInEvent = (player.participatedInEvents || []).find(
         e => e.id === event.id
       )
-      if (!playerInEvent) {
+      if (!playerInEvent && !player.redirect) {
         logError(
           'Missing event',
           event.tournamentName,
@@ -234,7 +235,6 @@ async function checkForAccuracy(allPlayers, allEvents) {
           tournamentSlug: event.tournamentSlug,
           service: event.service,
         })
-        // todo delete and re-add event to fix broken data
       }
     }
   }
@@ -247,18 +247,22 @@ async function fixDataErrors(toFix, allEvents, allPlayers) {
     const event = allEvents.find(
       e => e.id === eventStub.id && e.service === eventStub.service
     )
-    db.deleteEvent(event.id, event.service)
-    for (let player of event.participants)
+    db.deleteEvent(event.id, event.service, event.game)
+    for (let player of event.participants) {
       if (!affectedPlayers[player.id]) affectedPlayers[player.id] = []
-    affectedPlayers[player.id].push(event.id)
+      affectedPlayers[player.id].push(event.id)
+    }
     const index = allEvents.findIndex(
       e => e.id === eventStub.id && e.service === eventStub.service
     )
     allEvents.splice(index, 1)
     log('deleted event', event.name, event.tournamentName)
   }
+  let updatedPlayersNum = 0
   for (let id of Object.keys(affectedPlayers)) {
     const player = allPlayers.find(e => e.id === id)
+    if (!player) continue
+    updatedPlayersNum++
     const participatedInEvents = (
       player.participatedInEvents || []
     ).filter(e => !affectedPlayers[id].find(id => id === e.id))
@@ -270,7 +274,7 @@ async function fixDataErrors(toFix, allEvents, allPlayers) {
     event.name,
     event.tournamentName,
     'from',
-    Object.keys(affectedPlayers).length,
+    updatedPlayersNum,
     'players'
   )
 }
@@ -506,13 +510,20 @@ async function addEventWithNoContext(event) {
           game: gameTitle(event.game),
           id: participantData.id,
         })
-      if (!loadedPlayers[participantData.id] && !fromDb)
-        loadedPlayers[participantData.id] = {}
-      else if (!loadedPlayers[participantData.id] && fromDb)
-        loadedPlayers[participantData.id] = fromDb
-      if (loadedPlayers[participantData.id].error) {
-        return delete loadedPlayers[participantData.id]
-      }
+
+      // check for redirect
+      if (fromDb && fromDb.redirect)
+        fromDb = await db.getPlayer({
+          game: gameTitle(event.game),
+          id: fromDb.redirect,
+        })
+
+      if (
+        !loadedPlayers[participantData.id] &&
+        (!fromDb || !fromDb.error)
+      )
+        loadedPlayers[participantData.id] = fromDb || {}
+
       loadedPlayers[participantData.id][
         'participantData' + event.id
       ] = participantData

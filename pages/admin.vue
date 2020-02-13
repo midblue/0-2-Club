@@ -9,9 +9,7 @@
       v-for="(event, index) in presetEvents"
       :key="'event' + index"
       @click="loadEvent(index)"
-    >
-      Load {{ event.slug }} {{ event.tournamentSlug }}
-    </div>
+    >Load {{ event.slug }} {{ event.tournamentSlug }}</div>
 
     <br />
 
@@ -20,9 +18,7 @@
       v-for="(player, index) in presetPlayers"
       :key="'p' + index"
       @click="moreForPlayer(player)"
-    >
-      More for {{ player.tag }}
-    </div>
+    >More for {{ player.tag }}</div>
 
     <br />
 
@@ -157,7 +153,7 @@ export default {
   mounted() {},
   methods: {
     daily() {
-      if (!confirm('Start daily?')) return
+      // if (!confirm('Start daily?')) return
       this.$store.commit('setIsLoading', true)
       axios.get(`/api/daily/`).then(res => {
         this.$store.commit('setIsLoading', false)
@@ -175,10 +171,7 @@ export default {
           this.$store.commit('setIsLoading', false)
 
           if (res.data && !res.data.err) {
-            this.$store.dispatch(
-              'notifications/notify',
-              `Added that event!`
-            )
+            this.$store.dispatch('notifications/notify', `Added that event!`)
           } else
             this.$store.dispatch(
               'notifications/notify',
@@ -188,12 +181,10 @@ export default {
     },
     moreForPlayer(player) {
       this.$store.commit('setIsLoading', true)
-      axios
-        .get(`/api/more/${player.game}/${player.id}/`)
-        .then(res => {
-          this.$store.commit('setIsLoading', false)
-          this.$store.dispatch('notifications/notify', `Done!`)
-        })
+      axios.get(`/api/more/${player.game}/${player.id}/`).then(res => {
+        this.$store.commit('setIsLoading', false)
+        this.$store.dispatch('notifications/notify', `Done!`)
+      })
     },
   },
 }

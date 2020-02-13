@@ -159,8 +159,14 @@ function totalGameWins(player, events) {
       total +
       event.matchesWithUser.reduce((total, match) => {
         if (match.winnerId === player.id)
-          return total + (match.winnerScore || 0)
-        else return total + (match.loserScore || 0)
+          return total + (match.winnerScore || 2)
+        else
+          return (
+            total +
+            (match.loserScore && match.loserScore >= 0
+              ? match.loserScore
+              : 0)
+          )
       }, 0)
     )
   }, 0)

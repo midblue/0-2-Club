@@ -93,7 +93,7 @@ async function eventPoints(
           date: event.date,
         })
 
-      if (index === 0)
+      if (index === 0 && !onlyTouchEventId)
         p({
           category: `Progression`,
           title: `First Event`,

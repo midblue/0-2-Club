@@ -34,7 +34,7 @@
         >
           <g fill="none">
             <circle
-              stroke-width="5"
+              stroke-width="7"
               :stroke-dashoffset="315 - 315 * award.levelProgress"
               cx="53"
               cy="53"
@@ -96,10 +96,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+$widthu: 60px;
+$width: 50px;
+$widthd: 40px;
 .awardholder {
   position: relative;
-  width: 70px;
-  height: 60px;
+  width: $widthu;
+  height: $width;
   padding: 0 5px;
   cursor: help;
   display: flex;
@@ -108,8 +111,8 @@ export default {
 }
 .award {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: $width;
+  height: $width;
   margin: 0;
   outline: none;
   cursor: help;
@@ -223,8 +226,8 @@ export default {
 }
 
 .inprogress {
-  width: 40px;
-  height: 40px;
+  width: $widthd;
+  height: $widthd;
   position: relative;
   background-color: hsla(0, 0%, 92%, 1);
   background-size: 80%;

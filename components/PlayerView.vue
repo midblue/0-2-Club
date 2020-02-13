@@ -31,12 +31,12 @@
         <XPBar :totalPoints="totalPoints" :events="displayEvents" />
       </div>
 
-      <Stats
+      <!-- <Stats
         class="stats"
         :points="points"
         :player="player"
         :level="level.level"
-      />
+      /> -->
     </template>
 
     <ProgressChart
@@ -48,7 +48,11 @@
       class="chart"
     />
 
-    <Awards :player="player" class="awardspane" />
+    <Awards
+      v-if="displayEvents"
+      :player="player"
+      class="awardspane"
+    />
 
     <div class="eventslabel">
       <h2 v-if="displayEvents">

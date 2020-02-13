@@ -88,6 +88,14 @@ function daily() {
       const newUnsavedPlayers = []
       const newUnsavedEvents = []
       for (let player of activePlayers) {
+        const memory = process.memoryUsage()
+        const memoryUsedPercent = memory.heapUsed / memory.heapTotal
+        if (memoryUsedPercent > 0.85) {
+          logError(
+            'Low on memory, aborting remaining player updates. Will likely get to them on next daily.'
+          )
+          break
+        }
         const {
           newOwnerIds,
           newPlayers,

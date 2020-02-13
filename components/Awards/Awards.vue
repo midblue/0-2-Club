@@ -43,7 +43,6 @@
 // lifetime total x unique opponents
 // x total rivals / rivals beat
 // todo awards give points
-// todo awards show progress to next level
 
 import Award from '~/components/Awards/Award'
 const calculateAwards = require('~/api/data/points/awards').default
@@ -78,19 +77,19 @@ export default {
 
 <style lang="scss" scoped>
 .awardslabel {
-  margin: 0.5em 0 0 0;
+  margin: 0.2em 0 0 0;
 }
 
 .awards {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(auto-fit, 70px);
+  grid-template-columns: repeat(auto-fit, 60px);
   grid-gap: 0px;
 }
 
 .divider {
   height: 70%;
-  margin: 20% 0;
+  margin: 15% 0;
   width: 55%;
   border-right: 1px solid var(--grayd);
   display: flex;

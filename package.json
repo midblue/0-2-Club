@@ -11,7 +11,7 @@
     "precommit": "npm run lint",
     "logs": "heroku logs -a zero-two-club --tail -s app",
     "l": "npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs",
-    "rs": "heroku ps:restart -a zero-two-club"
+    "rs": "heroku ps:restart -a zero-two-club && npm run l"
   },
   "dependencies": {
     "axios": "^0.19.2",

@@ -102,13 +102,13 @@ function daily() {
       const newUnsavedEvents = []
       for (let player of activePlayers) {
         const memory = process.memoryUsage()
-        const memoryUsedPercent = memory.heapUsed / memory.heapTotal
-        if (memoryUsedPercent > 0.95) {
+        const memoryUsedPercent = memory.heapUsed / memory.rss
+        if (memoryUsedPercent > 0.85) {
           logError(
             'Low on memory, aborting remaining player updates. Will likely get to them on next daily.',
             Math.round(memory.heapUsed / 1024 / 1024),
             'mb of',
-            Math.round(memory.heapTotal / 1024 / 1024),
+            Math.round(memory.rss / 1024 / 1024),
             'mb'
           )
           break
@@ -233,13 +233,13 @@ function daily() {
 
 // check for accuracy — all players that should have event data do, and vice versa
 async function checkForAccuracy(allPlayers, allEvents) {
-  const eventsToDeleteAndReadd = []
+  const eventsToDeleteAndReAdd = []
   for (let event of allEvents) {
     for (let participant of event.participants) {
       const player = allPlayers.find(p => p.id === participant.id)
       if (!player) {
         logError('Missing player', participant.tag, participant.id)
-        eventsToDeleteAndReadd.push({
+        eventsToDeleteAndReAdd.push({
           game: event.game,
           id: event.id,
           eventSlug: event.slug,
@@ -261,7 +261,7 @@ async function checkForAccuracy(allPlayers, allEvents) {
           participant.tag,
           participant.id
         )
-        eventsToDeleteAndReadd.push({
+        eventsToDeleteAndReAdd.push({
           game: event.game,
           id: event.id,
           eventSlug: event.slug,
@@ -272,7 +272,7 @@ async function checkForAccuracy(allPlayers, allEvents) {
     }
   }
 
-  return eventsToDeleteAndReadd
+  return eventsToDeleteAndReAdd
 }
 
 function fixPlayersWithBrokenEventStubs(allEvents, allPlayers) {
@@ -345,8 +345,7 @@ async function getNewEventsForPlayer(
         player.tag
       } (${playerEventOwnerIds.length -
         newOwnerIds.length} skipped) (${Math.round(
-        (process.memoryUsage().heapUsed /
-          process.memoryUsage().heapTotal) *
+        (process.memoryUsage().heapUsed / process.memoryUsage().rss) *
           100
       )}% heap)`
     )

@@ -103,9 +103,13 @@ function daily() {
       for (let player of activePlayers) {
         const memory = process.memoryUsage()
         const memoryUsedPercent = memory.heapUsed / memory.heapTotal
-        if (memoryUsedPercent > 0.85) {
+        if (memoryUsedPercent > 0.95) {
           logError(
-            'Low on memory, aborting remaining player updates. Will likely get to them on next daily.'
+            'Low on memory, aborting remaining player updates. Will likely get to them on next daily.',
+            Math.round(memory.heapUsed / 1024 / 1024),
+            'mb of',
+            Math.round(memory.heapTotal / 1024 / 1024),
+            'mb'
           )
           break
         }
@@ -271,7 +275,7 @@ async function checkForAccuracy(allPlayers, allEvents) {
   return eventsToDeleteAndReadd
 }
 
-async function fixPlayersWithBrokenEventStubs(allEvents, allPlayers) {
+function fixPlayersWithBrokenEventStubs(allEvents, allPlayers) {
   // if a player has a ref to an event that doesn't exist, clear it out.
   const updated = []
   for (let player of allPlayers) {
@@ -311,6 +315,7 @@ async function fixDataErrors(toFix, allEvents, allPlayers) {
     log('deleted event', event.name, event.tournamentName)
   }
   let updatedPlayersNum = 0
+  // todo doesn't work?
   for (let id of Object.keys(affectedPlayers)) {
     const player = allPlayers.find(e => e.id === id)
     if (!player) continue
@@ -338,7 +343,12 @@ async function getNewEventsForPlayer(
     low(
       `${newOwnerIds.length} new owner/s found related to player ${
         player.tag
-      } (${playerEventOwnerIds.length - newOwnerIds.length} skipped)`
+      } (${playerEventOwnerIds.length -
+        newOwnerIds.length} skipped) (${Math.round(
+        (process.memoryUsage().heapUsed /
+          process.memoryUsage().heapTotal) *
+          100
+      )}% heap)`
     )
 
   let stubs = await getMoreEventStubs(player, newOwnerIds, allEvents)

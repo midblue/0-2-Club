@@ -305,16 +305,16 @@ async function matchPoints(
       const opponentInThisTournament = opponentData.participatedInEvents.find(
         e => e.id === event.id
       )
-      if (!opponentInThisTournament)
-        console.log(
-          'no data found for this tournament!',
-          opponentTag,
-          opponentId,
-          '@',
-          event.name,
-          event.tournamentName,
-          event.id
-        )
+      // if (!opponentInThisTournament)
+      //   console.log(
+      //     'no data found for this tournament!',
+      //     opponentTag,
+      //     opponentId,
+      //     '@',
+      //     event.name,
+      //     event.tournamentName,
+      //     event.id
+      //   )
       if (
         opponentInThisTournament &&
         (opponentInThisTournament.standing <= 2 ||

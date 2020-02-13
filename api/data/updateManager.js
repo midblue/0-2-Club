@@ -208,13 +208,13 @@ function daily() {
 
 // check for accuracy — all players that should have event data do, and vice versa
 async function checkForAccuracy(allPlayers, allEvents) {
-  const toDeleteAndReadd = []
+  const eventsToDeleteAndReadd = []
   for (let event of allEvents) {
     for (let participant of event.participants) {
       const player = allPlayers.find(p => p.id === participant.id)
       if (!player) {
         logError('Missing player', participant.tag, participant.id)
-        toDeleteAndReadd.push({
+        eventsToDeleteAndReadd.push({
           game: event.game,
           id: event.id,
           eventSlug: event.slug,
@@ -236,7 +236,7 @@ async function checkForAccuracy(allPlayers, allEvents) {
           participant.tag,
           participant.id
         )
-        toDeleteAndReadd.push({
+        eventsToDeleteAndReadd.push({
           game: event.game,
           id: event.id,
           eventSlug: event.slug,
@@ -246,7 +246,16 @@ async function checkForAccuracy(allPlayers, allEvents) {
       }
     }
   }
-  return toDeleteAndReadd
+  for (let player of allPlayers)
+    for (let index in player.participatedInEvents)
+      if (
+        !allEvents.find(
+          e => e.id === player.participatedInEvents[index].id
+        )
+      )
+        player.participatedInEvents.splice(index, 1)
+
+  return eventsToDeleteAndReadd
 }
 
 async function fixDataErrors(toFix, allEvents, allPlayers) {

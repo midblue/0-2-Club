@@ -269,14 +269,7 @@ async function fixDataErrors(toFix, allEvents, allPlayers) {
     player.participatedInEvents = participatedInEvents
     db.addPlayer(player)
   }
-  log(
-    'deleted record of event',
-    event.name,
-    event.tournamentName,
-    'from',
-    updatedPlayersNum,
-    'players'
-  )
+  log('deleted record of event', 'from', updatedPlayersNum, 'players')
 }
 
 async function getNewEventsForPlayer(

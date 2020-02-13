@@ -10,7 +10,8 @@
     "start": "nuxt build && nuxt start",
     "precommit": "npm run lint",
     "logs": "heroku logs -a zero-two-club --tail -s app",
-    "l": "npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs"
+    "l": "npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs",
+    "rs": "heroku ps:restart -a zero-two-club"
   },
   "dependencies": {
     "axios": "^0.19.2",

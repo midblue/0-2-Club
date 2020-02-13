@@ -109,7 +109,7 @@ function bestStreak(player, events) {
 function majors(player, events) {
   const majorCutoff = 200
   const majors = events.reduce((total, event) => {
-    return total + event.totalParticipants > majorCutoff ? 1 : 0
+    return total + (event.totalParticipants >= majorCutoff ? 1 : 0)
   }, 0)
 
   const levels = [0, 1, 2, 3, 5, 7, 10, 15, 20, 100]

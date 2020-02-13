@@ -276,12 +276,13 @@ module.exports = {
         ])
       )
 
-    log(
-      'will check',
-      ownerIds.length,
-      'owner/s —',
-      ownerIdsToCheck ? 'preset' : 'organic'
-    )
+    if (ownerIds.length)
+      log(
+        'will check',
+        ownerIds.length,
+        'owner/s —',
+        ownerIdsToCheck ? 'preset' : 'organic'
+      )
     const eventsFromOwnerIds = await Promise.all(
       ownerIds.map(async ownerId => {
         let data = null,

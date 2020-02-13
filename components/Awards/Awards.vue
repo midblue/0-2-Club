@@ -63,10 +63,14 @@ export default {
       return calculateAwards(this.player)
     },
     achievedAwards() {
-      return this.allAwards.filter(a => a.level > 0)
+      return this.allAwards
+        .filter(a => a.level > 0)
+        .sort((a, b) => b.level - a.level)
     },
     awardsInProgress() {
-      return this.allAwards.filter(a => a.level === 0)
+      return this.allAwards
+        .filter(a => a.level === 0)
+        .sort((a, b) => b.progress - a.progress)
     },
   },
 }

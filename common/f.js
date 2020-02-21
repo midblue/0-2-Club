@@ -28,8 +28,7 @@ function gameTitle(query) {
   return query
 }
 
-/* official game titles:
- */
+/* official game titles: */
 const gameTitleDisambiguation = [
   // Super Smash Bros. Melee
   q => {

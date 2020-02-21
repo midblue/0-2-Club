@@ -4,26 +4,16 @@
       class="low marr"
       v-if="player.id && player.tag && !hasLoadedGetMore"
       @click="getMore"
-    >
-      Auto-Scan For Recent Events
-    </button>
+    >Auto-Scan For Recent Events</button>
     <button
-      class="low"
+      :class="{low: player.id}"
       v-if="!showSearchBar"
       @click="showSearchBar = true"
-    >
-      + Add Event by URL
-    </button>
+    >+ Add Event by URL</button>
     <template v-else>
       <form @submit.prevent>
-        <input
-          v-model="searchUrl"
-          autofocus
-          placeholder="Enter a smash.gg URL..."
-        />
-        <button class="low" type="submit" @click="searchFor">
-          Add
-        </button>
+        <input v-model="searchUrl" autofocus placeholder="Enter a smash.gg URL..." />
+        <button class="low" type="submit" @click="searchFor">Add</button>
       </form>
       <div class="sub" v-if="!player.id">
         If you give us one tournament you've been in, we should be
@@ -58,29 +48,25 @@ export default {
 
       if (event) {
         if (event.err) {
-          return this.$store.dispatch(
-            'notifications/notify',
-            event.err
-          )
+          return this.$store.dispatch('notifications/notify', event.err)
         }
         this.$store.commit('setIsLoading', true)
         axios
           .get(
-            `/api/event/${event.service}/${this.player.game}/${event.tournamentSlug}/${event.eventSlug}/`
+            event.eventSlug
+              ? `/api/event/${event.service}/${this.player.game}/${event.tournamentSlug}/${event.eventSlug}/`
+              : `/api/event/${event.service}/${this.player.game}/${event.tournamentSlug}/`
           )
           .then(res => {
             this.$store.commit('setIsLoading', false)
 
             if (res.data && !res.data.err) {
-              this.$store.dispatch(
-                'notifications/notify',
-                `Added that event!`
-              )
+              this.$store.dispatch('notifications/notify', `Added that event!`)
               this.$emit('events', [res.data])
             } else
               this.$store.dispatch(
                 'notifications/notify',
-                `We didn't find an event at that URL! Check to make sure that it has /tournament/ AND /event/ in it.`
+                `We didn't find any event at that URL! Check to make sure that it has /tournament/ in it, and that the event is for your game.`
               )
           })
       } else
@@ -91,7 +77,6 @@ export default {
     },
     getMore() {
       if (this.hasLoadedGetMore) return
-      console.log('MORE')
       this.$emit('loading')
       this.$store.commit('setIsLoading', true)
       this.hasLoadedGetMore = true
@@ -100,10 +85,7 @@ export default {
         .then(res => {
           if (res.data && !res.data.err) {
             this.$store.commit('setIsLoading', false)
-            this.$store.dispatch(
-              'notifications/notify',
-              `Up to date!`
-            )
+            this.$store.dispatch('notifications/notify', `Up to date!`)
             this.$emit('events', [res.data])
           }
         })
@@ -113,12 +95,13 @@ export default {
 }
 
 function parseSmashGGEvent(url) {
-  if (url.indexOf('tournament') > -1 && url.indexOf('event') > -1) {
-    const [
-      wholeString,
-      ts,
-      es,
-    ] = /\/tournament\/([^/]*)\/events?\/([^/]*)/g.exec(url)
+  if (url.indexOf('tournament') > -1) {
+    const match = /\/tournament\/([^/]*)\/?(?:events?\/([^/]*))?/g.exec(url)
+    if (!match)
+      return {
+        err: `That URL isn't recognizable! Check to make sure that it has /tournament/ in it.`,
+      }
+    const [wholeString, ts, es] = match
     return {
       service: 'smashgg',
       tournamentSlug: ts,
@@ -126,7 +109,7 @@ function parseSmashGGEvent(url) {
     }
   }
   return {
-    err: `That URL isn't recognizable! Check to make sure that it has /tournament/ AND /event/ in it.`,
+    err: `That URL isn't recognizable! Check to make sure that it has /tournament/ in it.`,
   }
 }
 </script>
@@ -168,5 +151,9 @@ form {
 input {
   flex: 1;
   padding: 11px 10px;
+}
+
+div.sub {
+  margin-left: 15px;
 }
 </style>

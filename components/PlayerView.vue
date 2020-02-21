@@ -12,7 +12,18 @@
       </h1>
     </div>
 
-    <template v-if="!displayEvents">No events yet!</template>
+    <template v-if="!displayEvents">
+      <div class="emptystate">
+        <h3>No events yet!</h3>
+        <div>
+          Enter a URL for a tournament you've been to below!
+          <br />It should look something like
+          <code
+            v-html="`https://smash.gg/tournament/<b><i>[tournament name]</i></b>/events/<b><i>[event name]</i></b>/overview`"
+          ></code>.
+        </div>
+      </div>
+    </template>
 
     <template v-else>
       <div class="level">
@@ -20,23 +31,15 @@
           <span
             class="colorpad multiply"
             :style="{ background: `var(--l${level.level})` }"
-            >Level {{ level.level }} — {{ level.label }}</span
-          >
-          <InfoTooltip
-            >Get points by competing in tournaments to level
-            up!</InfoTooltip
-          >
+          >Level {{ level.level }} — {{ level.label }}</span>
+          <InfoTooltip>
+            Get points by competing in tournaments to level
+            up!
+          </InfoTooltip>
         </h3>
 
         <XPBar :totalPoints="totalPoints" :events="displayEvents" />
       </div>
-
-      <!-- <Stats
-        class="stats"
-        :points="points"
-        :player="player"
-        :level="level.level"
-      /> -->
     </template>
 
     <ProgressChart
@@ -48,15 +51,12 @@
       class="chart"
     />
 
-    <Awards
-      v-if="displayEvents"
-      :player="player"
-      class="awardspane"
-    />
+    <Awards v-if="displayEvents" :player="player" class="awardspane" />
 
     <div class="eventslabel">
       <h2 v-if="displayEvents">
-        Events <span class="sub">({{ displayEvents.length }})</span>
+        Events
+        <span class="sub">({{ displayEvents.length }})</span>
       </h2>
 
       <EventSearch
@@ -66,11 +66,7 @@
         class="eventsearch"
       />
     </div>
-    <EventsListing
-      :events="displayEvents"
-      :level="level.level"
-      :game="player.game"
-    />
+    <EventsListing :events="displayEvents" :level="level.level" :game="player.game" />
 
     <template v-if="peers && peers.length > 0">
       <hr />
@@ -81,20 +77,20 @@
         </div>
         <div>
           <span v-for="peer in peers">
-            <nuxt-link
-              v-if="peer"
-              :to="`/g/${player.game}/i/${peer.id}`"
-              ><div
+            <nuxt-link v-if="peer" :to="`/g/${player.game}/i/${peer.id}`">
+              <div
                 v-if="peer.img"
                 :style="{
                   'background-image': `url('${peer.img}')`,
                 }"
                 class="playericon"
-              ></div></nuxt-link
-            ><nuxt-link :to="`/g/${player.game}/i/${peer.id}`">{{
+              ></div>
+            </nuxt-link>
+            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`">
+              {{
               peer.tag
-            }}</nuxt-link
-            >&nbsp;
+              }}
+            </nuxt-link>&nbsp;
           </span>
         </div>
       </div>
@@ -160,10 +156,7 @@ export default {
   watch: {
     checkForUpdates(willCheck, wasChecking) {
       if (willCheck !== wasChecking && willCheck) {
-        this.checkForUpdatesInterval = setInterval(
-          this.reCheckPoints,
-          8000
-        )
+        this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 8000)
       } else {
         clearInterval(this.checkForUpdatesInterval)
       }

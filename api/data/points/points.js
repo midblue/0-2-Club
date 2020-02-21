@@ -1,7 +1,8 @@
 const { getPlacingRatio } = require('../../../common/f').default
+const db = require('../firebaseClient')
 
 module.exports = {
-  async get(player, allPlayers, onlyTouchEventId) {
+  async get(player, onlyTouchEventId, loadedPlayers) {
     let points = []
 
     const chronologicalEvents = (
@@ -12,8 +13,8 @@ module.exports = {
       ...(await eventPoints(
         chronologicalEvents,
         player,
-        allPlayers,
-        onlyTouchEventId
+        onlyTouchEventId,
+        loadedPlayers
       ))
     )
 
@@ -24,8 +25,8 @@ module.exports = {
 async function eventPoints(
   events,
   player,
-  allPlayers,
-  onlyTouchEventId
+  onlyTouchEventId,
+  loadedPlayers
 ) {
   let runningPlacingAverage
   let lastEventDate
@@ -200,7 +201,7 @@ async function eventPoints(
         event,
         events,
         player,
-        allPlayers
+        loadedPlayers
       )
       points.push(...(await mps))
 
@@ -215,7 +216,7 @@ async function matchPoints(
   event,
   events,
   player,
-  allPlayers
+  loadedPlayers
 ) {
   const chronologicalMatches = matches.sort((a, b) => a.date - b.date)
   let winStreak = 0,
@@ -299,7 +300,14 @@ async function matchPoints(
 
       const opponentId = didWin ? match.loserId : match.winnerId
       const opponentTag = didWin ? match.loserTag : match.winnerTag
-      const opponentData = allPlayers.find(p => p.id === opponentId)
+      let opponentData = loadedPlayers.find(p => p.id === opponentId)
+      if (
+        !opponentData ||
+        opponentData.redirect ||
+        !opponentData.participatedInEvents
+      )
+        opponentData = await db.getPlayerById(player.game, opponentId)
+
       if (!opponentData) return [...(await pointsArray), ...points]
       const opponentRatio = getPlacingRatio(opponentData)
       const opponentInThisTournament = opponentData.participatedInEvents.find(

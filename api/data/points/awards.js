@@ -1,14 +1,22 @@
 const { getPlacingRatio } = require('~/common/f').default
 
 export default function(player) {
-  if (!player) return []
-  let awards = []
+  if (!player || !player.participatedInEvents) return []
 
-  const chronologicalEvents = (
-    player.participatedInEvents || []
-  ).sort((a, b) => a.date - b.date)
+  // todo getting WEIRD error here trying to sort these on combined players
+  const chronologicalEvents = player.participatedInEvents.sort(
+    (a, b) => a.date - b.date
+  )
+  // so here's a workaround
+  // const orderedDates = player.participatedInEvents
+  //   .map(e => e.date)
+  //   .sort((a, b) => a - b)
+  // const chronologicalEvents = orderedDates.map(d =>
+  //   player.participatedInEvents.find(e => (e.date = d))
+  // )
+  // ! wait, this returns the same first event over and over!
 
-  awards.push(...getAwards(player, chronologicalEvents))
+  const awards = getAwards(player, chronologicalEvents)
 
   return awards
 }

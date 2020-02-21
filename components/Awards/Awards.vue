@@ -4,7 +4,6 @@
   >
     <h2 class="awardslabel">
       Awards
-      <!-- {{ achievedAwards.length }} Award{{ achievedAwards.length === 1 ? '' : 's' }} -->
     </h2>
     <div class="awards">
       <Award

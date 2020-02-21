@@ -1,1 +1,1 @@
-module.exports = { smashgg: require('./getters/smashgg') }
+module.exports = { smashgg: require('./getters/smashgg/get') }

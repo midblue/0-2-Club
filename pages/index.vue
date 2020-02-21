@@ -29,25 +29,23 @@
         </template>
       </PanelButton>
 
-      <div class="sub negmartop">
+      <!-- <div class="sub negmartop">
         {{
-        (Object.values(playerCounts) || []).reduce(
-        (total, p) => total + (p || 0),
-        0
-        )
+          (Object.values(players) || []).reduce(
+            (total, p) => total + (p || 0),
+            0
+          )
         }}
         players and
         {{
-        (Object.values(eventCounts) || []).reduce(
-        (total, e) => total + (e || 0),
-        0
-        )
+          (Object.values(events) || []).reduce(
+            (total, e) => total + (e || 0),
+            0
+          )
         }}
         events analyzed so far.
-      </div>
+      </div>-->
 
-      <br v-if="!isMobile" />
-      <br v-if="!isMobile" />
       <div>
         <b>See it in action:</b>
         <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/H0P">H0P</nuxt-link>・

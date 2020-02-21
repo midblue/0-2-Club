@@ -310,6 +310,11 @@ h3 {
   }
 }
 
+code {
+  padding: 3px 5px;
+  background-color: var(--gray);
+}
+
 .playericon {
   border-radius: 50%;
   overflow: hidden;

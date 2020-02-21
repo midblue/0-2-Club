@@ -1,4 +1,4 @@
-const minLength = 9
+let minLength = 15
 const resetColor = '\x1b[0m'
 const terminalColors = {
   red: '\x1b[31m',
@@ -17,8 +17,10 @@ module.exports = function(
   showTimeStamp = false
 ) {
   const isBrowser = typeof window !== 'undefined'
-  let prefix = name + ' '
-  while (prefix.length < minLength) prefix += ' '
+  let prefix = name
+  prefix += ' '
+  if (name.length > minLength) minLength = name.length
+  while (prefix.length < minLength) prefix = ' ' + prefix
   if (isBrowser)
     return (...args) => {
       console.log(

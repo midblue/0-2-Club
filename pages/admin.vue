@@ -2,14 +2,17 @@
   <section>
     <h1>Admin</h1>
     <pre>{{ JSON.stringify(stats, null, 2) }}</pre>
-    <button @click="daily">Daily</button>
+    <button @click="scanForNewEvents">Scan for New Events</button>
+    <button @click="rollingUpdate">Rolling Update</button>
 
     <div
       class="button"
       v-for="(event, index) in presetEvents"
       :key="'event' + index"
       @click="loadEvent(index)"
-    >Load {{ event.slug }} {{ event.tournamentSlug }}</div>
+    >
+      Load {{ event.slug }} {{ event.tournamentSlug }}
+    </div>
 
     <br />
 
@@ -18,7 +21,9 @@
       v-for="(player, index) in presetPlayers"
       :key="'p' + index"
       @click="moreForPlayer(player)"
-    >More for {{ player.tag }}</div>
+    >
+      More for {{ player.tag }}
+    </div>
 
     <br />
 
@@ -152,12 +157,18 @@ export default {
   },
   mounted() {},
   methods: {
-    daily() {
-      // if (!confirm('Start daily?')) return
+    scanForNewEvents() {
       this.$store.commit('setIsLoading', true)
-      axios.get(`/api/daily/`).then(res => {
+      axios.get(`/api/scan/`).then(res => {
         this.$store.commit('setIsLoading', false)
-        this.$store.dispatch('notifications/notify', `Up to date!`)
+        this.$store.dispatch('notifications/notify', `Done!`)
+      })
+    },
+    rollingUpdate() {
+      this.$store.commit('setIsLoading', true)
+      axios.get(`/api/rolling/`).then(res => {
+        this.$store.commit('setIsLoading', false)
+        this.$store.dispatch('notifications/notify', `Done!`)
       })
     },
     loadEvent(index) {
@@ -171,7 +182,10 @@ export default {
           this.$store.commit('setIsLoading', false)
 
           if (res.data && !res.data.err) {
-            this.$store.dispatch('notifications/notify', `Added that event!`)
+            this.$store.dispatch(
+              'notifications/notify',
+              `Added that event!`
+            )
           } else
             this.$store.dispatch(
               'notifications/notify',
@@ -181,10 +195,12 @@ export default {
     },
     moreForPlayer(player) {
       this.$store.commit('setIsLoading', true)
-      axios.get(`/api/more/${player.game}/${player.id}/`).then(res => {
-        this.$store.commit('setIsLoading', false)
-        this.$store.dispatch('notifications/notify', `Done!`)
-      })
+      axios
+        .get(`/api/more/${player.game}/${player.id}/`)
+        .then(res => {
+          this.$store.commit('setIsLoading', false)
+          this.$store.dispatch('notifications/notify', `Done!`)
+        })
     },
   },
 }

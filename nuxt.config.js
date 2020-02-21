@@ -57,9 +57,7 @@ module.exports = {
     '~/api/*.js',
     '~/api/routes/*.js',
     '~/api/data/*.js',
-    '~/api/data/db/*.js',
-    '~/api/data/getters/*.js',
-    '~/api/data/scripts/*.js',
-    '~/api/data/points/*.js',
+    '~/api/data/*/*.js',
+    '~/api/data/*/*/*.js',
   ],
 }

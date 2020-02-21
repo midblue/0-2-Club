@@ -1,7 +1,8 @@
 const services = require('./services')
 const db = require('./firebaseClient')
-const dbInterface = require('./updateManager')
-const points = require('./points/points')
+const addSingleEvent = require('./addSingleEvent')
+const getAndAddNewEventsForPlayer = require('./getAndAddNewEventsForPlayer')
+const combinePlayers = require('./combinePlayers')
 const logger = require('./scripts/log')
 const low = logger('get', 'gray')
 const log = logger('get', 'white')
@@ -14,18 +15,33 @@ module.exports = {
     return await db.getStats()
   },
 
-  async daily() {
-    return await dbInterface.daily()
-  },
-
-  event({ service, id, tournamentSlug, slug, game, retries = 0 }) {
+  event({
+    service,
+    id,
+    tournamentSlug,
+    slug,
+    game,
+    retries = 0,
+    onlyUpdatePlayers = false,
+  }) {
     if (!service)
       return logError('A service is required to get an event.')
-    if (!(id || (tournamentSlug && slug)))
+    if (!(id || tournamentSlug))
       return logError(
         'An id, tournamentSlug, or slug is required to get an event.'
       )
     return new Promise(async resolve => {
+      if (!id && !slug) {
+        // if this is just a tournament slug, we need to get the events from it first
+        const events = await services[
+          service
+        ].eventsForGameInTournament(game, tournamentSlug)
+        const loadedEvents = await Promise.all(
+          events.map(e => this.event({ service, id: e.id, game }))
+        )
+        return resolve(loadedEvents)
+      }
+
       let loadedEntry
       try {
         loadedEntry = await db.getEvent({
@@ -44,16 +60,12 @@ module.exports = {
           )
           return resolve(loadedEntry)
         }
-
         loadedEntry = await services[service].event({
           id,
           tournamentSlug,
           slug,
           retries,
         })
-
-        // console.log('loadedEntry:', loadedEntry)
-        resolve(loadedEntry)
       } catch (e) {
         logError(
           'failed to get event',
@@ -74,15 +86,10 @@ module.exports = {
           })
         }
       }
-      if (loadedEntry && !loadedEntry.err) {
-        await dbInterface.addEventWithNoContext(loadedEntry)
-        low(
-          `returning newly loaded event from ${loadedEntry.service}:`,
-          loadedEntry.name,
-          '-',
-          loadedEntry.tournamentName
-        )
-      }
+
+      if (loadedEntry && !loadedEntry.err)
+        await addSingleEvent(loadedEntry, onlyUpdatePlayers)
+
       resolve(loadedEntry)
     })
   },
@@ -99,11 +106,6 @@ module.exports = {
     return loadedPlayer
   },
 
-  async players({ game }) {
-    if (!game) return
-    return await db.getPlayers({ game: gameTitle(game) })
-  },
-
   async logToDb(event) {
     db.log(event)
   },
@@ -113,23 +115,6 @@ module.exports = {
       player = await this.player({ game: gameTitle(game), id, tag })
     if (!player || player.disambiguation) return
     db.setPlayerActive(player)
-  },
-
-  async points({ game, id, tag, setActive = false }) {
-    const loadedPlayer = await this.player({
-      game: gameTitle(game),
-      id,
-      tag,
-    })
-    if (!loadedPlayer) return
-    if (loadedPlayer.disambiguation) return loadedPlayer
-
-    if (setActive) this.setActive(loadedPlayer)
-
-    const collatedPlayerData = collatePointsIntoPlayerData(
-      loadedPlayer
-    )
-    return collatedPlayerData
   },
 
   async moreEventsForPlayer({ game, id, tag }) {
@@ -160,30 +145,11 @@ module.exports = {
 
     db.setPlayerActive(loadedPlayer)
 
-    const servicesList = loadedPlayer.participatedInEvents.reduce(
-      (list, event) => {
-        if (!list.find(s => s === event.service))
-          return [...list, event.service]
-        return list
-      },
-      []
-    )
-    const newStubs = await Promise.all(
-      servicesList.map(s => {
-        return services[s].moreEventsForPlayer(
-          loadedPlayer,
-          null,
-          null,
-          gameTitle(loadedPlayer.game)
-        )
-      })
-    )
-    const eventStubs = [].concat.apply([], newStubs || [])
-    return eventStubs
+    return await getAndAddNewEventsForPlayer(loadedPlayer)
   },
 
   async combineTag({ game, tag, id }) {
-    return await dbInterface.combinePlayers({
+    return await combinePlayers({
       game: gameTitle(game),
       tag,
       id,

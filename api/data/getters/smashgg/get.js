@@ -1,42 +1,57 @@
-const axios = require('axios')
+const db = require('../../firebaseClient')
+
+const {
+  makeQuery,
+  queryEvent,
+  queryEventSets,
+  queryEventStandings,
+  queryPlayerSets,
+  queryTournamentsByOwner,
+  queryEventsInTournament,
+} = require('./query')
+
+const {
+  isComplete,
+  isSingles,
+  parseEventStubsFromTournaments,
+} = require('./helperFunctions')
 
 const {
   parseParticipantTag,
   gameTitle,
-} = require('../../../common/f').default
+} = require('../../../../common/f').default
 
 const silent = () => {}
-const logger = require('../scripts/log')
+const logger = require('../../scripts/log')
 const log = logger('smashgg', 'gray')
 const low = silent //logger('smashgg', 'gray')
 const logAdd = logger('smashgg', 'green')
 const logError = logger('smashgg', 'yellow')
 
-const rateLimiter = require('../scripts/rateLimiter')
-const limiter = new rateLimiter(12, 10000)
-
 const currentlyLoadingNewEvents = []
-
-const perQueryPage = 100
 
 module.exports = {
   async event({ tournamentSlug, slug, eventSlug }) {
     if (eventSlug && !slug) slug = eventSlug
-    if (!(tournamentSlug && slug)) return
+    if (!(tournamentSlug && slug))
+      return { err: 'missing event or tournament slug' }
 
     if (
       currentlyLoadingNewEvents.find(e => e === tournamentSlug + slug)
-    )
+    ) {
       logError(
         'already loading this event! load queue length:',
         currentlyLoadingNewEvents.length
       )
-    else currentlyLoadingNewEvents.push(tournamentSlug + slug)
+      return { err: 'already loading' }
+    } else currentlyLoadingNewEvents.push(tournamentSlug + slug)
     // log(currentlyLoadingNewEvents)
 
     const eventData = await getEvent(tournamentSlug, slug)
-    if (!eventData || eventData.error)
-      return logError(`skipping event:`, eventData.error)
+    if (!eventData || eventData.error) {
+      logError(`skipping event:`, eventData.error)
+      return { err: eventData.error }
+    }
     const isDone = eventData.state === 'COMPLETED'
     if (!isDone) return { err: 'not done' }
 
@@ -138,6 +153,32 @@ module.exports = {
     return eventDataToReturn
   },
 
+  async eventsForGameInTournament(game, tournamentSlug) {
+    log(
+      'getting all events for game',
+      game,
+      'from tournament',
+      tournamentSlug
+    )
+    if (!game || !tournamentSlug) return []
+    const res = await makeQuery(queryEventsInTournament, {
+      slug: tournamentSlug,
+    })
+    const tournament = res.data.data.tournament
+    if (!tournament) return []
+    const events = res.data.data.tournament.events
+      .filter(e => gameTitle(e.videogame.name) === gameTitle(game))
+      .filter(isSingles)
+      .map(e => ({
+        name: e.name,
+        slug: e.slug.substring(e.slug.lastIndexOf('/') + 1),
+        tournamentSlug,
+        game: gameTitle(e.videogame.name),
+        id: e.id,
+      }))
+    return events
+  },
+
   async moreEventsForPlayer(
     player,
     ownerIdsToCheck,
@@ -164,7 +205,12 @@ module.exports = {
                 existingEvent.slug === eventSlug &&
                 existingEvent.service === 'smashgg'
             )
-          : false
+          : await db.getEventExists({
+              service: 'smashgg',
+              tournamentSlug,
+              slug: eventSlug,
+              game: player.game,
+            })
         if (existsInDb) return resolve(false)
 
         return resolve(true)
@@ -277,7 +323,7 @@ module.exports = {
       )
 
     if (ownerIds.length)
-      log(
+      low(
         'will check',
         ownerIds.length,
         'owner/s —',
@@ -303,12 +349,6 @@ module.exports = {
             logError(
               `Failed to get data for ownerId ${ownerId} on smashgg, retrying... (attempt ${attempts})`
             )
-            //   (${JSON.stringify(
-            //     data.error || data.data.error || data.data.errors,
-            //     null,
-            //     2
-            //   )})`
-            // )
             attempts++
             data = null
           }
@@ -346,14 +386,6 @@ module.exports = {
       foundEvents.push(...eventList)
     )
 
-    // if (foundEvents.length > 0)
-    //   logAdd(
-    //     'found additional events:\n                        ',
-    //     foundEvents
-    // )
-    //       .map(e => e.tournamentSlug + ' - ' + e.eventSlug)
-    //       .join('\n                         ')
-    //   )
     return foundEvents
   },
 }
@@ -381,11 +413,6 @@ async function getEvent(tournamentSlug, eventSlug) {
     ) {
       logError(
         `Failed to get data for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts})`
-        // (${JSON.stringify(
-        //   data.error || data.data.error || data.data.errors || data.data,
-        //   null,
-        //   2
-        // )})`
       )
       attempts++
       data = null
@@ -424,6 +451,7 @@ async function getEvent(tournamentSlug, eventSlug) {
             !moreSets.data ||
             moreSets.data.error ||
             moreSets.error ||
+            !moreSets.data.data ||
             !moreSets.data.data.event ||
             !moreSets.data.data.event.sets.nodes
           ) {
@@ -473,6 +501,7 @@ async function getEvent(tournamentSlug, eventSlug) {
             slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
           })
           if (
+            !moreStandings ||
             !moreStandings.data ||
             moreStandings.data.error ||
             moreStandings.error
@@ -512,427 +541,8 @@ async function getEvent(tournamentSlug, eventSlug) {
   return data
 }
 
-async function makeQuery(query, variables) {
-  // log('querying smashgg api:', query.substring(7, query.indexOf('(')))
-  const request = {
-    url: 'https://api.smash.gg/gql/alpha',
-    method: 'post',
-    headers: {
-      Authorization: `Authorization: Bearer ${process.env.SMASHGG_APIKEY}`,
-    },
-    data: {
-      query,
-      variables,
-    },
-  }
-  // console.log(request)
-  return limiter.queue(() => {
-    return axios(request).catch(error => {
-      logError('axios error:', error)
-      return
-    })
-  })
-}
-
-function isComplete(event) {
-  if (event.state !== 'COMPLETED') return false
-  if (event.sets && event.sets.nodes && event.sets.nodes.length > 0) {
-    for (let set of event.sets.nodes) {
-      if (!set.winnerId) {
-        return false
-      }
-    }
-  }
-  return true
-}
-
-function isSingles(event) {
-  const hasNumbers = /(?:[２３４234][ -]?(?:vs?|on)[ -]?[２３４234]|do?ub(?:le)?[sz]|team[sz])/gi
-  if (hasNumbers.exec(event.slug || event.eventSlug)) return false
-  if (hasNumbers.exec(event.name || '')) return false
-  if (
-    event.name &&
-    event.sets &&
-    event.sets.nodes &&
-    event.sets.nodes.length > 0
-  ) {
-    let isProbablyDoubles = 0
-    for (let c = 0; c < 6; c++) {
-      const set =
-        event.sets.nodes[
-          Math.floor(Math.random() * event.sets.nodes.length)
-        ]
-      if (
-        parseParticipantTag(
-          set.slots[0].entrant.participants[0].player.gamerTag
-        ).indexOf('/') > -1 ||
-        parseParticipantTag(
-          set.slots[1].entrant.participants[0].player.gamerTag
-        ).indexOf('/') > -1
-      )
-        isProbablyDoubles++
-    }
-    if (isProbablyDoubles >= 3) return false
-  }
-  return true
-}
-
 function isNotAlreadyLoading(event) {
   return !currentlyLoadingNewEvents.find(
     e => e === event.tournamentSlug + (event.slug || event.eventSlug)
   )
 }
-
-async function parseEventStubsFromTournaments(tournaments, game) {
-  return tournaments.reduce((eventsAccumulator, tournament) => {
-    const tournamentEvents =
-      tournament.events && tournament.events.length
-        ? tournament.events
-            .filter(
-              event =>
-                (!game ||
-                  gameTitle(event.videogame.name) ===
-                    gameTitle(game)) &&
-                event.state === 'COMPLETED' &&
-                event.sets.nodes &&
-                event.sets.nodes.length > 0
-            )
-            .map(event => {
-              const [
-                wholeString,
-                tournamentSlug,
-                eventSlug,
-              ] = /tournament\/([^/]*)\/event\/([^/]*)/g.exec(
-                event.slug
-              )
-              return {
-                service: 'smashgg',
-                eventSlug,
-                tournamentSlug,
-                game: gameTitle(event.videogame.name),
-              }
-            })
-        : []
-    return [...eventsAccumulator, ...tournamentEvents]
-  }, [])
-}
-
-const queryEvent = `
-query EventInfo($slug: String, $page: Int!) {
-  event(slug: $slug) {
-    id
-    name
-    slug
-    state
-    startAt
-    images {
-      url
-    }
-    videogame {
-      images {
-        url
-      }
-      name
-    }
-    tournament {
-      id
-      name
-      slug
-      ownerId
-    }
-    standings (query: {
-      page: $page,
-      perPage: 1
-    }) {
-      pageInfo {
-        totalPages
-      }
-      nodes {
-        id
-        placement
-        entrant {
-          id
-          participants {
-            player {
-              id
-              gamerTag
-            }
-          }
-        }
-      }
-    }
-    sets(
-      page: $page,
-      perPage: 1,
-      sortType: STANDARD,
-      filters: {
-        hideEmpty: true
-      }
-    ) {
-      pageInfo {
-        totalPages
-      }
-      nodes {
-        completedAt
-        winnerId
-        entrant1Score
-        entrant2Score
-        slots {
-          entrant {
-            id
-            participants {
-              player {
-                id
-                gamerTag
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}`
-
-const queryPlayerSets = `
-query PlayerSets ($id: ID!) {
-  player(id: $id) {
-    recentSets {
-      slots {
-        slotIndex
-      }
-      event {
-        id
-        name
-        state
-        slug
-        videogame {
-          name
-          slug
-        }
-        tournament {
-          id
-          ownerId
-          name
-          slug
-        }
-      }
-    }
-  }
-}`
-
-const queryEventSets = `
-query EventSets($slug: String, $page: Int!) {
-  event(slug: $slug) {
-    sets(
-      page: $page,
-      perPage:  ${perQueryPage},
-      sortType: STANDARD
-      filters: {
-        hideEmpty: true
-      }
-    ) {
-      nodes {
-        completedAt
-        winnerId
-        entrant1Score
-        entrant2Score
-        slots {
-          entrant {
-            id
-            participants {
-              player {
-                id
-                gamerTag
-                images {
-                  url
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}`
-
-const queryEventStandings = `
-query EventStandings($slug: String, $page: Int!) {
-  event(slug: $slug) {
-    standings (query: {
-      page: $page,
-      perPage: ${perQueryPage}
-    }) {
-      nodes {
-        id
-        placement
-        entrant {
-          id
-          participants {
-            player {
-              id
-              gamerTag
-              images {
-                url
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}`
-
-const queryTournamentsByOwner = `
-query TournamentsByOwner($ownerId: ID!) {
-    tournaments(query: {
-      perPage: 100
-      filter: {
-        ownerId: $ownerId
-      }
-    }) {
-    nodes {
-      events {
-        id
-        slug
-        state
-        name
-        videogame {
-          name
-          slug
-        }
-        sets (
-          page: 1,
-          perPage: 1,
-          filters: {
-            hideEmpty: true
-          }
-        ){
-          nodes {
-            id
-          }
-        }
-      }
-    }
-  }
-}`
-
-// async function getTournament(tournamentSlug) {
-//   await makeQuery(queryTournament, {
-//     slug: tournamentSlug,
-//   })
-// }
-
-// const queryTournament = `query TournamentQuery($slug: String) {
-// 		tournament(slug: $slug){
-// 			id
-//    	  images {
-//         url
-//       }
-// 			name
-//     	slug
-// 			events {
-// 			  id
-//         name
-//         slug
-//         state
-//         videogame {
-//           images{
-//             url
-//           }
-//           name
-//         }
-//         tournament {
-//           id
-//           name
-//           slug
-//         }
-//         entrants {
-//           nodes{
-//             id
-//             name
-//           }
-//       	}
-// 			}
-// 		}
-//   }`
-
-// ;(async function() {
-//   makeQuery(queryTournament, {
-//     slug: 'the-dojo-s-sunday-smash-18',
-//   })
-// })()
-
-//   async moreEventsForPlayer({ id, eventSlug, tournamentSlug }) {
-//     if (!id || !eventSlug) return
-//     const eventPromises = await (
-//       await $$(
-//         `https://smash.gg/tournament/${tournamentSlug}/event/${eventSlug}/entrant/${id}`,
-//         '.profileContents .tourney-content .AttendeeDetailsPage div div div div div section + section div div div > a'
-//       )
-//     ).map(async el => await (await el.getProperty('href')).jsonValue())
-//     const urls = await Promise.all(eventPromises)
-//     const relevantURLs = urls.filter(url => /\/entrant\//g.exec(url))
-//     const events = relevantURLs.map(url => {
-//       const [
-//         wholeString,
-//         ts,
-//         es,
-//       ] = /\/tournament\/([^/]*)\/event\/([^/]*)/g.exec(url)
-//       return {
-//         service: 'smashgg',
-//         tournamentSlug: ts,
-//         eventSlug: es,
-//       }
-//     })
-//     return events
-//   },
-// }
-
-// // first check all user events for related events with puppeteer
-// if (playerEventsToCheck.length > 0) {
-//   const eventToCheck =
-//     playerEventsToCheck[
-//       Math.floor(Math.random() * playerEventsToCheck.length)
-//     ]
-//   if (eventToCheck.entrantId) {
-//     const puppeteerEventPromises = await (
-//       await $$(
-//         `https://smash.gg/tournament/${eventToCheck.tournamentSlug}/event/${eventToCheck.slug}/entrant/${eventToCheck.entrantId}`,
-//         '.profileContents .tourney-content .AttendeeDetailsPage div div div div div section + section div div div > a'
-//       )
-//     ).map(async el => await (await el.getProperty('href')).jsonValue())
-
-//     const urls = await Promise.all(puppeteerEventPromises)
-//     const relevantURLs = urls.filter(
-//       url =>
-//         url.indexOf('/tournament/') > -1 &&
-//         url.indexOf('/event/') > -1 &&
-//         url.indexOf('/entrant/') > -1
-//     )
-//     let newPuppeteerEvents = relevantURLs.map(url => {
-//       const [
-//         wholeString,
-//         tournamentSlug,
-//         eventSlug,
-//       ] = /\/tournament\/([^/]*)\/event\/([^/]*)/g.exec(url)
-//       return {
-//         service: 'smashgg',
-//         tournamentSlug,
-//         eventSlug,
-//       }
-//     })
-//     newPuppeteerEvents = await Promise.all(
-//       newPuppeteerEvents.map(async e => {
-//         const isNew = await isUnknownEvent(e)
-//         if (isNew) return e
-//       })
-//     )
-//     newPuppeteerEvents = newPuppeteerEvents.filter(e => e)
-//     console.log(
-//       newPuppeteerEvents.length,
-//       'additional events found via puppeteer for player',
-//       player.tag
-//     )
-//     foundEvents.push(...newPuppeteerEvents)
-//   }
-// }

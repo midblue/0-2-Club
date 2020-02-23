@@ -1,7 +1,7 @@
 const prep = require('./dbDataPrep')
 const db = require('./firebaseClient')
 const services = require('./services')
-const { gameTitle } = require('../../common/f').default
+const { gameTitle } = require('../../common/functions').default
 const verifyPlayers = require('./verifyPlayers')
 const updatePlayersPointsAndPeers = require('./updatePlayersPointsAndPeers')
 

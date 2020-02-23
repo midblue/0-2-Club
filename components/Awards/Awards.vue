@@ -1,10 +1,6 @@
 <template>
-  <div
-    v-if="achievedAwards.length > 0 || awardsInProgress.length > 0"
-  >
-    <h2 class="awardslabel">
-      Awards
-    </h2>
+  <div v-if="achievedAwards.length > 0 || awardsInProgress.length > 0">
+    <h2 class="awardslabel">Awards</h2>
     <div class="awards">
       <Award
         v-for="(award, index) in achievedAwards"
@@ -35,20 +31,11 @@
 </template>
 
 <script>
-// todo awards for:
-// consistently attending tournaments x weeks in a row
-// attending tournaments in a series
-// improving win ratio x% in x weeks
-// lifetime total x unique opponents
-// x total rivals / rivals beat
-// todo awards give points
-
 import Award from '~/components/Awards/Award'
-const calculateAwards = require('~/api/data/points/awards').default
 
 export default {
   props: {
-    player: {},
+    awards: {},
   },
   components: { Award },
   data() {
@@ -57,16 +44,13 @@ export default {
     }
   },
   computed: {
-    allAwards() {
-      return calculateAwards(this.player)
-    },
     achievedAwards() {
-      return this.allAwards
+      return this.awards
         .filter(a => a.level > 0)
         .sort((a, b) => b.level - a.level)
     },
     awardsInProgress() {
-      return this.allAwards
+      return this.awards
         .filter(a => a.level === 0)
         .sort((a, b) => b.progress - a.progress)
     },

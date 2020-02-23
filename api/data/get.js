@@ -19,7 +19,7 @@ module.exports = {
     service,
     id,
     tournamentSlug,
-    slug,
+    eventSlug,
     game,
     retries = 0,
     onlyUpdatePlayers = false,
@@ -31,14 +31,20 @@ module.exports = {
         'An id, tournamentSlug, or slug is required to get an event.'
       )
     return new Promise(async resolve => {
-      if (!id && !slug) {
+      if (!id && !eventSlug) {
         // if this is just a tournament slug, we need to get the events from it first
         const events = await services[
           service
         ].eventsForGameInTournament(game, tournamentSlug)
-        const loadedEvents = await Promise.all(
-          events.map(e => this.event({ service, id: e.id, game }))
-        )
+        const loadedEvents = []
+        for (let e of events) {
+          const newEvent = await this.event({
+            service,
+            id: e.id,
+            game,
+          })
+          loadedEvents.push(newEvent)
+        }
         return resolve(loadedEvents)
       }
 
@@ -48,7 +54,7 @@ module.exports = {
           service,
           tournamentSlug,
           id,
-          slug,
+          eventSlug,
           game: gameTitle(game),
         })
         if (loadedEntry) {
@@ -63,13 +69,13 @@ module.exports = {
         loadedEntry = await services[service].event({
           id,
           tournamentSlug,
-          slug,
+          eventSlug,
           retries,
         })
       } catch (e) {
         logError(
           'failed to get event',
-          slug,
+          eventSlug,
           'at',
           tournamentSlug,
           ':',
@@ -81,7 +87,7 @@ module.exports = {
             service,
             id,
             tournamentSlug,
-            slug,
+            eventSlug,
             retries: retries + 1,
           })
         }
@@ -94,15 +100,17 @@ module.exports = {
     })
   },
 
-  async player({ game, id, tag }) {
+  async player({ game, id, tag, setActive = false }) {
     if (!game || (!id && !tag)) return
-    const loadedPlayer = await db.getPlayer({
+    let loadedPlayer = await db.getPlayer({
       game: gameTitle(game),
       id,
       tag,
     })
     if (Array.isArray(loadedPlayer))
       return { disambiguation: loadedPlayer }
+    if (loadedPlayer && setActive) db.setPlayerActive(loadedPlayer)
+    loadedPlayer = collatePointsIntoPlayerData(loadedPlayer)
     return loadedPlayer
   },
 
@@ -158,13 +166,14 @@ module.exports = {
 }
 
 function collatePointsIntoPlayerData(player) {
+  if (!player) return
   const collatedEvents = (player.participatedInEvents || []).map(
     event => {
       return {
         ...event,
         points: (player.points || []).filter(
           point =>
-            point.eventSlug === event.slug &&
+            point.eventSlug === event.eventSlug &&
             point.tournamentSlug === event.tournamentSlug
         ),
       }

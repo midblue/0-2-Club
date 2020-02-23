@@ -60,7 +60,7 @@ async function handleEvent(req, res, next) {
   const eventData = await get.event({
     service,
     tournamentSlug,
-    slug: eventSlug,
+    eventSlug,
     game,
   })
   res.json(eventData)

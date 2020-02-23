@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="awardholder"
-    @mouseover="hover = true"
-    @mouseout="hover = false"
-  >
+  <div class="awardholder" @mouseover="hover = true" @mouseout="hover = false">
     <button
       class="award"
       :class="
@@ -26,12 +22,7 @@
       <div class="label">{{ award.label }}</div>
 
       <template v-if="award.levelProgress > 0.01">
-        <svg
-          class="progress"
-          width="106px"
-          height="106px"
-          viewBox="0 0 106 106"
-        >
+        <svg class="progress" width="106px" height="106px" viewBox="0 0 106 106">
           <g fill="none">
             <circle
               stroke-width="7"
@@ -39,26 +30,28 @@
               cx="53"
               cy="53"
               r="50"
-            ></circle>
+            />
           </g>
         </svg>
         <!-- <div class="progresslabel start">{{ award.levelStart }}</div>
-      <div class="progresslabel end">{{ award.levelEnd }}</div> -->
+        <div class="progresslabel end">{{ award.levelEnd }}</div>-->
       </template>
 
       <template v-if="award.level > 0">
         <div class="levellabel">{{ award.level }}</div>
         <div class="tooltip" v-if="hover">
           <h3 v-html="award.title"></h3>
-          <div
-            class="level"
-            :style="{ color: `var(--l${award.level})` }"
-          >
-            Level {{ award.level }}
+          <div class="level" :style="{ color: `var(--l${award.level})` }">
+            <div>
+              <b>Level {{ award.level }}</b>
+            </div>
+            <div class="points">+{{ award.points }} points</div>
           </div>
           <div v-html="award.levelDescription"></div>
           <div class="sub">
-            Reach <b>{{ award.levelEnd }}</b> for level
+            Reach
+            <b>{{ award.levelEnd }}</b>
+            for level
             {{ award.level + 1 }}
           </div>
         </div>
@@ -220,8 +213,12 @@ $widthd: 40px;
   }
 
   .level {
-    font-weight: bold;
+    // font-weight: bold;
     margin-bottom: 5px;
+
+    .points {
+      font-size: 0.85em;
+    }
   }
 }
 

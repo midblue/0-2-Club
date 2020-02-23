@@ -1,20 +1,26 @@
 const { getPlacingRatio } = require('~/common/f').default
 
+// ? awards for:
+// consistently attending tournaments x weeks in a row
+// attending tournaments in a series
+// improving win ratio x% in x weeks
+// lifetime total x unique opponents
+// x total rivals / rivals beat
+
 export default function(player) {
   if (!player || !player.participatedInEvents) return []
 
-  // todo getting WEIRD error here trying to sort these on combined players
-  const chronologicalEvents = player.participatedInEvents.sort(
-    (a, b) => a.date - b.date
-  )
-  // so here's a workaround
-  // const orderedDates = player.participatedInEvents
-  //   .map(e => e.date)
-  //   .sort((a, b) => a - b)
-  // const chronologicalEvents = orderedDates.map(d =>
-  //   player.participatedInEvents.find(e => (e.date = d))
+  // ! getting WEIRD error here trying to sort these on combined players
+  // const chronologicalEvents = player.participatedInEvents.sort(
+  //   (a, b) => a.date - b.date
   // )
-  // ! wait, this returns the same first event over and over!
+  // so here's a workaround, no idea why it works
+  const orderedDates = player.participatedInEvents
+    .map(e => e.date)
+    .sort((a, b) => a - b)
+  const chronologicalEvents = orderedDates.map(d =>
+    player.participatedInEvents.find(e => e.date === d)
+  )
 
   const awards = getAwards(player, chronologicalEvents)
 
@@ -47,6 +53,7 @@ levelDescription
 requirements
 img
 label (for bottom center of icon)
+points
 
 */
 
@@ -97,6 +104,8 @@ function bestStreak(player, events) {
 
   const label = ``
 
+  const points = level * 10
+
   return [
     {
       title,
@@ -110,6 +119,7 @@ function bestStreak(player, events) {
       requirements,
       img,
       label,
+      points,
     },
   ]
 }
@@ -144,6 +154,8 @@ function majors(player, events) {
 
   const label = ``
 
+  const points = level * 10
+
   return [
     {
       title,
@@ -157,6 +169,7 @@ function majors(player, events) {
       requirements,
       img,
       label,
+      points,
     },
   ]
 }
@@ -217,6 +230,8 @@ function totalGameWins(player, events) {
 
   const label = ``
 
+  const points = level * 10
+
   return [
     {
       title,
@@ -230,6 +245,7 @@ function totalGameWins(player, events) {
       requirements,
       img,
       label,
+      points,
     },
   ]
 }
@@ -282,6 +298,8 @@ function mostWeeksInARow(player, events) {
 
   const label = ``
 
+  const points = level * 10
+
   return [
     {
       title,
@@ -295,6 +313,7 @@ function mostWeeksInARow(player, events) {
       requirements,
       img,
       label,
+      points,
     },
   ]
 }
@@ -347,6 +366,8 @@ function mostInOneWeek(player, events) {
 
   const label = ``
 
+  const points = level * 10
+
   return [
     {
       title,
@@ -360,6 +381,7 @@ function mostInOneWeek(player, events) {
       requirements,
       img,
       label,
+      points,
     },
   ]
 }
@@ -425,6 +447,8 @@ function yearlyImprovement(player, events) {
 
     const label = `${year}`
 
+    const points = level * 10
+
     return {
       title,
       total,
@@ -437,6 +461,7 @@ function yearlyImprovement(player, events) {
       requirements,
       img,
       label,
+      points,
     }
   })
 }
@@ -474,6 +499,8 @@ function yearlyAttendance(player, events) {
 
     const label = `${year}`
 
+    const points = level * 10
+
     return {
       title,
       total,
@@ -486,6 +513,7 @@ function yearlyAttendance(player, events) {
       requirements,
       img,
       label,
+      points,
     }
   })
 }

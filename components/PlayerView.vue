@@ -51,7 +51,7 @@
       class="chart"
     />
 
-    <Awards v-if="displayEvents" :player="player" class="awardspane" />
+    <Awards v-if="awards" :awards="awards" class="awardspane" />
 
     <div class="eventslabel">
       <h2 v-if="displayEvents">
@@ -86,11 +86,7 @@
                 class="playericon"
               ></div>
             </nuxt-link>
-            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`">
-              {{
-              peer.tag
-              }}
-            </nuxt-link>&nbsp;
+            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`" v-html="peer.tag"></nuxt-link>&nbsp;&nbsp;
           </span>
         </div>
       </div>
@@ -108,6 +104,7 @@ import Stats from '~/components/Stats'
 import Awards from '~/components/Awards/Awards'
 import levels from '~/common/levels'
 import axios from 'axios'
+const calculateAwards = require('~/api/data/points/awards').default
 
 export default {
   props: {
@@ -127,6 +124,7 @@ export default {
       player: {},
       peers: [],
       points: [],
+      awards: [],
       levels,
       checkForUpdates: false,
       checkForUpdatesInterval: null,
@@ -142,9 +140,11 @@ export default {
         : null
     },
     totalPoints() {
-      return this.points
-        ? this.points.reduce((total, { value }) => total + value, 0)
-        : 0
+      return (
+        (this.points
+          ? this.points.reduce((total, { value }) => total + value, 0)
+          : 0) + this.awards.reduce((total, { points }) => total + points, 0)
+      )
     },
     level() {
       let l = 0
@@ -166,6 +166,7 @@ export default {
     this.player = this.initialPlayer
     this.points = this.initialPlayer.points
     this.peers = this.initialPlayer.peers
+    this.awards = calculateAwards(this.player)
   },
   mounted() {},
   beforeDestroy() {

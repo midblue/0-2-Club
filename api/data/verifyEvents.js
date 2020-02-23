@@ -9,6 +9,7 @@ const logInfo = logger('verifyevents', 'blue')
 const logError = logger('verifyevents', 'yellow')
 
 module.exports = async function(events) {
+  if (!events || !events.length) return []
   const gotPlayers = [] // this is a little funky tbh
   const toFix = await checkForAccuracy(events, gotPlayers)
   if (toFix.length) {
@@ -62,6 +63,7 @@ async function checkSingleEvent(event, gotPlayers) {
       const playerInEvent = (player.participatedInEvents || []).find(
         e => e.id === event.id
       )
+      // todo batch these
       if (!playerInEvent && !player.redirect) {
         logError(
           'Missing event',
@@ -95,8 +97,14 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
     log('deleted event', event.name, event.tournamentName)
   }
 
+  log(
+    'will remove entry from',
+    Object.keys(affectedPlayers).length,
+    'players...'
+  )
+
   let updatedPlayersNum = 0
-  // todo doesn't work?
+  // todo doesn't work? seems to hang on big events with no network at all
   await Promise.all(
     Object.keys(affectedPlayers).map(async id => {
       return new Promise(async resolve => {
@@ -125,7 +133,7 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
   for (let event of eventsToDeleteAndReAdd) {
     await get.event({
       service: event.service,
-      slug: event.slug,
+      eventSlug: event.eventSlug,
       tournamentSlug: event.tournamentSlug,
       game: event.game,
       onlyUpdatePlayers: true,

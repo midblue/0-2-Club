@@ -8,6 +8,7 @@ const {
   queryPlayerSets,
   queryTournamentsByOwner,
   queryEventsInTournament,
+  perQueryPage,
 } = require('./query')
 
 const {
@@ -32,22 +33,24 @@ const currentlyLoadingNewEvents = []
 
 module.exports = {
   async event({ tournamentSlug, slug, eventSlug }) {
-    if (eventSlug && !slug) slug = eventSlug
-    if (!(tournamentSlug && slug))
+    if (!eventSlug && slug) eventSlug = slug
+    if (!(tournamentSlug && eventSlug))
       return { err: 'missing event or tournament slug' }
 
     if (
-      currentlyLoadingNewEvents.find(e => e === tournamentSlug + slug)
+      currentlyLoadingNewEvents.find(
+        e => e === tournamentSlug + eventSlug
+      )
     ) {
       logError(
         'already loading this event! load queue length:',
         currentlyLoadingNewEvents.length
       )
       return { err: 'already loading' }
-    } else currentlyLoadingNewEvents.push(tournamentSlug + slug)
+    } else currentlyLoadingNewEvents.push(tournamentSlug + eventSlug)
     // log(currentlyLoadingNewEvents)
 
-    const eventData = await getEvent(tournamentSlug, slug)
+    const eventData = await getEvent(tournamentSlug, eventSlug)
     if (!eventData || eventData.error) {
       logError(`skipping event:`, eventData.error)
       return { err: eventData.error }
@@ -126,7 +129,7 @@ module.exports = {
 
     log(
       'done getting',
-      slug,
+      eventSlug,
       tournamentSlug,
       'on smash.gg,',
       currentlyLoadingNewEvents.length,
@@ -138,7 +141,7 @@ module.exports = {
     const eventDataToReturn = {
       id: eventData.id,
       name: eventData.name,
-      slug: slug,
+      eventSlug,
       game: gameTitle(eventData.videogame.name),
       date: eventData.startAt,
       service: 'smashgg',
@@ -171,7 +174,7 @@ module.exports = {
       .filter(isSingles)
       .map(e => ({
         name: e.name,
-        slug: e.slug.substring(e.slug.lastIndexOf('/') + 1),
+        eventSlug: e.slug.substring(e.slug.lastIndexOf('/') + 1),
         tournamentSlug,
         game: gameTitle(e.videogame.name),
         id: e.id,
@@ -202,13 +205,13 @@ module.exports = {
           ? existingEvents.find(
               existingEvent =>
                 existingEvent.tournamentSlug === tournamentSlug &&
-                existingEvent.slug === eventSlug &&
+                existingEvent.eventSlug === eventSlug &&
                 existingEvent.service === 'smashgg'
             )
           : await db.getEventExists({
               service: 'smashgg',
               tournamentSlug,
-              slug: eventSlug,
+              eventSlug: eventSlug,
               game: player.game,
             })
         if (existsInDb) return resolve(false)
@@ -543,6 +546,8 @@ async function getEvent(tournamentSlug, eventSlug) {
 
 function isNotAlreadyLoading(event) {
   return !currentlyLoadingNewEvents.find(
-    e => e === event.tournamentSlug + (event.slug || event.eventSlug)
+    e =>
+      e ===
+      event.tournamentSlug + (event.eventSlug || event.eventSlug)
   )
 }

@@ -2,82 +2,13 @@
   <div class="eventslisting">
     <template v-if="events">
       <div>
-        <div
-          class="panel"
+        <EventListing
           v-for="event in events"
-          :key="event.slug + event.tournamentSlug"
-        >
-          <h3>
-            <span
-              v-if="event.points.reduce((t, p) => t + p.value, 0)"
-              class="colorpad"
-              :style="{ background: `var(--l${level})` }"
-            >
-              +{{ event.points.reduce((t, p) => t + p.value, 0) }}
-            </span>
-            {{ event.tournamentName }}
-            <span class="sub">
-              {{ event.name }} ({{
-                new Date(event.date * 1000).toLocaleDateString()
-              }})
-            </span>
-          </h3>
-          <div v-if="event.points.length === 0" class="sub">
-            Calculating points... Check back in 24 hours!
-          </div>
-          <div
-            v-for="(point, index) in event.points"
-            :key="event.slug + event.tournamentSlug + 'point' + index"
-            class="point"
-            :class="{ padtop: point.title.indexOf('Set') > -1 }"
-          >
-            <span
-              class="pointvalue"
-              :style="{
-                color: `var(--l${level}d)`,
-                opacity: point.value >= 10 ? 1 : point.value / 10,
-              }"
-              >+{{ point.value }}</span
-            >
-            <div class="explanation">
-              <span class="title">{{ point.title }}</span>
-              <span class="context sub">
-                <span>
-                  {{
-                    point.context.substring(
-                      0,
-                      point.context.indexOf('%O') > -1
-                        ? point.context.indexOf('%O')
-                        : point.context.length
-                    )
-                  }}
-                  <nuxt-link
-                    v-if="point.opponent"
-                    :to="`/g/${game}/i/${point.opponent.id}`"
-                    ><div
-                      v-if="point.opponent.img"
-                      :style="{
-                        'background-image': `url('${point.opponent.img}')`,
-                      }"
-                      class="playericon"
-                    ></div></nuxt-link
-                  ><nuxt-link
-                    v-if="point.opponent"
-                    :to="`/g/${game}/i/${point.opponent.id}`"
-                    >{{ point.opponent.tag }}</nuxt-link
-                  >
-                  {{
-                    point.context.substring(
-                      point.context.indexOf('%O') > -1
-                        ? point.context.indexOf('%O') + 2
-                        : point.context.length
-                    )
-                  }}
-                </span>
-              </span>
-            </div>
-          </div>
-        </div>
+          :key="event.eventSlug + event.tournamentSlug"
+          :event="event"
+          :level="level"
+          :game="game"
+        />
         <div class="sub disclaimer">
           <b>See something wrong?</b> Check back in a day or two — we
           fully update all points on a rotating basis. If something
@@ -94,68 +25,23 @@
 </template>
 
 <script>
-import levels from '~/common/levels'
+import EventListing from '~/components/EventListing'
+
 export default {
+  components: { EventListing },
   props: {
     events: {},
     level: {},
     game: {},
   },
   data() {
-    return {
-      levels,
-    }
+    return {}
   },
   computed: {},
 }
 </script>
 
 <style scoped lang="scss">
-h3 {
-  line-height: 1.1;
-  margin-top: 0;
-}
-
-.point {
-  line-height: 1.05;
-  max-width: 600px;
-  display: grid;
-  grid-template-columns: 20px 1fr;
-  grid-gap: 10px;
-
-  &.padtop {
-    padding-top: 15px;
-
-    @media (max-width: 768px) {
-      line-height: 1;
-      padding-top: 15px;
-    }
-  }
-
-  .explanation {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-
-    @media (max-width: 768px) {
-      margin-bottom: 4px;
-      display: block;
-    }
-  }
-
-  .pointvalue {
-    font-weight: bold;
-  }
-}
-
-.context {
-  opacity: 1;
-  color: var(--textl);
-
-  a {
-    color: inherit;
-  }
-}
-
 .disclaimer {
   text-align: center;
   max-width: 450px;

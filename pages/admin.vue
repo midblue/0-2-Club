@@ -10,9 +10,7 @@
       v-for="(event, index) in presetEvents"
       :key="'event' + index"
       @click="loadEvent(index)"
-    >
-      Load {{ event.slug }} {{ event.tournamentSlug }}
-    </div>
+    >Load {{ event.eventSlug }} {{ event.tournamentSlug }}</div>
 
     <br />
 
@@ -21,9 +19,7 @@
       v-for="(player, index) in presetPlayers"
       :key="'p' + index"
       @click="moreForPlayer(player)"
-    >
-      More for {{ player.tag }}
-    </div>
+    >More for {{ player.tag }}</div>
 
     <br />
 
@@ -113,37 +109,37 @@ export default {
       presetEvents: [
         {
           service: 'smashgg',
-          slug: 'dx-melee-singles-1-vs-1',
+          eventSlug: 'dx-melee-singles-1-vs-1',
           tournamentSlug: 'battlegateway-29-1',
           game: 'Super Smash Bros. Melee',
         },
         {
           service: 'smashgg',
-          slug: 'melee-singles-vs',
+          eventSlug: 'melee-singles-vs',
           tournamentSlug: 'battlegateway-26',
           game: 'Super Smash Bros. Melee',
         },
         {
           service: 'smashgg',
-          slug: 'melee-singles',
+          eventSlug: 'melee-singles',
           tournamentSlug: 'that-s-not-safe-90',
           game: 'Super Smash Bros. Melee',
         },
         {
           service: 'smashgg',
-          slug: 'melee',
+          eventSlug: 'melee',
           tournamentSlug: '21-1',
           game: 'Super Smash Bros. Melee',
         },
         {
           service: 'smashgg',
-          slug: 'melee-singels',
+          eventSlug: 'melee-singels',
           tournamentSlug: 'meleeverse',
           game: 'Super Smash Bros. Melee',
         },
         {
           service: 'smashgg',
-          slug: 'ultimate-singles',
+          eventSlug: 'ultimate-singles',
           tournamentSlug: 'waveshine-24',
           game: 'Super Smash Bros. Melee',
         },
@@ -176,16 +172,13 @@ export default {
       this.$store.commit('setIsLoading', true)
       axios
         .get(
-          `/api/event/${event.service}/${event.game}/${event.tournamentSlug}/${event.slug}/`
+          `/api/event/${event.service}/${event.game}/${event.tournamentSlug}/${event.eventSlug}/`
         )
         .then(res => {
           this.$store.commit('setIsLoading', false)
 
           if (res.data && !res.data.err) {
-            this.$store.dispatch(
-              'notifications/notify',
-              `Added that event!`
-            )
+            this.$store.dispatch('notifications/notify', `Added that event!`)
           } else
             this.$store.dispatch(
               'notifications/notify',
@@ -195,12 +188,10 @@ export default {
     },
     moreForPlayer(player) {
       this.$store.commit('setIsLoading', true)
-      axios
-        .get(`/api/more/${player.game}/${player.id}/`)
-        .then(res => {
-          this.$store.commit('setIsLoading', false)
-          this.$store.dispatch('notifications/notify', `Done!`)
-        })
+      axios.get(`/api/more/${player.game}/${player.id}/`).then(res => {
+        this.$store.commit('setIsLoading', false)
+        this.$store.dispatch('notifications/notify', `Done!`)
+      })
     },
   },
 }

@@ -367,7 +367,7 @@ async function matchPoints(
       const sharedEvents = events.filter(e =>
         opponentData.participatedInEvents.find(
           oe =>
-            oe.slug === e.slug &&
+            oe.eventSlug === e.eventSlug &&
             oe.tournamentSlug === oe.tournamentSlug
         )
       )
@@ -436,7 +436,7 @@ function makePointElementGenerator(
       context,
       value,
       date,
-      eventSlug: event.slug,
+      eventSlug: event.eventSlug,
       eventName: event.name,
       tournamentSlug: event.tournamentSlug,
       tournamentName: event.tournamentName,

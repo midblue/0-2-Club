@@ -78,7 +78,7 @@ module.exports = {
                   tournamentSlug,
                   eventSlug,
                 ] = /tournament\/([^/]*)\/event\/([^/]*)/g.exec(
-                  event.slug
+                  event.slug || event.eventSlug
                 )
                 return {
                   service: 'smashgg',

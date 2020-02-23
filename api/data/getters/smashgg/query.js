@@ -256,4 +256,5 @@ module.exports = {
   queryPlayerSets,
   queryTournamentsByOwner,
   queryEventsInTournament,
+  perQueryPage,
 }

@@ -5,7 +5,6 @@ const logAdd = logger('firebase', 'green')
 const logError = logger('firebase', 'yellow')
 
 const memo = require('./scripts/memo')
-
 const prep = require('./dbDataPrep')
 
 const admin = require('firebase-admin')
@@ -36,10 +35,39 @@ const memoizedPlayers = memo(300, 'players')
 
 const aDayInSeconds = 24 * 60 * 60
 
+let writes = 0,
+  reads = 0,
+  deletes = 0,
+  prevWrites = 0,
+  prevReads = 0,
+  prevDeletes = 0
+setInterval(() => {
+  if (
+    writes !== prevWrites ||
+    reads !== prevReads ||
+    deletes !== prevDeletes
+  )
+    low(
+      `today so far: ${writes} writes, ${reads} reads, ${deletes} deletes`
+    )
+  prevWrites = writes
+  prevReads = reads
+  prevDeletes = deletes
+}, 100000)
+setInterval(() => {
+  writes = 0
+  reads = 0
+  deletes = 0
+  prevWrites = 0
+  prevReads = 0
+  prevDeletes = 0
+}, aDayInSeconds * 1000)
+
 module.exports = {
   async getStats() {
     return statsRef.get().then(async doc => {
       const games = await this.getGames()
+      reads++
       return { ...doc.data(), games }
     })
   },
@@ -51,33 +79,14 @@ module.exports = {
       },
       { merge: true }
     )
-  },
-
-  async updateStats() {
-    // todo update player and event counts from here
-    // const totals = { events: {}, players: {} }
-    // return gamesRef.get().then(async snapshot => {
-    //   await Promise.all(
-    //     snapshot.docs.map(async doc => {
-    //       const game = doc.ref._path.segments[1]
-    //       const data = doc.data() || { events: 0, players: 0 }
-    //       totals.events[game] = data.events || 0
-    //       totals.players[game] = data.players || 0
-    //     })
-    //   )
-    //   await statsRef.update(
-    //     {
-    //       ...totals,
-    //     },
-    //     { merge: true }
-    //   )
-    // })
+    writes++
   },
 
   async getGames() {
     return gamesRef
       .get()
       .then(snapshot => {
+        reads += snapshot.docs.length || 0
         return snapshot.docs.map(doc => doc.id)
       })
       .catch(err => {
@@ -107,6 +116,7 @@ module.exports = {
           // low(`player ${id} of ${game} not found in database`)
           return
         }
+        reads += snapshot.docs.length || 0
         if (snapshot.docs[0].redirect)
           return await this.getPlayerById(
             game,
@@ -135,6 +145,7 @@ module.exports = {
           // low(`player ${tag} of ${game} not found in database`)
           return
         }
+        reads += snapshot.docs.length || 0
         const disambig = prep.parsePlayerDisambiguation(
           snapshot.docs.map(d => d.data())
         )
@@ -151,23 +162,6 @@ module.exports = {
       })
   },
 
-  // async getPlayers(game) {
-  //   const gameRef = await getGameRef(game)
-  //   if (!gameRef) return
-  //   return gameRef
-  //     .collection('players')
-  //     .get()
-  //     .then(snapshot => {
-  //       // todo memo
-  //       return snapshot.docs.map(d => d.data())
-  //       // .filter(p => !p.redirect)
-  //     })
-  //     .catch(err => {
-  //       logError('Error getting players', err)
-  //       return []
-  //     })
-  // },
-
   async getActivePlayers(game) {
     const gameRef = await getGameRef(game)
     if (!gameRef) return
@@ -176,6 +170,7 @@ module.exports = {
       .where('lastActive', '>', Date.now() / 1000 - aDayInSeconds * 7)
       .get()
       .then(snapshot => {
+        reads += snapshot.docs.length || 0
         const playersData = snapshot.docs.map(d => d.data())
         playersData.forEach(p =>
           memoizedPlayers.set(p.id + p.game, p)
@@ -189,11 +184,11 @@ module.exports = {
       })
   },
 
-  async getSomeEvents() {
+  async getSomeEvents(numberOfEvents = 3) {
     // get starting point from db
     if (
-      !getSomeEventsStartingPoint ||
-      !currentEventsCountedInRollingUpdate
+      getSomeEventsStartingPoint === undefined ||
+      currentEventsCountedInRollingUpdate === undefined
     )
       await statsRef.get().then(async doc => {
         const data = doc.data()
@@ -210,21 +205,27 @@ module.exports = {
     return db
       .collectionGroup('events')
       .orderBy('ownerId')
-      .limit(10)
+      .limit(numberOfEvents)
       .startAfter(getSomeEventsStartingPoint)
       .get()
       .then(async snapshot => {
         if (!snapshot.docs.length) {
+          // if there are no events, don't loop forever
+          if (getSomeEventsStartingPoint === 0) return []
           // if it's the end, start over from 0
           getSomeEventsStartingPoint = 0
           await statsRef.get().then(async doc => {
             statsRef.update(
               {
-                totalEventsEstimate: doc.data()
-                  .currentEventsCountedInRollingUpdate,
+                totalEventsEstimate:
+                  doc.data().currentEventsCountedInRollingUpdate || 0,
+                currentEventsCountedInRollingUpdate: 0,
               },
               { merge: true }
             )
+            currentEventsCountedInRollingUpdate = 0
+            reads++
+            writes++
           })
           return await this.getSomeEvents()
         }
@@ -239,6 +240,9 @@ module.exports = {
           },
           { merge: true }
         )
+
+        writes++
+        reads += snapshot.docs.length
 
         return snapshot.docs.map(d => d.data())
       })
@@ -255,6 +259,7 @@ module.exports = {
       .collection('events')
       .get()
       .then(snapshot => {
+        reads += snapshot.docs.length || 0
         return snapshot.docs.map(d => d.data())
       })
       .catch(err => {
@@ -263,9 +268,9 @@ module.exports = {
       })
   },
 
-  async getEvent({ service, id, tournamentSlug, slug, game }) {
+  async getEvent({ service, id, tournamentSlug, eventSlug, game }) {
     const memoed = memoizedEvents.get(
-      service + (id || tournamentSlug + slug) + game
+      service + (id || tournamentSlug + eventSlug) + game
     )
     if (memoed) return memoed
 
@@ -275,9 +280,9 @@ module.exports = {
       .collection('events')
       .where('service', '==', service)
     if (id) docRef = docRef.where('id', '==', id)
-    else if (tournamentSlug && slug)
+    else if (tournamentSlug && eventSlug)
       docRef = docRef
-        .where('slug', '==', slug)
+        .where('eventSlug', '==', eventSlug)
         .where('tournamentSlug', '==', tournamentSlug)
 
     return docRef
@@ -286,13 +291,14 @@ module.exports = {
         if (snapshot.docs.length === 0) return
         const eventData = snapshot.docs[0].data()
         memoizedEvents.set(
-          service + (id || tournamentSlug + slug) + game,
+          service + (id || tournamentSlug + eventSlug) + game,
           eventData
         )
         memoizedKnownEventStubs.set(
-          service + (id || tournamentSlug + slug) + game,
+          service + (id || tournamentSlug + eventSlug) + game,
           true
         )
+        reads += snapshot.docs.length || 0
         return eventData
       })
       .catch(err => {
@@ -300,21 +306,27 @@ module.exports = {
       })
   },
 
-  async getEventExists({ service, id, tournamentSlug, slug, game }) {
+  async getEventExists({
+    service,
+    id,
+    tournamentSlug,
+    eventSlug,
+    game,
+  }) {
     const memoed = memoizedKnownEventStubs.get(
-      service + (id || tournamentSlug + slug) + game
+      service + (id || tournamentSlug + eventSlug) + game
     )
     if (memoed) return true
     return !!(await this.getEvent({
       service,
       id,
       tournamentSlug,
-      slug,
+      eventSlug,
       game,
     }))
   },
 
-  async addPlayer(player, incrementCounter = true) {
+  async addPlayer(player) {
     const playerData = prep.pruneUndefined(player)
     memoizedPlayers.set(player.id + player.game, playerData)
     const gameRef = await getGameRef(player.game)
@@ -323,13 +335,7 @@ module.exports = {
       ...playerData,
       lastUpdated: parseInt(Date.now() / 1000),
     })
-    // if (incrementCounter)
-    //   await gameRef.set(
-    //     {
-    //       players: increment,
-    //     },
-    //     { merge: true }
-    //   )
+    writes++
   },
 
   async updatePlayer(player) {
@@ -344,6 +350,7 @@ module.exports = {
       },
       { merge: true }
     )
+    writes++
   },
 
   async setPlayerActive(player) {
@@ -358,12 +365,7 @@ module.exports = {
       .collection('events')
       .doc(event.service + event.id)
     await eventRef.set(eventData, { merge: true })
-    // await gameRef.set(
-    //   {
-    //     events: increment,
-    //   },
-    //   { merge: true }
-    // )
+    writes++
     logAdd(
       'added event ' +
         `${event.name} @ ${event.tournamentName}` +
@@ -379,12 +381,7 @@ module.exports = {
     const gameRef = await getGameRef(game)
     let eventRef = gameRef.collection('events').doc(service + id)
     await eventRef.delete()
-    // await gameRef.set(
-    //   {
-    //     events: decrement,
-    //   },
-    //   { merge: true }
-    // )
+    deletes++
     logAdd('deleted event ' + id)
   },
 
@@ -393,12 +390,14 @@ module.exports = {
     statsRef.update({
       [event]: admin.firestore.FieldValue.increment(1),
     })
+    writes++
   },
   setStat(type, value) {
     if (typeof type !== 'string') return
     statsRef.update({
       [type]: value,
     })
+    writes++
   },
 }
 
@@ -414,11 +413,13 @@ function getGameRef(game) {
     .doc(game)
     .get()
     .then(async doc => {
+      reads++
       if (memoedGameRefs[game]) return memoedGameRefs[game]
       memoedGameRefs[game] = doc.ref
       if (!doc.exists) {
         logAdd(`game ${game} not found in database, creating...`)
         await gamesRef.doc(game).create({})
+        writes++
         // addCountListeners(doc.ref)
       }
       return doc.ref

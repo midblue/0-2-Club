@@ -83,7 +83,9 @@ async function saveEvents(newEvents, game) {
     newEvents.map(async event => {
       await db.addEvent(event)
 
-      event.participants.map(async participant => {
+      let skipDouble = 0
+
+      event.participants.map(participant => {
         const player =
           newPlayers.find(
             p =>
@@ -106,25 +108,29 @@ async function saveEvents(newEvents, game) {
             event,
             participant
           )
+          // todo update instead
           if (
             player.participatedInEvents.find(
               e => e.id === newParticipantData.id
             )
           )
-            logError(
-              'skipped double adding participant data for',
-              player.tag,
-              `(event ${newParticipantData.name} @ ${newParticipantData.tournamentName})`
-            )
+            skipDouble++
           else {
-            newPlayerData = player.participatedInEvents.push(
-              newParticipantData
-            )
+            newPlayerData.participatedInEvents = [
+              ...player.participatedInEvents,
+              newParticipantData,
+            ]
           }
         }
         for (let key of Object.keys(newPlayerData))
           player[key] = newPlayerData[key]
       })
+      if (skipDouble)
+        logError(
+          'skipped double adding participant data for',
+          skipDouble,
+          ` players (event ${event.name} @ ${event.tournamentName})`
+        )
     })
   )
 

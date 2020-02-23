@@ -10,11 +10,7 @@ export default {
   scrollToTop: true,
   asyncData({ params, error, redirect }) {
     return axios
-      .get(
-        `/api/points/${params.game}/tag/${encodeURIComponent(
-          params.tag
-        )}/`
-      )
+      .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)
       .then(res => {
         if (res.data && !res.data.err && !res.data.disambiguation)
           return { player: res.data }

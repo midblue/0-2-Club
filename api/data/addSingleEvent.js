@@ -79,10 +79,11 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
       ].participatedInEvents.findIndex(
         e => e.id === eventParticipantData.id
       )
-      if (alreadyExistsIndex !== undefined) {
+      if (alreadyExistsIndex >= 0) {
         loadedPlayers[p.id].participatedInEvents[
           alreadyExistsIndex
         ] = eventParticipantData
+        // todo batch these
         logError(
           'updated participant data for',
           loadedPlayers[p.id].tag,
@@ -130,7 +131,7 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
       .map(p => db.updatePlayer(loadedPlayers[p.id])),
   ])
   logAdd(
-    `done saving ${players.length} players' data for ${event.slug} @ ${event.tournamentSlug}`
+    `done saving ${players.length} players' data for ${event.eventSlug} @ ${event.tournamentSlug}`
   )
 
   clearTimeout(clearLoadedPlayers)

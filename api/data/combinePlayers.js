@@ -1,5 +1,5 @@
 const db = require('./firebaseClient')
-const { gameTitle } = require('../../common/f').default
+const { gameTitle } = require('../../common/functions').default
 
 const logger = require('./scripts/log')
 const low = logger('combine', 'gray')

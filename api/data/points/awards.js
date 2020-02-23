@@ -1,4 +1,4 @@
-const { getPlacingRatio } = require('~/common/f').default
+const { getPlacingRatio } = require('~/common/functions').default
 
 // ? awards for:
 // consistently attending tournaments x weeks in a row

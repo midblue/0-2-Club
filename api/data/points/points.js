@@ -1,4 +1,6 @@
-const { getPlacingRatio } = require('../../../common/f').default
+const {
+  getPlacingRatio,
+} = require('../../../common/functions').default
 const db = require('../firebaseClient')
 
 module.exports = {

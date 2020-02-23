@@ -8,7 +8,7 @@ const low = logger('get', 'gray')
 const log = logger('get', 'white')
 const logAdd = logger('get', 'green')
 const logError = logger('get', 'yellow')
-const { gameTitle } = require('../../common/f').default
+const { gameTitle } = require('../../common/functions').default
 
 module.exports = {
   async dbStats() {

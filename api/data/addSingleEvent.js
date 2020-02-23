@@ -1,6 +1,6 @@
 const points = require('./points/points')
 const db = require('./firebaseClient')
-const { gameTitle } = require('../../common/f').default
+const { gameTitle } = require('../../common/functions').default
 const prep = require('./dbDataPrep')
 
 const logger = require('./scripts/log')

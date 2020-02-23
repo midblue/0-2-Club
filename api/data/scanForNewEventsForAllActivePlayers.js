@@ -9,7 +9,7 @@ const logAdd = logger('eventscanner', 'green')
 const logInfo = logger('eventscanner', 'blue')
 const logError = logger('eventscanner', 'yellow')
 
-const { gameTitle } = require('../../common/f').default
+const { gameTitle } = require('../../common/functions').default
 
 let games = []
 

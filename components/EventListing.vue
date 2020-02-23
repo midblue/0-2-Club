@@ -89,7 +89,7 @@ export default {
 
 <style scoped lang="scss">
 .panel {
-  cursor: pointer;
+  // cursor: pointer;
 
   &:not(.open) {
     padding-top: 1.5em;

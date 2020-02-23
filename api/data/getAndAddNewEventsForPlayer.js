@@ -12,6 +12,8 @@ const logAdd = logger('getnewevents', 'green')
 const logInfo = logger('getnewevents', 'blue')
 const logError = logger('getnewevents', 'yellow')
 
+const willLoad = []
+
 module.exports = async function(player, skipOwnerIds = []) {
   if (!player.participatedInEvents)
     // if just a stub, get real player
@@ -34,17 +36,43 @@ module.exports = async function(player, skipOwnerIds = []) {
     skipOwnerIds.length ? newOwnerIds : null
   )
 
+  // filter already queued events
+  stubs = stubs.filter(
+    s =>
+      !willLoad.find(
+        w =>
+          w.eventSlug === s.eventSlug &&
+          w.service === s.service &&
+          w.tournamentSlug === s.tournamentSlug
+      )
+  )
+  willLoad.push(...stubs)
+
+  const stubsToBatch = [...stubs]
   const perBatch = 15
-  while (stubs.length) {
+  while (stubsToBatch.length) {
     log(
-      `batching up to ${perBatch} of ${stubs.length} remaining new events...`
+      `batching up to ${perBatch} of ${stubsToBatch.length} remaining new events... (${willLoad.length} total)`
     )
-    const currentStubs = stubs.slice(0, perBatch) // grab a subset
+    const currentStubs = stubsToBatch.slice(0, perBatch) // grab a subset
     let newEvents = await loadNewEventsData(currentStubs) // get data
     newEvents = newEvents.filter(e => e && !e.err)
     await saveEvents(newEvents, player.game) // save them fully
-    stubs = stubs.slice(perBatch) // advance to next set
+    stubsToBatch = stubsToBatch.slice(perBatch) // advance to next set
   }
+
+  // return
+  stubs.forEach(s =>
+    willLoad.splice(
+      willLoad.findIndex(
+        w =>
+          w.eventSlug === s.eventSlug &&
+          w.service === s.service &&
+          w.tournamentSlug === s.tournamentSlug
+      ),
+      1
+    )
+  )
 
   return { newOwnerIds }
 }

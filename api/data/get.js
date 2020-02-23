@@ -110,7 +110,8 @@ module.exports = {
     if (Array.isArray(loadedPlayer))
       return { disambiguation: loadedPlayer }
     if (loadedPlayer && setActive) db.setPlayerActive(loadedPlayer)
-    log('returning player', loadedPlayer.tag, loadedPlayer.id)
+    if (loadedPlayer)
+      log('returning player', loadedPlayer.tag, loadedPlayer.id)
     loadedPlayer = collatePointsIntoPlayerData(loadedPlayer)
     return loadedPlayer
   },

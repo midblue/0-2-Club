@@ -30,6 +30,7 @@ const logAdd = logger('smashgg', 'green')
 const logError = logger('smashgg', 'yellow')
 
 const currentlyLoadingNewEvents = []
+// sometimes has trouble with double call to MORE, can get stuck with entries left in it
 
 module.exports = {
   async event({ tournamentSlug, slug, eventSlug }) {

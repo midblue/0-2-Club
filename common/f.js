@@ -8,6 +8,7 @@ export default {
     const eventsToUse = events.participatedInEvents
       ? events.participatedInEvents
       : events
+    if (!eventsToUse) return 0.7
     return (
       eventsToUse.reduce(
         (total, event) =>

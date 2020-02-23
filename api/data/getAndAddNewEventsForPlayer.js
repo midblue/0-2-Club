@@ -129,7 +129,7 @@ async function saveEvents(newEvents, game) {
         logError(
           'skipped double adding participant data for',
           skipDouble,
-          ` players (event ${event.name} @ ${event.tournamentName})`
+          `players (event ${event.name} @ ${event.tournamentName})`
         )
     })
   )

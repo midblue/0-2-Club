@@ -31,7 +31,7 @@ async function scanForNewEvents() {
     return logError(
       'Skipping attempt to scan while update/scan is running'
     )
-  if (!dbUsageIsOkay)
+  if (!dbUsageIsOkay())
     return logError('Too close to db usage cap to scan')
   isScanning = true
   logInfo('starting scan for new events')
@@ -48,7 +48,7 @@ async function rollingUpdate() {
     return logError(
       'Skipping attempt to update while update/scan is running'
     )
-  if (!dbUsageIsOkay)
+  if (!dbUsageIsOkay())
     return logError('Too close to db usage cap to scan')
   isUpdating = true
   logInfo('starting rolling update')

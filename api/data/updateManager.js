@@ -72,8 +72,9 @@ async function rollingUpdate() {
 }
 
 function dbUsageIsOkay() {
-  const { reads, writes, deletes } = db.getLimitProximity()
-  log(reads, writes, deletes)
+  const proximity = db.getLimitProximity()
+  log('db proximity:', JSON.stringify(proximity))
+  const { reads, writes, deletes } = proximity
   if (reads > 0.8 || writes > 0.8 || deletes > 0.9) return false
   return true
 }

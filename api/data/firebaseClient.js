@@ -75,7 +75,7 @@ module.exports = {
     })
   },
 
-  async getLimitProximity() {
+  getLimitProximity() {
     return {
       reads: reads / maxReads,
       writes: writes / maxWrites,

@@ -31,6 +31,8 @@ async function scanForNewEvents() {
     return logError(
       'Skipping attempt to scan while update/scan is running'
     )
+  if (!dbUsageIsOkay)
+    return logError('Too close to db usage cap to scan')
   isScanning = true
   logInfo('starting scan for new events')
 
@@ -46,6 +48,8 @@ async function rollingUpdate() {
     return logError(
       'Skipping attempt to update while update/scan is running'
     )
+  if (!dbUsageIsOkay)
+    return logError('Too close to db usage cap to scan')
   isUpdating = true
   logInfo('starting rolling update')
 
@@ -65,4 +69,11 @@ async function rollingUpdate() {
     'players.'
   )
   isUpdating = false
+}
+
+function dbUsageIsOkay() {
+  const { reads, writes, deletes } = db.getLimitProximity()
+  log(reads, writes, deletes)
+  if (reads > 0.8 || writes > 0.8 || deletes > 0.9) return false
+  return true
 }

@@ -35,6 +35,9 @@ const memoizedPlayers = memo(300, 'players')
 
 const aDayInSeconds = 24 * 60 * 60
 
+const maxWrites = 20000,
+  maxReads = 50000,
+  maxDeletes = 20000
 let writes = 0,
   reads = 0,
   deletes = 0,
@@ -70,6 +73,14 @@ module.exports = {
       reads++
       return { ...doc.data(), games }
     })
+  },
+
+  async getLimitProximity() {
+    return {
+      reads: reads / maxReads,
+      writes: writes / maxWrites,
+      deletes: deletes / maxDeletes,
+    }
   },
 
   async updateActive(game, count) {

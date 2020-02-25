@@ -235,7 +235,8 @@ module.exports = {
             statsRef.update(
               {
                 ['events.totalEstimate']:
-                  doc.data().currentEventsCountedInRollingUpdate || 0,
+                  doc.data().events.currentCountedInRollingUpdate ||
+                  0,
                 ['events.currentCountedInRollingUpdate']: 0,
               },
               { merge: true }

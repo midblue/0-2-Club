@@ -8,22 +8,27 @@ import PlayerView from '~/components/PlayerView'
 
 export default {
   scrollToTop: true,
-  asyncData({ params, error, redirect }) {
-    return axios
-      .get(`/api/points/${params.game}/id/${params.id}`)
-      .then(res => {
-        if (res.data && !res.data.err && !res.data.disambiguation)
-          return { player: res.data }
-        else
-          return {
-            player: {
-              game: params.game,
-              peers: [],
-              points: [],
-              id: params.id,
-            },
-          }
-      })
+  asyncData({ params, error, redirect, req }) {
+    return axios.get(`/api/points/${params.game}/id/${params.id}`).then(res => {
+      if (res.data && !res.data.err && !res.data.disambiguation) {
+        if (req)
+          require('~/api/data/scripts/log')('page:id', 'gray')(
+            req.connection.remoteAddress || req.socket.remoteAddress,
+            params.game,
+            params.id,
+            res.data.tag
+          )
+        return { player: res.data }
+      } else
+        return {
+          player: {
+            game: params.game,
+            peers: [],
+            points: [],
+            id: params.id,
+          },
+        }
+    })
   },
   components: { PlayerView },
   head() {

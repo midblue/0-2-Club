@@ -8,7 +8,13 @@ import PlayerView from '~/components/PlayerView'
 
 export default {
   scrollToTop: true,
-  asyncData({ params, error, redirect }) {
+  asyncData({ params, error, redirect, req }) {
+    if (req)
+      require('~/api/data/scripts/log')('page:tag', 'gray')(
+        req.connection.remoteAddress || req.socket.remoteAddress,
+        params.game,
+        params.tag
+      )
     return axios
       .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)
       .then(res => {

@@ -6,7 +6,8 @@
       </div>
       <h3>
         Track your progress, keep improving, and stay motivated —
-        <br />An <span class="highlight">esports fitbit</span> for
+        <br />An
+        <span class="highlight">esports fitbit</span> for
         anyone getting started in competitive gaming.
       </h3>
 
@@ -20,11 +21,7 @@
 
           <!-- Game -->
           <div class="game">
-            <ModelSelect
-              :options="gameOptions"
-              v-model="inputGame"
-              placeholder="Your game"
-            />
+            <ModelSelect :options="gameOptions" v-model="inputGame" placeholder="Your game" />
           </div>
         </div>
         <template #button>
@@ -51,15 +48,9 @@
 
       <div>
         <b>See it in action:</b>
-        <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/H0P"
-          >H0P</nuxt-link
-        >・
-        <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/DoodleDork"
-          >DoodleDork</nuxt-link
-        >・
-        <nuxt-link to="/g/Super%20Smash%20Bros.%20Ultimate/t/Fluffy"
-          >Fluffy</nuxt-link
-        >
+        <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/H0P">H0P</nuxt-link>・
+        <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/DoodleDork">DoodleDork</nuxt-link>・
+        <nuxt-link to="/g/Super%20Smash%20Bros.%20Ultimate/t/Fluffy">Fluffy</nuxt-link>
       </div>
 
       <br />
@@ -70,22 +61,19 @@
 
       <div class="intro">
         <div class="text">
-          <h3>See Your Growth</h3>
-          If you feel like you've been leveling up this year, now you
+          <h3>See Your Growth</h3>If you feel like you've been leveling up this year, now you
           can prove it. Your progress is charted over time, and you
           can compare your growth with your peers.
         </div>
 
         <div class="text">
-          <h3>Points for All</h3>
-          In training, victory isn't as important as growth and
+          <h3>Points for All</h3>In training, victory isn't as important as growth and
           consistency. Lose a tight set to a strong player? That's
           worth some points. Support your local scene? Points city.
         </div>
 
         <div class="text">
-          <h3>Easy Data Handling</h3>
-          Just link us one tournament with you in it, and we'll
+          <h3>Easy Data Handling</h3>Just link us one tournament with you in it, and we'll
           automatically snag more. Currently supports all 1v1
           tournaments for any game hosted through smash.gg.
         </div>
@@ -106,14 +94,11 @@
                     new Date(patchNotes[0].date).getTime() <
                     7 * 24 * 60 * 60 * 1000
                 "
-                >New!</span
-              >
+              >New!</span>
             </h4>
           </summary>
           <div v-for="(patch, index) in patchNotes" :key="index">
-            <div class="sub">
-              {{ new Date(patch.date).toLocaleDateString() }}
-            </div>
+            <div class="sub">{{ new Date(patch.date).toLocaleDateString() }}</div>
             <div>{{ patch.content }}</div>
           </div>
         </details>
@@ -131,7 +116,11 @@ const patchNotes = require('~/assets/patchNotes').default
 
 export default {
   scrollToTop: true,
-  async asyncData() {
+  async asyncData({ req }) {
+    if (req)
+      require('~/api/data/scripts/log')('page:home', 'gray')(
+        req.connection.remoteAddress || req.socket.remoteAddress
+      )
     let { data } = await axios.get(`/api/stats`)
     return data
   },
@@ -180,12 +169,11 @@ export default {
     go() {
       const tag = parseParticipantTag(this.inputTag)
       if (!tag) return this.notify('You need to enter a tag!')
-      if (!this.inputGame.value)
-        return this.notify('You need to pick a game!')
+      if (!this.inputGame.value) return this.notify('You need to pick a game!')
       return this.$router.push(
-        `/g/${encodeURIComponent(
-          this.inputGame.value
-        )}/t/${encodeURIComponent(tag)}`
+        `/g/${encodeURIComponent(this.inputGame.value)}/t/${encodeURIComponent(
+          tag
+        )}`
       )
     },
     notify(message) {

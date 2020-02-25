@@ -79,7 +79,11 @@ import axios from '~/plugins/axios'
 
 export default {
   scrollToTop: true,
-  async asyncData() {
+  async asyncData({ req }) {
+    if (req)
+      require('~/api/data/scripts/log')('page:admin', 'gray')(
+        req.connection.remoteAddress || req.socket.remoteAddress
+      )
     let { data } = await axios.get(`/api/stats`)
     return { stats: data }
   },

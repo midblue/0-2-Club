@@ -2,8 +2,7 @@
   <section>
     <h1>
       We found multiple
-      <span class="highlight">{{ player.tag }}</span
-      >s!
+      <span class="highlight">{{ player.tag }}</span>s!
     </h1>
     <h2>Which are you?</h2>
     <nuxt-link
@@ -32,9 +31,7 @@
     <br />
     <br />
     <br />
-    <button class="low" @click="combineAll">
-      These are all the same person
-    </button>
+    <button class="low" @click="combineAll">These are all the same person</button>
   </section>
 </template>
 
@@ -42,13 +39,15 @@
 import axios from '~/plugins/axios'
 
 export default {
-  asyncData({ params, error, redirect }) {
-    return axios
-      .get(
-        `/api/points/${params.game}/tag/${encodeURIComponent(
-          params.tag
-        )}/`
+  asyncData({ params, error, redirect, req }) {
+    if (req)
+      require('~/api/data/scripts/log')('page:disamb', 'gray')(
+        req.connection.remoteAddress || req.socket.remoteAddress,
+        params.game,
+        params.tag
       )
+    return axios
+      .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)
       .then(res => {
         if (!res.data.disambiguation)
           return redirect(`/g/${params.game}/t/${params.tag}`)
@@ -116,9 +115,7 @@ export default {
         )
         .then(res => {
           if (res.data && !res.data.err) {
-            this.$router.push(
-              `/g/${this.player.game}/t/${this.player.tag}`
-            )
+            this.$router.push(`/g/${this.player.game}/t/${this.player.tag}`)
           } else console.log(err)
         })
     },

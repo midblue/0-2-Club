@@ -310,7 +310,8 @@ async function matchPoints(
       )
         opponentData = await db.getPlayerById(player.game, opponentId)
 
-      if (!opponentData) return [...(await pointsArray), ...points]
+      if (!opponentData || !opponentData.participatedInEvents)
+        return [...(await pointsArray), ...points]
       const opponentRatio = getPlacingRatio(opponentData)
       const opponentInThisTournament = opponentData.participatedInEvents.find(
         e => e.id === event.id

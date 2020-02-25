@@ -51,7 +51,7 @@ setInterval(() => {
     deletes !== prevDeletes
   )
     low(
-      `today so far: ${writes} writes, ${reads} reads, ${deletes} deletes`
+      `today so far: ${reads} reads, ${writes} writes, ${deletes} deletes`
     )
   prevWrites = writes
   prevReads = reads
@@ -101,7 +101,7 @@ module.exports = {
         return snapshot.docs.map(doc => doc.id)
       })
       .catch(err => {
-        logError('Error getting games', err)
+        handleError('Error getting games', err)
       })
   },
 
@@ -137,7 +137,7 @@ module.exports = {
         return snapshot.docs[0].data()
       })
       .catch(err => {
-        logError('Error getting player by id', err)
+        handleError('Error getting player by id', err)
         return { error: err }
       })
   },
@@ -168,7 +168,7 @@ module.exports = {
         return disambig
       })
       .catch(err => {
-        logError('Error getting player by tag', err)
+        handleError('Error getting player by tag', err)
         return { error: err }
       })
   },
@@ -190,7 +190,7 @@ module.exports = {
         // .filter(p => !p.redirect)
       })
       .catch(err => {
-        logError('Error getting players', err)
+        handleError('Error getting players', err)
         return []
       })
   },
@@ -203,9 +203,9 @@ module.exports = {
     )
       await statsRef.get().then(async doc => {
         const data = doc.data()
-        getSomeEventsStartingPoint = data.eventScanStart || 0
+        getSomeEventsStartingPoint = data.events.scanStart || 0
         currentEventsCountedInRollingUpdate =
-          data.currentEventsCountedInRollingUpdate || 0
+          data.events.currentCountedInRollingUpdate || 0
       })
 
     log(
@@ -228,9 +228,9 @@ module.exports = {
           await statsRef.get().then(async doc => {
             statsRef.update(
               {
-                totalEventsEstimate:
+                ['events.totalEstimate']:
                   doc.data().currentEventsCountedInRollingUpdate || 0,
-                currentEventsCountedInRollingUpdate: 0,
+                ['events.currentCountedInRollingUpdate']: 0,
               },
               { merge: true }
             )
@@ -246,8 +246,8 @@ module.exports = {
 
         statsRef.update(
           {
-            eventScanStart: getSomeEventsStartingPoint,
-            currentEventsCountedInRollingUpdate: currentEventsCountedInRollingUpdate,
+            ['events.scanStart']: getSomeEventsStartingPoint,
+            ['events.currentCountedInRollingUpdate']: currentEventsCountedInRollingUpdate,
           },
           { merge: true }
         )
@@ -258,7 +258,7 @@ module.exports = {
         return snapshot.docs.map(d => d.data())
       })
       .catch(err => {
-        logError('Error getting events', err)
+        handleError('Error getting events', err)
         return []
       })
   },
@@ -274,7 +274,7 @@ module.exports = {
         return snapshot.docs.map(d => d.data())
       })
       .catch(err => {
-        logError('Error getting events', err)
+        handleError('Error getting events', err)
         return []
       })
   },
@@ -313,7 +313,7 @@ module.exports = {
         return eventData
       })
       .catch(err => {
-        logError('Error getting event', err)
+        handleError('Error getting event', err)
       })
   },
 
@@ -342,10 +342,14 @@ module.exports = {
     memoizedPlayers.set(player.id + player.game, playerData)
     const gameRef = await getGameRef(player.game)
     let playerRef = gameRef.collection('players').doc(`${player.id}`)
-    await playerRef.set({
-      ...playerData,
-      lastUpdated: parseInt(Date.now() / 1000),
-    })
+    await playerRef
+      .set({
+        ...playerData,
+        lastUpdated: parseInt(Date.now() / 1000),
+      })
+      .catch(err => {
+        handleError('Error adding player', err)
+      })
     writes++
   },
 
@@ -354,13 +358,18 @@ module.exports = {
     memoizedPlayers.set(player.id + player.game, playerData)
     const gameRef = await getGameRef(player.game)
     let playerRef = gameRef.collection('players').doc(`${player.id}`)
-    await playerRef.update(
-      {
-        ...playerData,
-        lastUpdated: parseInt(Date.now() / 1000),
-      },
-      { merge: true }
-    )
+    await playerRef
+      .set(
+        // switched to .set because .update was slow
+        {
+          ...playerData,
+          lastUpdated: parseInt(Date.now() / 1000),
+        },
+        { merge: true }
+      )
+      .catch(err => {
+        handleError('Error updating player', err)
+      })
     writes++
   },
 
@@ -375,7 +384,9 @@ module.exports = {
     let eventRef = gameRef
       .collection('events')
       .doc(event.service + event.id)
-    await eventRef.set(eventData, { merge: true })
+    await eventRef.set(eventData, { merge: true }).catch(err => {
+      handleError('Error adding event', err)
+    })
     writes++
     logAdd(
       'added event ' +
@@ -391,23 +402,22 @@ module.exports = {
     memoizedKnownEventStubs.delete(service + id + game)
     const gameRef = await getGameRef(game)
     let eventRef = gameRef.collection('events').doc(service + id)
-    await eventRef.delete()
+    await eventRef.delete().catch(err => {
+      handleError('Error deleting event', err)
+    })
     deletes++
     logAdd('deleted event ' + id)
   },
 
   log(event) {
     if (typeof event !== 'string') return
-    statsRef.update({
-      [event]: admin.firestore.FieldValue.increment(1),
-    })
-    writes++
-  },
-  setStat(type, value) {
-    if (typeof type !== 'string') return
-    statsRef.update({
-      [type]: value,
-    })
+    statsRef
+      .update({
+        ['log.' + event]: admin.firestore.FieldValue.increment(1),
+      })
+      .catch(err => {
+        handleError('Error logging to db', err)
+      })
     writes++
   },
 }
@@ -435,6 +445,17 @@ function getGameRef(game) {
       }
       return doc.ref
     })
+    .catch(err => {
+      handleError('Error getting game ref', err)
+    })
+}
+
+function handleError(label, err) {
+  logError(label, err)
+  // most likely over quota, so do this to essentially suspend all updates/scans for the day
+  reads = maxReads
+  writes = maxWrites
+  deletes = maxDeletes
 }
 
 // async function addCountListeners(gameRef) {

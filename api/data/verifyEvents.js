@@ -104,7 +104,7 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
   )
 
   let updatedPlayersNum = 0
-  // todo doesn't work? seems to hang on big events with no network at all
+  // todo doesn't work? seems to hang on big events with no network at all (x2)
   await Promise.all(
     Object.keys(affectedPlayers).map(async id => {
       return new Promise(async resolve => {
@@ -112,7 +112,10 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
           affectedPlayers[id][0].game,
           id
         )
-        if (!player) return
+        if (!player) {
+          logError('attempted to fix player that does not exist:', id)
+          return resolve()
+        }
         updatedPlayersNum++
         const participatedInEvents = (
           player.participatedInEvents || []

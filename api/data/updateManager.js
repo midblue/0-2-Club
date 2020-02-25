@@ -22,8 +22,11 @@ let isScanning = false,
 const aDayInSeconds = 24 * 60 * 60
 const aDayInMilliseconds = aDayInSeconds * 1000
 
-setInterval(scanForNewEvents, aDayInMilliseconds * 2) // run every 2 days
-setInterval(rollingUpdate, aDayInMilliseconds / 20) // run 20 times a day
+let scanInterval, udpdateInterval
+clearInterval(scanInterval)
+clearInterval(udpdateInterval) // these are here for hot reloading
+scanInterval = setInterval(scanForNewEvents, aDayInMilliseconds * 2) // run every 2 days
+udpdateInterval = setInterval(rollingUpdate, aDayInMilliseconds / 20) // run 20 times a day
 
 // this will add new events for active players.
 async function scanForNewEvents() {
@@ -35,8 +38,13 @@ async function scanForNewEvents() {
     return logError('Too close to db usage cap to scan')
   isScanning = true
   logInfo('starting scan for new events')
-
-  await scanForNewEventsForAllActivePlayers()
+  try {
+    await scanForNewEventsForAllActivePlayers()
+  } catch (e) {
+    logError('scan failed:', e)
+    isScanning = false
+    return
+  }
 
   logInfo('scan complete')
   isScanning = false
@@ -52,14 +60,20 @@ async function rollingUpdate() {
     return logError('Too close to db usage cap to scan')
   isUpdating = true
   logInfo('starting rolling update')
+  let someEvents, players
+  try {
+    someEvents = await db.getSomeEvents(3)
 
-  const someEvents = await db.getSomeEvents(3)
+    players = await verifyEvents(someEvents)
 
-  const players = await verifyEvents(someEvents)
+    await verifyPlayers(players)
 
-  await verifyPlayers(players)
-
-  await updatePlayersPointsAndPeers(players)
+    await updatePlayersPointsAndPeers(players)
+  } catch (e) {
+    logError('update failed:', e)
+    isUpdating = false
+    return
+  }
 
   logInfo(
     'rolling update complete for',
@@ -72,9 +86,17 @@ async function rollingUpdate() {
 }
 
 function dbUsageIsOkay() {
-  const proximity = db.getLimitProximity()
-  log('db proximity:', JSON.stringify(proximity))
-  const { reads, writes, deletes } = proximity
-  if (reads > 0.8 || writes > 0.8 || deletes > 0.9) return false
+  const limit = 0.7
+  const { reads, writes, deletes } = db.getLimitProximity()
+  low(
+    'db daily usage:',
+    parseInt(reads * 100) + '%',
+    'reads,',
+    parseInt(writes * 100) + '%',
+    'writes,',
+    parseInt(deletes * 100) + '%',
+    'deletes'
+  )
+  if (reads > limit || writes > limit || deletes > limit) return false
   return true
 }

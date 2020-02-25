@@ -6,6 +6,8 @@ const timeout = require('connect-timeout')
 // Create express instance
 const app = express()
 
+app.set('trust proxy', true)
+
 // Require API routes
 const players = require('./routes/players')
 

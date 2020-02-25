@@ -1,6 +1,6 @@
-const db = require('./firebaseClient')
+const db = require('../db/firebaseClient')
 
-const logger = require('./scripts/log')
+const logger = require('../scripts/log')
 const low = logger('verifyplayers', 'gray')
 const log = logger('verifyplayers', 'white')
 const logAdd = logger('verifyplayers', 'green')

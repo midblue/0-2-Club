@@ -1,11 +1,11 @@
 const prep = require('./dbDataPrep')
 const db = require('./firebaseClient')
-const services = require('./services')
+const services = require('../getters/services')
 const { gameTitle } = require('../../common/functions').default
-const verifyPlayers = require('./verifyPlayers')
+const verifyPlayers = require('../updater/verifyPlayers')
 const updatePlayersPointsAndPeers = require('./updatePlayersPointsAndPeers')
 
-const logger = require('./scripts/log')
+const logger = require('../scripts/log')
 const low = logger('getnewevents', 'gray')
 const log = logger('getnewevents', 'white')
 const logAdd = logger('getnewevents', 'green')

@@ -1,10 +1,10 @@
-const logger = require('./scripts/log')
+const logger = require('../scripts/log')
 const log = logger('firebase', 'white')
 const low = logger('firebase', 'gray')
 const logAdd = logger('firebase', 'green')
 const logError = logger('firebase', 'yellow')
 
-const memo = require('./scripts/memo')
+const memo = require('../scripts/memo')
 const prep = require('./dbDataPrep')
 
 const admin = require('firebase-admin')
@@ -62,7 +62,7 @@ setInterval(() => {
   prevWrites = writes
   prevReads = reads
   prevDeletes = deletes
-}, 100000)
+}, 5 * 60 * 1000)
 setInterval(() => {
   writes = 0
   reads = 0

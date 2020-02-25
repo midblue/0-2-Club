@@ -81,7 +81,7 @@ export default {
   scrollToTop: true,
   async asyncData({ req }) {
     if (req)
-      require('~/api/data/scripts/log')('page:admin', 'gray')(
+      require('~/api/scripts/log')('page:admin', 'gray')(
         req.headers['x-forwarded-for']
           ? req.headers['x-forwarded-for'].split(/, /)[0]
           : req.connection.remoteAddress || req.socket.remoteAddress

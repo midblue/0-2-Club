@@ -1,7 +1,7 @@
 const {
   parseParticipantTag,
   gameTitle,
-} = require('../../../../common/functions').default
+} = require('../../../common/functions').default
 
 const silent = () => {}
 const logger = require('../../scripts/log')

@@ -41,7 +41,7 @@ import axios from '~/plugins/axios'
 export default {
   asyncData({ params, error, redirect, req }) {
     if (req)
-      require('~/api/data/scripts/log')('page:disamb', 'gray')(
+      require('~/api/scripts/log')('page:disamb', 'gray')(
         req.headers['x-forwarded-for']
           ? req.headers['x-forwarded-for'].split(/, /)[0]
           : req.connection.remoteAddress || req.socket.remoteAddress,

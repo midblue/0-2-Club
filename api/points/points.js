@@ -1,7 +1,5 @@
-const {
-  getPlacingRatio,
-} = require('../../../common/functions').default
-const db = require('../firebaseClient')
+const { getPlacingRatio } = require('../../common/functions').default
+const db = require('../db/firebaseClient')
 
 module.exports = {
   async get(player, onlyTouchEventId, loadedPlayers) {

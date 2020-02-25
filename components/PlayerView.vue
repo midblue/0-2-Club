@@ -104,7 +104,7 @@ import Stats from '~/components/Stats'
 import Awards from '~/components/Awards/Awards'
 import levels from '~/common/levels'
 import axios from 'axios'
-const calculateAwards = require('~/api/data/points/awards').default
+const calculateAwards = require('~/api/points/awards').default
 
 export default {
   props: {

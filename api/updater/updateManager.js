@@ -1,10 +1,10 @@
-const db = require('./firebaseClient')
+const db = require('../db/firebaseClient')
 const scanForNewEventsForAllActivePlayers = require('./scanForNewEventsForAllActivePlayers')
 const verifyPlayers = require('./verifyPlayers')
 const verifyEvents = require('./verifyEvents')
-const updatePlayersPointsAndPeers = require('./updatePlayersPointsAndPeers')
+const updatePlayersPointsAndPeers = require('../db/updatePlayersPointsAndPeers')
 
-const logger = require('./scripts/log')
+const logger = require('../scripts/log')
 const low = logger('updater', 'gray')
 const log = logger('updater', 'white')
 const logAdd = logger('updater', 'green')

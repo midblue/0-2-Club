@@ -9,10 +9,10 @@ const app = express()
 app.set('trust proxy', true)
 
 // Require API routes
-const players = require('./routes/players')
+const api = require('./routes/api')
 
 // Import API Routes
-app.use(players)
+app.use(api)
 
 app.use(timeout(360000))
 app.use(haltOnTimedout)

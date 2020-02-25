@@ -12,7 +12,7 @@ export default {
     return axios.get(`/api/points/${params.game}/id/${params.id}`).then(res => {
       if (res.data && !res.data.err && !res.data.disambiguation) {
         if (req)
-          require('~/api/data/scripts/log')('page:id', 'gray')(
+          require('~/api/scripts/log')('page:id', 'gray')(
             req.headers['x-forwarded-for']
               ? req.headers['x-forwarded-for'].split(/, /)[0]
               : req.connection.remoteAddress || req.socket.remoteAddress,

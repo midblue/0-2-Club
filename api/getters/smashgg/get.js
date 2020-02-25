@@ -1,4 +1,4 @@
-const db = require('../../firebaseClient')
+const db = require('../../db/firebaseClient')
 
 const {
   makeQuery,
@@ -20,7 +20,7 @@ const {
 const {
   parseParticipantTag,
   gameTitle,
-} = require('../../../../common/functions').default
+} = require('../../../common/functions').default
 
 const silent = () => {}
 const logger = require('../../scripts/log')

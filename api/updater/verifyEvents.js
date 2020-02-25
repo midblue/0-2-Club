@@ -1,7 +1,7 @@
-const db = require('./firebaseClient')
-const get = require('./get')
+const db = require('../db/firebaseClient')
+const get = require('../getters/get')
 
-const logger = require('./scripts/log')
+const logger = require('../scripts/log')
 const low = logger('verifyevents', 'gray')
 const log = logger('verifyevents', 'white')
 const logAdd = logger('verifyevents', 'green')

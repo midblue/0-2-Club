@@ -1,7 +1,7 @@
-const points = require('./points/points')
+const points = require('../points/points')
 const db = require('./firebaseClient')
 
-const logger = require('./scripts/log')
+const logger = require('../scripts/log')
 const low = logger('points&peers', 'gray')
 const log = logger('points&peers', 'white')
 const logAdd = logger('points&peers', 'green')

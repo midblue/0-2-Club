@@ -44,9 +44,6 @@ module.exports = {
     ],
   },
   css: ['~/assets/css/main.scss'],
-  build: {
-    vendor: ['axios'],
-  },
   axios: {
     progress: true,
     retry: false,

@@ -1,4 +1,4 @@
-const logger = require('./scripts/log')
+const logger = require('../scripts/log')
 const log = logger('prep', 'white')
 const low = logger('prep', 'gray')
 const logAdd = logger('prep', 'green')

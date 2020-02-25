@@ -1,10 +1,10 @@
 const { Router } = require('express')
 const router = Router()
-const logger = require('../data/scripts/log')
-const log = logger('api', 'gray')
+const logger = require('../scripts/log')
+const log = () => {} //logger('api', 'gray')
 
-const get = require('../data/get')
-const updateManager = require('../data/updateManager')
+const get = require('../getters/get')
+const updateManager = require('../updater/updateManager')
 
 router.get('/test', (req, res) => {
   res.json({ test: 'success' })

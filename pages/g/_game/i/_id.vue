@@ -13,7 +13,9 @@ export default {
       if (res.data && !res.data.err && !res.data.disambiguation) {
         if (req)
           require('~/api/data/scripts/log')('page:id', 'gray')(
-            req.connection.remoteAddress || req.socket.remoteAddress,
+            req.headers['x-forwarded-for']
+              ? req.headers['x-forwarded-for'].split(/, /)[0]
+              : req.connection.remoteAddress || req.socket.remoteAddress,
             params.game,
             params.id,
             res.data.tag

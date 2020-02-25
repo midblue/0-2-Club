@@ -119,7 +119,9 @@ export default {
   async asyncData({ req }) {
     if (req)
       require('~/api/data/scripts/log')('page:home', 'gray')(
-        req.connection.remoteAddress || req.socket.remoteAddress
+        req.headers['x-forwarded-for']
+          ? req.headers['x-forwarded-for'].split(/, /)[0]
+          : req.connection.remoteAddress || req.socket.remoteAddress
       )
     let { data } = await axios.get(`/api/stats`)
     return data

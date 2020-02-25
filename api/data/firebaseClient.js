@@ -51,7 +51,13 @@ setInterval(() => {
     deletes !== prevDeletes
   )
     low(
-      `today so far: ${reads} reads, ${writes} writes, ${deletes} deletes`
+      `today so far: ${reads} reads (${parseInt(
+        (reads / maxReads) * 100
+      )}%), ${writes} writes (${parseInt(
+        (writes / maxWrites) * 100
+      )}%), ${deletes} deletes (${parseInt(
+        (deletes / maxDeletes) * 100
+      )}%)`
     )
   prevWrites = writes
   prevReads = reads

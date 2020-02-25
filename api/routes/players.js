@@ -12,7 +12,7 @@ router.get('/test', (req, res) => {
 
 /* GET stats */
 router.get('/stats', async (req, res, next) => {
-  log(req.ip, 'db stats')
+  log(req.ip, req.connection.remoteAddress, 'db stats')
   const stats = await get.dbStats()
   res.json(stats)
 })
@@ -21,7 +21,12 @@ router.get('/stats', async (req, res, next) => {
 router.get('/points/:game/tag/:tag', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const tag = decodeURIComponent(req.params.tag)
-  log(req.ip, 'player with points by tag:', tag)
+  log(
+    req.ip,
+    req.connection.remoteAddress,
+    'player with points by tag:',
+    tag
+  )
   const foundPoints = await get.player({ game, tag, setActive: true })
   if (foundPoints) {
     res.json(foundPoints)
@@ -34,7 +39,12 @@ router.get('/points/:game/tag/:tag', async (req, res, next) => {
 router.get('/points/:game/id/:id', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const id = parseInt(decodeURIComponent(req.params.id))
-  log(req.ip, 'player with points by id:', id)
+  log(
+    req.ip,
+    req.connection.remoteAddress,
+    'player with points by id:',
+    id
+  )
   const foundPoints = await get.player({ game, id, setActive: true })
   if (foundPoints) {
     res.json(foundPoints)
@@ -50,7 +60,7 @@ router.get(
 )
 router.get('/event/:service/:game/:tournamentSlug', handleEvent)
 async function handleEvent(req, res, next) {
-  log(req.ip, 'event by url')
+  log(req.ip, req.connection.remoteAddress, 'event by url')
   const service = decodeURIComponent(req.params.service)
   const game = decodeURIComponent(req.params.game)
   const tournamentSlug = decodeURIComponent(req.params.tournamentSlug)
@@ -70,7 +80,12 @@ async function handleEvent(req, res, next) {
 router.get('/more/:game/:id/', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const id = parseInt(decodeURIComponent(req.params.id))
-  log(req.ip, 'more events for player', id)
+  log(
+    req.ip,
+    req.connection.remoteAddress,
+    'more events for player',
+    id
+  )
   get.logToDb('more')
   const moreEvents = await get.moreEventsForPlayer({
     game,
@@ -81,7 +96,7 @@ router.get('/more/:game/:id/', async (req, res, next) => {
 
 /* GET combine all instances of a tag into one id */
 router.get('/combine/:game/:tag/:id/', async (req, res, next) => {
-  log(req.ip, 'combining ids')
+  log(req.ip, req.connection.remoteAddress, 'combining ids')
   get.logToDb('combine')
   const game = decodeURIComponent(req.params.game)
   const tag = decodeURIComponent(req.params.tag)
@@ -105,7 +120,7 @@ router.get('/scan/', async (req, res, next) => {
     res.json({ complete: false })
     return log('skipping scan (last was too recent)')
   }
-  log(req.ip, 'starting scan')
+  log(req.ip, req.connection.remoteAddress, 'starting scan')
   lastScan = Date.now()
   get.logToDb('scan')
   await updateManager.scanForNewEvents()
@@ -123,7 +138,7 @@ router.get('/rolling/', async (req, res, next) => {
     res.json({ complete: false })
     return log('skipping rolling update (last was too recent)')
   }
-  log(req.ip, 'starting rolling update')
+  log(req.ip, req.connection.remoteAddress, 'starting rolling update')
   lastRolling = Date.now()
   get.logToDb('rolling')
   await updateManager.rollingUpdate()

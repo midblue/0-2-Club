@@ -22,7 +22,11 @@ router.get('/points/:game/tag/:tag', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const tag = decodeURIComponent(req.params.tag)
   log('player with points by tag:', tag)
-  const foundPoints = await get.player({ game, tag, setActive: true })
+  const foundPoints = await get.player({
+    game,
+    tag,
+    setActive: false,
+  })
   if (foundPoints) {
     res.json(foundPoints)
   } else {
@@ -35,7 +39,7 @@ router.get('/points/:game/id/:id', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const id = parseInt(decodeURIComponent(req.params.id))
   log('player with points by id:', id)
-  const foundPoints = await get.player({ game, id, setActive: true })
+  const foundPoints = await get.player({ game, id, setActive: false })
   if (foundPoints) {
     res.json(foundPoints)
   } else {

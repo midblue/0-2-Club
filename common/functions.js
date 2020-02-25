@@ -24,6 +24,14 @@ export default {
     )
   },
 
+  parseIp(req) {
+    const ip = req.headers['x-forwarded-for']
+      ? req.headers['x-forwarded-for'].split(/, /)[0]
+      : req.connection.remoteAddress || req.socket.remoteAddress
+    if (ip.substring('66.249.64.') === 0) return 'Google'
+    return ip
+  },
+
   gameTitle,
 }
 

@@ -5,15 +5,14 @@
 <script>
 import axios from '~/plugins/axios'
 import PlayerView from '~/components/PlayerView'
+const { parseIp } = require('~/common/functions').default
 
 export default {
   scrollToTop: true,
   asyncData({ params, error, redirect, req }) {
     if (req)
       require('~/api/scripts/log')('page:tag', 'gray')(
-        req.headers['x-forwarded-for']
-          ? req.headers['x-forwarded-for'].split(/, /)[0]
-          : req.connection.remoteAddress || req.socket.remoteAddress,
+        parseIp(req),
         params.game,
         params.tag
       )

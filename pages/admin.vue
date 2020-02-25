@@ -76,16 +76,12 @@
 
 <script>
 import axios from '~/plugins/axios'
+const { parseIp } = require('~/common/functions').default
 
 export default {
   scrollToTop: true,
   async asyncData({ req }) {
-    if (req)
-      require('~/api/scripts/log')('page:admin', 'gray')(
-        req.headers['x-forwarded-for']
-          ? req.headers['x-forwarded-for'].split(/, /)[0]
-          : req.connection.remoteAddress || req.socket.remoteAddress
-      )
+    if (req) require('~/api/scripts/log')('page:admin', 'gray')(parseIp(req))
     let { data } = await axios.get(`/api/stats`)
     return { stats: data }
   },

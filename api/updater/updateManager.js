@@ -25,8 +25,14 @@ const aDayInMilliseconds = aDayInSeconds * 1000
 let scanInterval, udpdateInterval
 clearInterval(scanInterval)
 clearInterval(udpdateInterval) // these are here for hot reloading
-scanInterval = setInterval(scanForNewEvents, aDayInMilliseconds * 2) // run every 2 days
-udpdateInterval = setInterval(rollingUpdate, aDayInMilliseconds / 20) // run 20 times a day
+scanInterval = setInterval(
+  scanForNewEvents,
+  Math.round(aDayInMilliseconds * 1.997)
+) // run about every 2 days (not even so it doesn't overlap with a reset)
+udpdateInterval = setInterval(
+  rollingUpdate,
+  Math.round(aDayInMilliseconds / 20.003)
+) // run ~20 times a day
 
 // this will add new events for active players.
 async function scanForNewEvents() {

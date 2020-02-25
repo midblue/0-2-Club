@@ -49,7 +49,7 @@ module.exports = async function(player, skipOwnerIds = []) {
   willLoad.push(...stubs)
 
   let stubsToBatch = [...stubs]
-  const perBatch = 15
+  const perBatch = 5
   while (stubsToBatch.length) {
     log(
       `batching up to ${perBatch} of ${stubsToBatch.length} remaining new events... (${willLoad.length} total)`

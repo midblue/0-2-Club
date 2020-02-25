@@ -234,9 +234,7 @@ module.exports = {
           await statsRef.get().then(async doc => {
             statsRef.update(
               {
-                ['events.totalEstimate']:
-                  doc.data().events.currentCountedInRollingUpdate ||
-                  0,
+                ['events.totalEstimate']: currentEventsCountedInRollingUpdate,
                 ['events.currentCountedInRollingUpdate']: 0,
               },
               { merge: true }

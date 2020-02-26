@@ -116,8 +116,12 @@ const patchNotes = require('~/assets/patchNotes').default
 
 export default {
   scrollToTop: true,
-  async asyncData({ req }) {
-    if (req) require('~/api/scripts/log')('page:home', 'gray')(parseIp(req))
+  async asyncData({ req, error }) {
+    if (req) {
+      const ip = parseIp(req)
+      require('~/api/scripts/log')('page:home', 'gray')(ip)
+      if (!ip) return error()
+    }
     let { data } = await axios.get(`/api/stats`)
     return data
   },

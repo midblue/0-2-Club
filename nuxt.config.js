@@ -50,11 +50,5 @@ module.exports = {
     timeout: 360000,
   },
   serverMiddleware: ['~/api/index.js'],
-  watch: [
-    '~/api/*.js',
-    '~/api/routes/*.js',
-    '~/api/data/*.js',
-    '~/api/data/*/*.js',
-    '~/api/data/*/*/*.js',
-  ],
+  watch: ['~/api/*.js', '~/api/*/*.js', '~/api/*/*/*.js'],
 }

@@ -94,15 +94,15 @@ async function rollingUpdate() {
 function dbUsageIsOkay() {
   const limit = 0.7
   const { reads, writes, deletes } = db.getLimitProximity()
-  low(
-    'db daily usage:',
-    parseInt(reads * 100) + '%',
-    'reads,',
-    parseInt(writes * 100) + '%',
-    'writes,',
-    parseInt(deletes * 100) + '%',
-    'deletes'
-  )
+  // low(
+  //   'db daily usage:',
+  //   parseInt(reads * 100) + '%',
+  //   'reads,',
+  //   parseInt(writes * 100) + '%',
+  //   'writes,',
+  //   parseInt(deletes * 100) + '%',
+  //   'deletes'
+  // )
   if (reads > limit || writes > limit || deletes > limit) return false
   return true
 }

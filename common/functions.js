@@ -28,8 +28,10 @@ export default {
     const ip = req.headers['x-forwarded-for']
       ? req.headers['x-forwarded-for'].split(/, /)[0]
       : req.connection.remoteAddress || req.socket.remoteAddress
-    if (ip.substring('66.249.64.') === 0) return 'Google'
+    if (ip === '127.0.0.1') return 'localhost'
+    if (ip.indexOf('66.249.64.') === 0) return 'Google'
     if (ip === '118.111.157.140') return 'Me'
+    if (ip === '216.244.66.199') return false // WOW
     return ip
   },
 

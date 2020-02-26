@@ -41,12 +41,15 @@ const { parseIp } = require('~/common/functions').default
 
 export default {
   asyncData({ params, error, redirect, req }) {
-    if (req)
+    if (req) {
+      const ip = parseIp(req)
       require('~/api/scripts/log')('page:disamb', 'gray')(
         parseIp(req),
         params.game,
         params.tag
       )
+      if (!ip) return error()
+    }
     return axios
       .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)
       .then(res => {

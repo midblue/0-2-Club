@@ -15,6 +15,7 @@ let games = []
 
 module.exports = async function() {
   return new Promise(async resolve => {
+    // todo batch these in the same way as events
     logInfo(`scanning for new events for all active players`)
     games = await db.getGames()
 
@@ -27,7 +28,6 @@ module.exports = async function() {
       )
       db.updateActive(game, activePlayers.length)
       const alreadyCheckedOwnerIds = []
-      const newUnsavedEvents = []
       for (let player of activePlayers) {
         const { newOwnerIds } = await getAndAddNewEventsForPlayer(
           player,

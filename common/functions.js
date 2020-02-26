@@ -28,61 +28,53 @@ export default {
     const ip = req.headers['x-forwarded-for']
       ? req.headers['x-forwarded-for'].split(/, /)[0]
       : req.connection.remoteAddress || req.socket.remoteAddress
-    let allowed = true,
-      name
-    for (let { regex, effect } of ipFilters) {
+    let knownAllowed = true,
+      knownName
+    for (let { regex, name, allowed } of ipFilters) {
       if (!regex.exec(ip)) continue
-      if (effect.allowed === false) allowed = false
-      name = effect.name
+      if (allowed === false) knownAllowed = false
+      knownName = name
       break
     }
     return {
       ip,
-      allowed,
-      name,
+      allowed: knownAllowed,
+      name: knownName,
     }
   },
 
-  gameTitle,
-}
-
-function gameTitle(query) {
-  const unambiguousTitle = gameTitleDisambiguation.find(d => d(query))
-  if (unambiguousTitle) {
-    return unambiguousTitle(query)
-  }
-  return query
+  gameTitle(query) {
+    const unambiguousTitle = gameTitleDisambiguation.find(d =>
+      d(query)
+    )
+    if (unambiguousTitle) {
+      return unambiguousTitle(query)
+    }
+    return query
+  },
 }
 
 const ipFilters = [
   {
-    regex: /^127\.0\.0\.1$/g,
-    effect: {
-      name: 'localhost',
-    },
+    regex: /127\.0\.0\.1/g,
+    name: 'localhost',
   },
   {
-    regex: /^66\.249\.64\..*/g,
-    effect: {
-      name: 'Google',
-    },
+    regex: /^66\.249\.64\./g,
+    name: 'Google',
   },
   {
-    regex: /^118\.111\.157\.140$/g,
-    effect: {
-      name: 'Me',
-    },
+    regex: /118\.111\.157\.140/g,
+    name: 'Me',
   },
   {
-    regex: /^216\.244\.66\.199$/g,
-    effect: {
-      name: 'wow.net',
-      allowed: false,
-    },
+    regex: /216\.244\.66\.199/g,
+    name: 'wow.net',
+    allowed: false,
   },
 ]
 
-/* official game titles: */
+/* official game titles */
 const gameTitleDisambiguation = [
   // Super Smash Bros. Melee
   q => {
@@ -90,7 +82,6 @@ const gameTitleDisambiguation = [
       q
     )
     if (match) return 'Super Smash Bros. Melee'
-    return false
   },
 
   // Super Smash Bros. Ultimate
@@ -99,7 +90,6 @@ const gameTitleDisambiguation = [
       q
     )
     if (match) return 'Super Smash Bros. Ultimate'
-    return false
   },
 
   // Super Smash Bros. Brawl
@@ -108,7 +98,6 @@ const gameTitleDisambiguation = [
       q
     )
     if (match) return 'Super Smash Bros. Brawl'
-    return false
   },
 
   // Super Smash Bros.
@@ -117,6 +106,5 @@ const gameTitleDisambiguation = [
       q
     )
     if (match) return 'Super Smash Bros.'
-    return false
   },
 ]

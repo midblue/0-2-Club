@@ -42,13 +42,14 @@ const { parseIp } = require('~/common/functions').default
 export default {
   asyncData({ params, error, redirect, req }) {
     if (req) {
-      const ip = parseIp(req)
+      const ipInfo = parseIp(req)
       require('~/api/scripts/log')('page:disamb', 'gray')(
-        parseIp(req),
+        ipInfo.name || ipInfo.ip,
         params.game,
         params.tag
       )
-      if (!ip) return error({ statusCode: 404, message: 'Not found.' })
+      if (!ipInfo.allowed)
+        return error({ statusCode: 404, message: 'Not found.' })
     }
     return axios
       .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)

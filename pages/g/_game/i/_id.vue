@@ -10,16 +10,23 @@ const { parseIp } = require('~/common/functions').default
 export default {
   scrollToTop: true,
   asyncData({ params, error, redirect, req }) {
-    let ip
+    let ipInfo
     if (req) {
-      ip = parseIp(req)
-      if (!ip) return error({ statusCode: 404, message: 'Not found.' })
+      ipInfo = parseIp(req)
+      if (!ipInfo.allowed) {
+        require('~/api/scripts/log')('page:id', 'gray')(
+          ipInfo.name,
+          params.game,
+          params.id
+        )
+        return error({ statusCode: 404, message: 'Not found.' })
+      }
     }
     return axios.get(`/api/points/${params.game}/id/${params.id}`).then(res => {
       if (res.data && !res.data.err && !res.data.disambiguation) {
         if (req)
           require('~/api/scripts/log')('page:id', 'gray')(
-            ip,
+            ipInfo.name || ipInfo.ip,
             params.game,
             params.id,
             res.data.tag

@@ -118,9 +118,12 @@ export default {
   scrollToTop: true,
   async asyncData({ req, error }) {
     if (req) {
-      const ip = parseIp(req)
-      require('~/api/scripts/log')('page:home', 'gray')(ip)
-      if (!ip) return error({ statusCode: 404, message: 'Not found.' })
+      const ipInfo = parseIp(req)
+      require('~/api/scripts/log')('page:home', 'gray')(
+        ipInfo.name || ipInfo.ip
+      )
+      if (!ipInfo.allowed)
+        return error({ statusCode: 404, message: 'Not found.' })
     }
     let { data } = await axios.get(`/api/stats`)
     return data

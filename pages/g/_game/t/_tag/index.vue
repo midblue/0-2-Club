@@ -11,13 +11,14 @@ export default {
   scrollToTop: true,
   asyncData({ params, error, redirect, req }) {
     if (req) {
-      const ip = parseIp(req)
+      const ipInfo = parseIp(req)
       require('~/api/scripts/log')('page:tag', 'gray')(
-        parseIp(req),
+        ipInfo.name || ipInfo.ip,
         params.game,
         params.tag
       )
-      if (!ip) return error({ statusCode: 404, message: 'Not found.' })
+      if (!ipInfo.allowed)
+        return error({ statusCode: 404, message: 'Not found.' })
     }
     return axios
       .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)

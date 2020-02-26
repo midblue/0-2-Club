@@ -28,11 +28,19 @@ export default {
     const ip = req.headers['x-forwarded-for']
       ? req.headers['x-forwarded-for'].split(/, /)[0]
       : req.connection.remoteAddress || req.socket.remoteAddress
-    if (ip === '127.0.0.1') return 'localhost'
-    if (ip.indexOf('66.249.64.') === 0) return 'Google'
-    if (ip === '118.111.157.140') return 'Me'
-    if (ip === '216.244.66.199') return false // WOW.net or something, known spambotter
-    return ip
+    let allowed = true,
+      name
+    for (let { regex, effect } of ipFilters) {
+      if (!regex.exec(ip)) continue
+      if (effect.allowed === false) allowed = false
+      name = effect.name
+      break
+    }
+    return {
+      ip,
+      allowed,
+      name,
+    }
   },
 
   gameTitle,
@@ -45,6 +53,34 @@ function gameTitle(query) {
   }
   return query
 }
+
+const ipFilters = [
+  {
+    regex: /^127\.0\.0\.1$/g,
+    effect: {
+      name: 'localhost',
+    },
+  },
+  {
+    regex: /^66\.249\.64\..*/g,
+    effect: {
+      name: 'Google',
+    },
+  },
+  {
+    regex: /^118\.111\.157\.140$/g,
+    effect: {
+      name: 'Me',
+    },
+  },
+  {
+    regex: /^216\.244\.66\.199$/g,
+    effect: {
+      name: 'wow.net',
+      allowed: false,
+    },
+  },
+]
 
 /* official game titles: */
 const gameTitleDisambiguation = [

@@ -31,7 +31,7 @@ export default {
     if (ip === '127.0.0.1') return 'localhost'
     if (ip.indexOf('66.249.64.') === 0) return 'Google'
     if (ip === '118.111.157.140') return 'Me'
-    if (ip === '216.244.66.199') return false // WOW
+    if (ip === '216.244.66.199') return false // WOW.net or something, known spambotter
     return ip
   },
 

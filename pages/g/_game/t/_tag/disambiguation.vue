@@ -48,7 +48,7 @@ export default {
         params.game,
         params.tag
       )
-      if (!ip) return error()
+      if (!ip) return error({ statusCode: 404, message: 'Not found.' })
     }
     return axios
       .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)

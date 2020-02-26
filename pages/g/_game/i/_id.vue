@@ -13,7 +13,7 @@ export default {
     let ip
     if (req) {
       ip = parseIp(req)
-      if (!ip) return error()
+      if (!ip) return error({ statusCode: 404, message: 'Not found.' })
     }
     return axios.get(`/api/points/${params.game}/id/${params.id}`).then(res => {
       if (res.data && !res.data.err && !res.data.disambiguation) {

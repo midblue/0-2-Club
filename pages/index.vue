@@ -119,9 +119,10 @@ export default {
   async asyncData({ req, error }) {
     if (req) {
       const ipInfo = parseIp(req)
-      require('~/api/scripts/log')('page:home', 'gray')(
-        ipInfo.name || ipInfo.ip
-      )
+      if (ipInfo.log)
+        require('~/api/scripts/log')('page:home', 'gray')(
+          ipInfo.name || ipInfo.ip
+        )
       if (!ipInfo.allowed)
         return error({ statusCode: 404, message: 'Not found.' })
     }

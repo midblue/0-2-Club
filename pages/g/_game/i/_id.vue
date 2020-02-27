@@ -14,13 +14,18 @@ export default {
     if (req) {
       ipInfo = parseIp(req)
       if (!ipInfo.allowed) {
-        // not logging here
+        if (ipInfo.log)
+          require('~/api/scripts/log')('page:id', 'gray')(
+            ipInfo.name || ipInfo.ip,
+            params.game,
+            params.id
+          )
         return error({ statusCode: 404, message: 'Not found.' })
       }
     }
     return axios.get(`/api/points/${params.game}/id/${params.id}`).then(res => {
       if (res.data && !res.data.err && !res.data.disambiguation) {
-        if (req)
+        if (req && ipInfo.log)
           require('~/api/scripts/log')('page:id', 'gray')(
             ipInfo.name || ipInfo.ip,
             params.game,

@@ -31,8 +31,8 @@ scanInterval = setInterval(
 ) // run about every 2 days (not even so it doesn't overlap with a reset)
 udpdateInterval = setInterval(
   rollingUpdate,
-  Math.round(aDayInMilliseconds / 20.003)
-) // run ~20 times a day
+  Math.round(aDayInMilliseconds / 30.03)
+) // run ~30 times a day
 
 // this will add new events for active players.
 async function scanForNewEvents() {

@@ -12,11 +12,12 @@ export default {
   asyncData({ params, error, redirect, req }) {
     if (req) {
       const ipInfo = parseIp(req)
-      require('~/api/scripts/log')('page:tag', 'gray')(
-        ipInfo.name || ipInfo.ip,
-        params.game,
-        params.tag
-      )
+      if (ipInfo.log)
+        require('~/api/scripts/log')('page:tag', 'gray')(
+          ipInfo.name || ipInfo.ip,
+          params.game,
+          params.tag
+        )
       if (!ipInfo.allowed)
         return error({ statusCode: 404, message: 'Not found.' })
     }

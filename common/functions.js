@@ -29,10 +29,12 @@ export default {
       ? req.headers['x-forwarded-for'].split(/, /)[0]
       : req.connection.remoteAddress || req.socket.remoteAddress
     let knownAllowed = true,
-      knownName
+      knownName,
+      knownLog = true
     for (let { regex, name, allowed } of ipFilters) {
       if (!regex.exec(ip)) continue
       if (allowed === false) knownAllowed = false
+      if (log === false) knownLog = false
       knownName = name
       break
     }
@@ -40,6 +42,7 @@ export default {
       ip,
       allowed: knownAllowed,
       name: knownName,
+      log: knownLog,
     }
   },
 
@@ -60,8 +63,9 @@ const ipFilters = [
     name: 'localhost',
   },
   {
-    regex: /^66\.249\.6.\./g,
+    regex: /^66\.249\./g,
     name: 'Google',
+    log: false,
   },
   {
     regex: /118\.111\.157\.140/g,
@@ -71,6 +75,7 @@ const ipFilters = [
     regex: /216\.244\.66\.199/g,
     name: 'wowrack.com',
     allowed: false,
+    log: false,
   },
 ]
 

@@ -60,7 +60,7 @@ const ipFilters = [
     name: 'localhost',
   },
   {
-    regex: /^66\.249\.64\./g,
+    regex: /^66\.249\.6.\./g,
     name: 'Google',
   },
   {
@@ -69,7 +69,7 @@ const ipFilters = [
   },
   {
     regex: /216\.244\.66\.199/g,
-    name: 'wow.net',
+    name: 'wowrack.com',
     allowed: false,
   },
 ]

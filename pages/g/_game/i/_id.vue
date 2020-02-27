@@ -14,11 +14,7 @@ export default {
     if (req) {
       ipInfo = parseIp(req)
       if (!ipInfo.allowed) {
-        require('~/api/scripts/log')('page:id', 'gray')(
-          ipInfo.name,
-          params.game,
-          params.id
-        )
+        // not logging here
         return error({ statusCode: 404, message: 'Not found.' })
       }
     }

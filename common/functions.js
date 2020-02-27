@@ -31,7 +31,7 @@ export default {
     let knownAllowed = true,
       knownName,
       knownLog = true
-    for (let { regex, name, allowed } of ipFilters) {
+    for (let { regex, name, allowed, log } of ipFilters) {
       if (!regex.exec(ip)) continue
       if (allowed === false) knownAllowed = false
       if (log === false) knownLog = false

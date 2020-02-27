@@ -46,6 +46,8 @@ async function scanForNewEvents() {
   logInfo('starting scan for new events')
   try {
     await scanForNewEventsForAllActivePlayers()
+
+    await db.logUsage()
   } catch (e) {
     logError('scan failed:', e)
     isScanning = false
@@ -75,6 +77,8 @@ async function rollingUpdate() {
     await verifyPlayers(players)
 
     await updatePlayersPointsAndPeers(players)
+
+    await db.logUsage()
   } catch (e) {
     logError('update failed:', e)
     isUpdating = false

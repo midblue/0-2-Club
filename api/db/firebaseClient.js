@@ -44,6 +44,14 @@ let writes = 0,
   prevWrites = 0,
   prevReads = 0,
   prevDeletes = 0
+
+statsRef.get().then(doc => {
+  const usage = doc.data().usage || {}
+  reads = usage.reads || 0
+  writes = usage.writes || 0
+  deletes = usage.deletes || 0
+})
+
 setInterval(() => {
   if (
     writes !== prevWrites ||
@@ -87,6 +95,17 @@ module.exports = {
       writes: writes / maxWrites,
       deletes: deletes / maxDeletes,
     }
+  },
+
+  async logUsage() {
+    await statsRef.update(
+      {
+        [`usage.reads`]: reads,
+        [`usage.writes`]: writes,
+        [`usage.deletes`]: deletes,
+      },
+      { merge: true }
+    )
   },
 
   async updateActive(game, count) {

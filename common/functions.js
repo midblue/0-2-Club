@@ -28,22 +28,22 @@ export default {
     const ip = req.headers['x-forwarded-for']
       ? req.headers['x-forwarded-for'].split(/, /)[0]
       : req.connection.remoteAddress || req.socket.remoteAddress
-    let knownAllowed = true,
+    let isAllowed = true,
       knownName,
-      knownLog = true
+      shouldLog = true
     for (let { regex, name, allowed, log } of ipFilters) {
-      console.log(ip, regex.exec(ip), ip.length, name)
-      if (!regex.exec(ip)) continue
-      if (allowed === false) knownAllowed = false
-      if (log === false) knownLog = false
+      if (regex.exec(ip) === undefined) continue
+      // console.log(ip, regex.exec(ip) !== undefined, ip.length, name)
+      if (allowed === false) isAllowed = false
+      if (log === false) shouldLog = false
       knownName = name
       break
     }
     return {
       ip,
-      allowed: knownAllowed,
+      allowed: isAllowed,
       name: knownName,
-      log: knownLog,
+      log: shouldLog,
     }
   },
 

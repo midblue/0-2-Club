@@ -1,7 +1,7 @@
 const { Router } = require('express')
 const router = Router()
 const logger = require('../scripts/log')
-const log = () => {} //logger('api', 'gray')
+const log = logger('api', 'gray')
 
 const get = require('../getters/get')
 const updateManager = require('../updater/updateManager')
@@ -12,7 +12,7 @@ router.get('/test', (req, res) => {
 
 /* GET stats */
 router.get('/stats', async (req, res, next) => {
-  log('db stats')
+  // log('db stats')
   const stats = await get.dbStats()
   res.json(stats)
 })
@@ -21,7 +21,7 @@ router.get('/stats', async (req, res, next) => {
 router.get('/points/:game/tag/:tag', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const tag = decodeURIComponent(req.params.tag)
-  log('player with points by tag:', tag)
+  // log('player with points by tag:', tag)
   const foundPoints = await get.player({
     game,
     tag,
@@ -38,7 +38,7 @@ router.get('/points/:game/tag/:tag', async (req, res, next) => {
 router.get('/points/:game/id/:id', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const id = parseInt(decodeURIComponent(req.params.id))
-  log('player with points by id:', id)
+  // log('player with points by id:', id)
   const foundPoints = await get.player({ game, id, setActive: false })
   if (foundPoints) {
     res.json(foundPoints)
@@ -54,7 +54,7 @@ router.get(
 )
 router.get('/event/:service/:game/:tournamentSlug', handleEvent)
 async function handleEvent(req, res, next) {
-  log('event by url')
+  // log('event by url')
   const service = decodeURIComponent(req.params.service)
   const game = decodeURIComponent(req.params.game)
   const tournamentSlug = decodeURIComponent(req.params.tournamentSlug)
@@ -74,7 +74,7 @@ async function handleEvent(req, res, next) {
 router.get('/more/:game/:id/', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const id = parseInt(decodeURIComponent(req.params.id))
-  log('more events for player', id)
+  // log('more events for player', id)
   get.logToDb('more')
   const moreEvents = await get.moreEventsForPlayer({
     game,
@@ -85,7 +85,7 @@ router.get('/more/:game/:id/', async (req, res, next) => {
 
 /* GET combine all instances of a tag into one id */
 router.get('/combine/:game/:tag/:id/', async (req, res, next) => {
-  log('combining ids')
+  // log('combining ids')
   get.logToDb('combine')
   const game = decodeURIComponent(req.params.game)
   const tag = decodeURIComponent(req.params.tag)

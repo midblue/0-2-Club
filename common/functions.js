@@ -32,6 +32,7 @@ export default {
       knownName,
       knownLog = true
     for (let { regex, name, allowed, log } of ipFilters) {
+      console.log(ip, regex.exec(ip), ip.length, name)
       if (!regex.exec(ip)) continue
       if (allowed === false) knownAllowed = false
       if (log === false) knownLog = false
@@ -68,7 +69,7 @@ const ipFilters = [
     log: false,
   },
   {
-    regex: /118\.111\.157\.140/g,
+    regex: /118\.111\.157\.140/g, // todo sometimes not firing intermittently, trailing space?
     name: 'Me',
   },
   {
@@ -76,6 +77,10 @@ const ipFilters = [
     name: 'wowrack.com',
     allowed: false,
     log: false,
+  },
+  {
+    regex: /136\.243\.70\.151/g,
+    name: 'Hetzner Online',
   },
 ]
 

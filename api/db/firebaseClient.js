@@ -228,7 +228,7 @@ module.exports = {
     )
       await statsRef.get().then(async doc => {
         const data = doc.data()
-        getSomeEventsStartingPoint = data.events.scanStart || 0
+        getSomeEventsStartingPoint = data.events.scanStartId || 0
         currentEventsCountedInRollingUpdate =
           data.events.currentCountedInRollingUpdate || 0
       })
@@ -270,7 +270,7 @@ module.exports = {
 
         statsRef.update(
           {
-            ['events.scanStart']: getSomeEventsStartingPoint,
+            ['events.scanStartId']: getSomeEventsStartingPoint,
             ['events.currentCountedInRollingUpdate']: currentEventsCountedInRollingUpdate,
           },
           { merge: true }

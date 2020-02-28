@@ -32,8 +32,7 @@ export default {
       knownName,
       shouldLog = true
     for (let { regex, name, allowed, log } of ipFilters) {
-      if (regex.exec(ip) === undefined) continue
-      // console.log(ip, regex.exec(ip) !== undefined, ip.length, name)
+      if (regex.exec(ip) === null) continue
       if (allowed === false) isAllowed = false
       if (log === false) shouldLog = false
       knownName = name

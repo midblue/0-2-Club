@@ -74,12 +74,12 @@ export default {
         {
           hid: `og:url`,
           property: 'og:url',
-          content: `https://www.0-2.club/${this.player.game}/i/${this.player.id}/`,
+          content: `http://www.0-2.club/${this.player.game}/i/${this.player.id}/`,
         },
         {
           property: 'og:description',
           hid: `og:description`,
-          content: `Level ${this.level} in ${this.player.game}`,
+          content: `Level ${this.level.level}: ${this.level.label} in ${this.player.game}`,
         },
       ],
     }
@@ -96,7 +96,7 @@ export default {
   },
   computed: {
     level() {
-      return this.$store.state.player.level.level
+      return this.$store.state.player.level
     },
   },
 }

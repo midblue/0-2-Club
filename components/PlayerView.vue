@@ -39,6 +39,29 @@
           <InfoTooltip>
             Get points by competing in tournaments to level up!
           </InfoTooltip>
+
+          <client-only>
+            <social-sharing
+              :url="
+                window ? window.location.href : `http://www.0-2.club/`
+              "
+              :title="`See ${player.tag} on the The 0-2 Club`"
+              :description="
+                `Level ${level.level}: ${level.label} in ${player.game}`
+              "
+              hashtags="esports"
+              inline-template
+            >
+              <div class="social">
+                <network network="facebook">
+                  <div class="facebookicon"></div>
+                </network>
+                <network network="twitter">
+                  <div class="twittericon"></div>
+                </network>
+              </div>
+            </social-sharing>
+          </client-only>
         </h3>
 
         <XPBar :totalPoints="totalPoints" :events="displayEvents" />
@@ -135,6 +158,7 @@ export default {
   },
   data() {
     return {
+      window: null,
       player: {},
       peers: [],
       points: [],
@@ -193,7 +217,9 @@ export default {
       awards: this.awards,
     })
   },
-  mounted() {},
+  mounted() {
+    this.window = window
+  },
   beforeDestroy() {
     clearInterval(this.checkForUpdatesInterval)
   },
@@ -262,6 +288,13 @@ export default {
     margin-bottom: 0px;
   }
 }
+
+.social {
+  float: right;
+  position: relative;
+  display: flex;
+}
+
 .stats {
   margin-bottom: 2em;
 }

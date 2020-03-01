@@ -50,7 +50,7 @@ export default {
   },
   components: { PlayerView },
   head() {
-    return {
+    const data = {
       title: this.player.tag,
       meta: [
         {
@@ -66,13 +66,30 @@ export default {
         {
           hid: `og:url`,
           property: 'og:url',
-          content: `https://www.0-2.club/${this.player.game}/t/${this.player.tag}/`,
+          content: `http://www.0-2.club/${this.player.game}/t/${this.player.tag}/`,
+        },
+        {
+          property: 'og:description',
+          hid: `og:description`,
+          content: `Level ${this.level.level}: ${this.level.label} in ${this.player.game}`,
         },
       ],
     }
+    if (this.player.img)
+      data.meta.push({
+        hid: `og:image`,
+        property: 'og:image',
+        content: this.player.img,
+      })
+    return data
   },
   data() {
     return {}
+  },
+  computed: {
+    level() {
+      return this.$store.state.player.level
+    },
   },
 }
 </script>

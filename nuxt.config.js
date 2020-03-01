@@ -31,6 +31,11 @@ module.exports = {
         property: 'og:image',
         content: `http://www.0-2.club/thumb.png`,
       },
+      {
+        hid: `og:url`,
+        property: 'og:url',
+        content: `http://www.0-2.club/`,
+      },
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
@@ -44,6 +49,7 @@ module.exports = {
     ],
   },
   css: ['~/assets/css/main.scss'],
+  plugins: ['~/plugins/social'],
   axios: {
     progress: true,
     retry: false,

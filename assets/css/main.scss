@@ -385,6 +385,34 @@ code {
   display: flex;
 }
 
+.facebookicon,
+.twittericon {
+  width: 20px;
+  height: 20px;
+  margin: 5px 0;
+  margin-left: 10px;
+  cursor: pointer;
+  opacity: 0.5;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+
+  @media (max-width: 768px) {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+}
+.facebookicon {
+  background-image: url('/img/facebook.svg');
+}
+.twittericon {
+  background-image: url('/img/twitter.svg');
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s;

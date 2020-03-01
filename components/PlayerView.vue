@@ -19,8 +19,11 @@
           Enter a URL for a tournament you've been to below!
           <br />It should look something like
           <code
-            v-html="`https://smash.gg/tournament/<b><i>[tournament name]</i></b>/events/<b><i>[event name]</i></b>/overview`"
-          ></code>.
+            v-html="
+              `https://smash.gg/tournament/<b><i>[tournament name]</i></b>/events/<b><i>[event name]</i></b>/overview`
+            "
+          ></code
+          >.
         </div>
       </div>
     </template>
@@ -31,10 +34,10 @@
           <span
             class="colorpad multiply"
             :style="{ background: `var(--l${level.level})` }"
-          >Level {{ level.level }} — {{ level.label }}</span>
+            >Level {{ level.level }} — {{ level.label }}</span
+          >
           <InfoTooltip>
-            Get points by competing in tournaments to level
-            up!
+            Get points by competing in tournaments to level up!
           </InfoTooltip>
         </h3>
 
@@ -66,7 +69,11 @@
         class="eventsearch"
       />
     </div>
-    <EventsListing :events="displayEvents" :level="level.level" :game="player.game" />
+    <EventsListing
+      :events="displayEvents"
+      :level="level.level"
+      :game="player.game"
+    />
 
     <template v-if="peers && peers.length > 0">
       <hr />
@@ -77,7 +84,10 @@
         </div>
         <div>
           <span v-for="peer in peers">
-            <nuxt-link v-if="peer" :to="`/g/${player.game}/i/${peer.id}`">
+            <nuxt-link
+              v-if="peer"
+              :to="`/g/${player.game}/i/${peer.id}`"
+            >
               <div
                 v-if="peer.img"
                 :style="{
@@ -86,7 +96,11 @@
                 class="playericon"
               ></div>
             </nuxt-link>
-            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`" v-html="peer.tag"></nuxt-link>&nbsp;&nbsp;
+            <nuxt-link
+              :to="`/g/${player.game}/i/${peer.id}`"
+              v-html="peer.tag"
+            ></nuxt-link
+            >&nbsp;&nbsp;
           </span>
         </div>
       </div>
@@ -143,20 +157,27 @@ export default {
       return (
         (this.points
           ? this.points.reduce((total, { value }) => total + value, 0)
-          : 0) + this.awards.reduce((total, { points }) => total + points, 0)
+          : 0) +
+        this.awards.reduce((total, { points }) => total + points, 0)
       )
     },
     level() {
       let l = 0
       while (this.totalPoints > this.levels[l].points) l++
       if (l > 0) l--
+      this.$store.commit('setPlayer', {
+        level: { ...this.levels[l], level: l },
+      })
       return { ...this.levels[l], level: l }
     },
   },
   watch: {
     checkForUpdates(willCheck, wasChecking) {
       if (willCheck !== wasChecking && willCheck) {
-        this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 8000)
+        this.checkForUpdatesInterval = setInterval(
+          this.reCheckPoints,
+          8000
+        )
       } else {
         clearInterval(this.checkForUpdatesInterval)
       }
@@ -167,6 +188,10 @@ export default {
     this.points = this.initialPlayer.points
     this.peers = this.initialPlayer.peers
     this.awards = calculateAwards(this.player)
+    this.$store.commit('setPlayer', {
+      ...this.initialPlayer,
+      awards: this.awards,
+    })
   },
   mounted() {},
   beforeDestroy() {
@@ -187,10 +212,19 @@ export default {
             }
             for (let prop in res.data) {
               this.$set(this.player, prop, res.data[prop])
+              this.$store.commit('setPlayer', res.data)
             }
             if (res.data.peers) this.peers = res.data.peers
             this.points = null
-            this.$nextTick(() => (this.points = res.data.points))
+            this.awards = null
+            this.$nextTick(() => {
+              this.points = res.data.points
+              this.awards = calculateAwards(this.player)
+              this.$store.commit('setPlayer', {
+                points: this.points,
+                awards: this.awards,
+              })
+            })
           }
         })
       })

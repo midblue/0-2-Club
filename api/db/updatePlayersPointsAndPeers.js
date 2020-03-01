@@ -61,7 +61,6 @@ async function recalculatePoints(player, players) {
 }
 
 async function recalculatePeers(player) {
-  // todo? make this based on avg % overlap over all events for both players, not just raw numbers
   const startingPeers = player.peers || []
   const idsByFrequency = {}
 
@@ -75,15 +74,23 @@ async function recalculatePeers(player) {
           game: player.game,
         })
         if (!event || !event.participants) return
-        event.participants.forEach(({ id, tag, img }) => {
-          if (tag !== player.tag)
+        const playerStanding = event.participants.find(
+          p => p.id === player.id
+        ).standing
+        event.participants.forEach(({ id, tag, img, standing }) => {
+          if (tag !== player.tag) {
+            const standingSimilarity =
+              1 -
+                Math.abs(playerStanding - standing) /
+                  event.participants.length || 0
             idsByFrequency[id] = {
               tag,
               img,
               common:
                 (idsByFrequency[id] ? idsByFrequency[id].common : 0) +
-                1,
+                standingSimilarity,
             }
+          }
         })
       })
   )

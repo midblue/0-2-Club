@@ -1,5 +1,9 @@
 <template>
-  <div class="awardholder" @mouseover="hover = true" @mouseout="hover = false">
+  <div
+    class="awardholder"
+    @mouseover="hover = true"
+    @mouseout="hover = false"
+  >
     <button
       class="award"
       :class="
@@ -11,8 +15,8 @@
           ' ' +
           (fade ? 'fade' : '')
       "
-      @focus="hover = true"
-      @blur="hover = false"
+      @click="hover = true"
+      v-on-clickaway="() => (hover = false)"
       :style="{
         'background-color':
           award.level > 0 ? `var(--l${award.level})` : ``,
@@ -22,7 +26,12 @@
       <div class="label">{{ award.label }}</div>
 
       <template v-if="award.levelProgress > 0.01">
-        <svg class="progress" width="106px" height="106px" viewBox="0 0 106 106">
+        <svg
+          class="progress"
+          width="106px"
+          height="106px"
+          viewBox="0 0 106 106"
+        >
           <g fill="none">
             <circle
               stroke-width="7"
@@ -39,9 +48,17 @@
 
       <template v-if="award.level > 0">
         <div class="levellabel">{{ award.level }}</div>
-        <div class="tooltip" v-if="hover">
+        <div
+          class="tooltip"
+          v-if="hover"
+          :style="tooltipStyle"
+          ref="tooltip"
+        >
           <h3 v-html="award.title"></h3>
-          <div class="level" :style="{ color: `var(--l${award.level})` }">
+          <div
+            class="level"
+            :style="{ color: `var(--l${award.level})` }"
+          >
             <div>
               <b>Level {{ award.level }}</b>
             </div>
@@ -58,7 +75,12 @@
       </template>
 
       <template v-else>
-        <div class="tooltip" v-if="hover">
+        <div
+          class="tooltip"
+          v-if="hover"
+          :style="tooltipStyle"
+          ref="tooltip"
+        >
           <h3>{{ award.title }}</h3>
           <div class="sub">(Not yet achieved)</div>
           <div v-html="award.requirements"></div>
@@ -70,6 +92,8 @@
 </template>
 
 <script>
+import { mixin as clickaway } from 'vue-clickaway2'
+
 export default {
   props: {
     award: {},
@@ -78,11 +102,44 @@ export default {
   data() {
     return {
       hover: false,
+      tooltipStyle: {},
     }
+  },
+  mixins: [clickaway],
+  computed: {
+    winWidth() {
+      return this.$store.state.winWidth
+    },
   },
   watch: {
     hover(isHovering) {
       this.$emit(isHovering ? 'isHovering' : 'unhover')
+      this.recalcTooltipStyle()
+    },
+    winWidth() {
+      this.recalcTooltipStyle()
+    },
+  },
+  methods: {
+    recalcTooltipStyle() {
+      if (!this.hover) return (this.tooltipStyle = {})
+      this.$nextTick(() => {
+        const {
+          right,
+          left,
+        } = this.$refs.tooltip.getBoundingClientRect()
+        if (right > this.winWidth - 20)
+          return (this.tooltipStyle = {
+            transform: `translateX(${-1 * (right - this.winWidth) -
+              20}px) translateX(-50%)`,
+          })
+        if (left < 20)
+          return (this.tooltipStyle = {
+            transform: `translateX(${-1 * left +
+              20}px) translateX(-50%)`,
+          })
+        return (this.tooltipStyle = {})
+      })
     },
   },
 }
@@ -101,6 +158,7 @@ $widthd: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 10px;
 }
 .award {
   position: relative;
@@ -189,7 +247,7 @@ $widthd: 40px;
   position: absolute;
   pointer-events: none;
   top: 110%;
-  // left: 50%;
+  left: 50%;
   z-index: 2000;
   line-height: 1.1;
   font-size: 1rem;
@@ -199,7 +257,7 @@ $widthd: 40px;
   padding: 15px 10px;
   background: hsla(0, 0%, 0%, 0.8);
   color: var(--bg);
-  // transform: translateX(-50%);
+  transform: translateX(-50%);
   transition: none;
 
   h3 {
@@ -252,7 +310,7 @@ $widthd: 40px;
   transition: stroke-dashoffset 1s;
   stroke-dasharray: 315; // 315 is 100%
   stroke-dashoffset: 315;
-  stroke: var(--grayd2);
+  stroke: var(--grayd3);
   mix-blend-mode: multiply;
 }
 </style>

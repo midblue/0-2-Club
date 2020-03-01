@@ -4,14 +4,19 @@
       class="icon low"
       @mouseover="show = true"
       @mouseout="show = false"
-      @focus="show = true"
-      @blur="show = false"
+      @click="show = true"
+      v-on-clickaway="() => (show = false)"
     >
       <span class="textlabel">?</span>
     </button>
 
     <transition name="fade">
-      <div class="tooltip" v-if="show">
+      <div
+        class="tooltip"
+        v-if="show"
+        ref="tooltip"
+        :style="tooltipStyle"
+      >
         <slot></slot>
       </div>
     </transition>
@@ -19,11 +24,42 @@
 </template>
 
 <script>
+import { mixin as clickaway } from 'vue-clickaway2'
+
 export default {
   data() {
     return {
       show: false,
+      tooltipStyle: {},
     }
+  },
+  mixins: [clickaway],
+  computed: {
+    winWidth() {
+      return this.$store.state.winWidth
+    },
+  },
+  watch: {
+    show() {
+      this.recalcTooltipStyle()
+    },
+    winWidth() {
+      this.recalcTooltipStyle()
+    },
+  },
+  methods: {
+    recalcTooltipStyle() {
+      if (!this.show) return (this.tooltipStyle = {})
+      this.$nextTick(() => {
+        const { right } = this.$refs.tooltip.getBoundingClientRect()
+        if (right > this.winWidth)
+          return (this.tooltipStyle = {
+            left: -1 * (right - this.winWidth) - 10 + 'px',
+            top: '25px',
+          })
+        return (this.tooltipStyle = {})
+      })
+    },
   },
 }
 </script>

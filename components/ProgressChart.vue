@@ -66,12 +66,7 @@ import LineChart from './LineChart.js'
 import axios from 'axios'
 
 export default {
-  props: {
-    points: { default: () => [] },
-    peers: {},
-    player: {},
-    level: { default: 0 },
-  },
+  props: {},
   components: { LineChart },
   data() {
     return {
@@ -132,11 +127,23 @@ export default {
     }
   },
   computed: {
+    points() {
+      return this.$store.state.player.points
+    },
+    peers() {
+      return this.$store.state.player.peers
+    },
+    player() {
+      return this.$store.state.player
+    },
+    level() {
+      return this.$store.state.player.level.level
+    },
     pointsToUse() {
-      return (this.points || []).sort((a, b) => a.date - b.date)
+      return this.points || []
     },
     rivalPointsToUse() {
-      return (this.rivalPoints || []).sort((a, b) => a.date - b.date)
+      return this.rivalPoints || []
     },
   },
   watch: {

@@ -6,6 +6,7 @@
 import axios from '~/plugins/axios'
 import PlayerView from '~/components/PlayerView'
 const { parseIp } = require('~/common/functions').default
+import levels from '~/common/levels'
 
 export default {
   scrollToTop: true,
@@ -23,31 +24,37 @@ export default {
         return error({ statusCode: 404, message: 'Not found.' })
       }
     }
-    return axios.get(`/api/points/${params.game}/id/${params.id}`).then(res => {
-      if (res.data && !res.data.err && !res.data.disambiguation) {
-        if (req && ipInfo.log)
-          require('~/api/scripts/log')('page:id', 'gray')(
-            ipInfo.name || ipInfo.ip,
-            params.game,
-            params.id,
-            res.data.tag
-          )
-        // todo set active if not a named ip, or if browsing (localhost)
-        return { player: res.data }
-      } else
-        return {
-          player: {
-            game: params.game,
-            peers: [],
-            points: [],
-            id: params.id,
-          },
-        }
-    })
+    return axios
+      .get(
+        ipInfo
+          ? `/api/points/${params.game}/id/${params.id}`
+          : `/api/points/${params.game}/id/${params.id}/active`
+      )
+      .then(res => {
+        if (res.data && !res.data.err && !res.data.disambiguation) {
+          if (req && ipInfo.log)
+            require('~/api/scripts/log')('page:id', 'gray')(
+              ipInfo.name || ipInfo.ip,
+              params.game,
+              params.id,
+              res.data.tag
+            )
+          // todo set active if not a named ip, or if browsing (localhost)
+          return { player: res.data }
+        } else
+          return {
+            player: {
+              game: params.game,
+              peers: [],
+              points: [],
+              id: params.id,
+            },
+          }
+      })
   },
   components: { PlayerView },
   head() {
-    return {
+    const data = {
       title: this.player.tag,
       meta: [
         {
@@ -69,11 +76,28 @@ export default {
           property: 'og:url',
           content: `https://www.0-2.club/${this.player.game}/i/${this.player.id}/`,
         },
+        {
+          property: 'og:description',
+          hid: `og:description`,
+          content: `Level ${this.level} in ${this.player.game}`,
+        },
       ],
     }
+    if (this.player.img)
+      data.meta.push({
+        hid: `og:image`,
+        property: 'og:image',
+        content: this.player.img,
+      })
+    return data
   },
   data() {
     return {}
+  },
+  computed: {
+    level() {
+      return this.$store.state.player.level.level
+    },
   },
 }
 </script>

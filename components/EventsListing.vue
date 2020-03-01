@@ -29,15 +29,21 @@ import EventListing from '~/components/EventListing'
 
 export default {
   components: { EventListing },
-  props: {
-    events: {},
-    level: {},
-    game: {},
-  },
+  props: {},
   data() {
     return {}
   },
-  computed: {},
+  computed: {
+    events() {
+      return this.$store.state.player.participatedInEvents
+    },
+    level() {
+      return this.$store.state.player.level.level
+    },
+    game() {
+      return this.$store.state.player.game
+    },
+  },
 }
 </script>
 

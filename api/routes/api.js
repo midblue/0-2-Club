@@ -18,34 +18,41 @@ router.get('/stats', async (req, res, next) => {
 })
 
 /* GET player with points by game and tag. */
-router.get('/points/:game/tag/:tag', async (req, res, next) => {
-  const game = decodeURIComponent(req.params.game)
-  const tag = decodeURIComponent(req.params.tag)
-  // log('player with points by tag:', tag)
-  const foundPoints = await get.player({
-    game,
-    tag,
-    setActive: false,
-  })
-  if (foundPoints) {
-    res.json(foundPoints)
-  } else {
-    res.json({ err: 'No player in database by that tag.' })
+router.get(
+  '/points/:game/tag/:tag/:active*?',
+  async (req, res, next) => {
+    const game = decodeURIComponent(req.params.game)
+    const tag = decodeURIComponent(req.params.tag)
+    const setActive = !!req.params.active
+    // log('player with points by tag:', tag)
+    const foundPoints = await get.player({
+      game,
+      tag,
+      setActive,
+    })
+    if (foundPoints) {
+      res.json(foundPoints)
+    } else {
+      res.json({ err: 'No player in database by that tag.' })
+    }
   }
-})
+)
 
 /* GET player with points by game and id. */
-router.get('/points/:game/id/:id', async (req, res, next) => {
-  const game = decodeURIComponent(req.params.game)
-  const id = parseInt(decodeURIComponent(req.params.id))
-  // log('player with points by id:', id)
-  const foundPoints = await get.player({ game, id, setActive: false })
-  if (foundPoints) {
-    res.json(foundPoints)
-  } else {
-    res.json({ err: 'No player in database by that id.' })
+router.get(
+  '/points/:game/id/:id/:active*?',
+  async (req, res, next) => {
+    const game = decodeURIComponent(req.params.game)
+    const id = parseInt(decodeURIComponent(req.params.id))
+    const setActive = !!req.params.active
+    const foundPoints = await get.player({ game, id, setActive })
+    if (foundPoints) {
+      res.json(foundPoints)
+    } else {
+      res.json({ err: 'No player in database by that id.' })
+    }
   }
-})
+)
 
 /* GET get manually added event data */
 router.get(

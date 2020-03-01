@@ -29,7 +29,7 @@ module.exports = {
       {
         hid: `og:image`,
         property: 'og:image',
-        content: `https://www.0-2.club/thumb.png`,
+        content: `http://www.0-2.club/thumb.png`,
       },
     ],
     link: [

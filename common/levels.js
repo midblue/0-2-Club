@@ -1,4 +1,4 @@
-const multiplier = 175
+const multiplier = 200
 
 const levels = [
   {
@@ -31,11 +31,11 @@ const levels = [
   },
   {
     points: 22 * multiplier,
-    label: 'FalcoMaster5000',
+    label: 'Top Tier',
   },
   {
     points: 29 * multiplier,
-    label: 'FalcoMaster50000',
+    label: 'Champion',
   },
   {
     points: 37 * multiplier,
@@ -47,7 +47,7 @@ const levels = [
   },
   {
     points: 56 * multiplier,
-    label: 'Mew3King',
+    label: 'Undisputed Master',
   },
 ]
 

@@ -1,5 +1,7 @@
 <template>
-  <div v-if="achievedAwards.length > 0 || awardsInProgress.length > 0">
+  <div
+    v-if="achievedAwards.length > 0 || awardsInProgress.length > 0"
+  >
     <h2 class="awardslabel">Awards</h2>
     <div class="awards">
       <Award

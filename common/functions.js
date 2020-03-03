@@ -63,7 +63,7 @@ const ipFilters = [
     name: 'localhost',
   },
   {
-    regex: /66\.249\..*/g,
+    regex: /66\.249\./g,
     name: 'Google',
     log: false,
   },
@@ -84,6 +84,14 @@ const ipFilters = [
   {
     regex: /40\.77\.167\.181/g,
     name: 'Bing',
+  },
+  {
+    regex: /173\.252\.95\./g,
+    name: 'Facebook',
+  },
+  {
+    regex: /199\.59\.150\./g,
+    name: 'Twitter',
   },
 ]
 

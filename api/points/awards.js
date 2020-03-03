@@ -445,7 +445,7 @@ function yearlyImprovement(player, events) {
 
     const img = '/img/awards/yearplacing.png'
 
-    const label = `${year}`
+    const label = `'${`${year}`.substring(2)}`
 
     const points = level * 10
 
@@ -497,7 +497,7 @@ function yearlyAttendance(player, events) {
 
     const img = '/img/awards/yearattendance.png'
 
-    const label = `${year}`
+    const label = `'${`${year}`.substring(2)}`
 
     const points = level * 10
 

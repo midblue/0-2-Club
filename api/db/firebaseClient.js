@@ -41,9 +41,10 @@ const maxWrites = 20000,
 let writes = 0,
   reads = 0,
   deletes = 0,
-  prevWrites = 0,
-  prevReads = 0,
-  prevDeletes = 0
+  resetInterval //,
+// prevWrites = 0,
+// prevReads = 0,
+// prevDeletes = 0
 
 statsRef.get().then(doc => {
   const usage = doc.data().usage || {}
@@ -52,26 +53,27 @@ statsRef.get().then(doc => {
   deletes = usage.deletes || 0
 })
 
-setInterval(() => {
-  if (
-    writes !== prevWrites ||
-    reads !== prevReads ||
-    deletes !== prevDeletes
-  )
-    low(
-      `today so far: ${reads} reads (${parseInt(
-        (reads / maxReads) * 100
-      )}%), ${writes} writes (${parseInt(
-        (writes / maxWrites) * 100
-      )}%), ${deletes} deletes (${parseInt(
-        (deletes / maxDeletes) * 100
-      )}%)`
-    )
-  prevWrites = writes
-  prevReads = reads
-  prevDeletes = deletes
-}, 5 * 60 * 1000)
-setInterval(() => {
+// setInterval(() => {
+//   if (
+//     writes !== prevWrites ||
+//     reads !== prevReads ||
+//     deletes !== prevDeletes
+//   )
+//     low(
+//       `today so far: ${reads} reads (${parseInt(
+//         (reads / maxReads) * 100
+//       )}%), ${writes} writes (${parseInt(
+//         (writes / maxWrites) * 100
+//       )}%), ${deletes} deletes (${parseInt(
+//         (deletes / maxDeletes) * 100
+//       )}%)`
+//     )
+//   prevWrites = writes
+//   prevReads = reads
+//   prevDeletes = deletes
+// }, 5 * 60 * 1000)
+clearInterval(resetInterval) // for hot reload
+resetInterval = setInterval(() => {
   writes = 0
   reads = 0
   deletes = 0

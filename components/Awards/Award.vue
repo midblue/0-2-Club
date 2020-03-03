@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="awardholder"
-    @mouseover="hover = true"
-    @mouseout="hover = false"
-  >
+  <div class="awardholder" @mouseover="hover = true" @mouseout="hover = false">
     <button
       class="award"
       :class="
@@ -26,15 +22,10 @@
       <div class="label">{{ award.label }}</div>
 
       <template v-if="award.levelProgress > 0.01">
-        <svg
-          class="progress"
-          width="106px"
-          height="106px"
-          viewBox="0 0 106 106"
-        >
+        <svg class="progress" width="106px" height="106px" viewBox="0 0 106 106">
           <g fill="none">
             <circle
-              stroke-width="7"
+              stroke-width="5"
               :stroke-dashoffset="315 - 315 * award.levelProgress"
               cx="53"
               cy="53"
@@ -48,17 +39,9 @@
 
       <template v-if="award.level > 0">
         <div class="levellabel">{{ award.level }}</div>
-        <div
-          class="tooltip"
-          v-if="hover"
-          :style="tooltipStyle"
-          ref="tooltip"
-        >
+        <div class="tooltip" v-if="hover" :style="tooltipStyle" ref="tooltip">
           <h3 v-html="award.title"></h3>
-          <div
-            class="level"
-            :style="{ color: `var(--l${award.level})` }"
-          >
+          <div class="level" :style="{ color: `var(--l${award.level})` }">
             <div>
               <b>Level {{ award.level }}</b>
             </div>
@@ -75,12 +58,7 @@
       </template>
 
       <template v-else>
-        <div
-          class="tooltip"
-          v-if="hover"
-          :style="tooltipStyle"
-          ref="tooltip"
-        >
+        <div class="tooltip" v-if="hover" :style="tooltipStyle" ref="tooltip">
           <h3>{{ award.title }}</h3>
           <div class="sub">(Not yet achieved)</div>
           <div v-html="award.requirements"></div>
@@ -124,10 +102,7 @@ export default {
     recalcTooltipStyle() {
       if (!this.hover) return (this.tooltipStyle = {})
       this.$nextTick(() => {
-        const {
-          right,
-          left,
-        } = this.$refs.tooltip.getBoundingClientRect()
+        const { right, left } = this.$refs.tooltip.getBoundingClientRect()
         if (right > this.winWidth - 20)
           return (this.tooltipStyle = {
             transform: `translateX(${-1 * (right - this.winWidth) -
@@ -135,8 +110,7 @@ export default {
           })
         if (left < 20)
           return (this.tooltipStyle = {
-            transform: `translateX(${-1 * left +
-              20}px) translateX(-50%)`,
+            transform: `translateX(${-1 * left + 20}px) translateX(-50%)`,
           })
         return (this.tooltipStyle = {})
       })
@@ -284,7 +258,7 @@ $widthd: 40px;
   width: $widthd;
   height: $widthd;
   position: relative;
-  background-color: hsla(0, 0%, 92%, 1);
+  background-color: hsla(0, 0%, 88%, 1);
   background-size: 80%;
   box-shadow: none;
 

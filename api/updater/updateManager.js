@@ -22,17 +22,17 @@ let isScanning = false,
 const aDayInSeconds = 24 * 60 * 60
 const aDayInMilliseconds = aDayInSeconds * 1000
 
-let scanInterval, udpdateInterval
-clearInterval(scanInterval)
-clearInterval(udpdateInterval) // these are here for hot reloading
-scanInterval = setInterval(
+let scanTimeout, udpdateTimeout
+clearTimeout(scanTimeout)
+clearTimeout(udpdateTimeout) // these are here for hot reloading
+scanTimeout = setTimeout(
   scanForNewEvents,
   Math.round(aDayInMilliseconds * 1.997)
-) // run about every 2 days (not even so it doesn't overlap with a reset)
-udpdateInterval = setInterval(
+)
+udpdateTimeout = setTimeout(
   rollingUpdate,
-  Math.round(aDayInMilliseconds / 40.03)
-) // run ~40 times a day
+  Math.round(aDayInMilliseconds / 20.03)
+)
 
 // this will add new events for active players.
 async function scanForNewEvents() {
@@ -40,8 +40,15 @@ async function scanForNewEvents() {
     return logError(
       'Skipping attempt to scan while update/scan is running'
     )
-  if (!dbUsageIsOkay())
-    return logError('Too close to db usage cap to scan')
+  if (!dbUsageIsOkay()) {
+    scanTimeout = setTimeout(
+      scanForNewEvents,
+      Math.round(aDayInMilliseconds / 2)
+    ) // try again in 12 hours
+    return logError(
+      'Too close to db usage cap to scan, postponing...'
+    )
+  }
   isScanning = true
   logInfo('starting scan for new events')
   try {
@@ -56,6 +63,10 @@ async function scanForNewEvents() {
 
   logInfo('scan complete')
   isScanning = false
+  scanTimeout = setTimeout(
+    scanForNewEvents,
+    Math.round(aDayInMilliseconds * 1.997)
+  ) // run again in 2 days
 }
 
 // the goal here is to update a fairly consistent number of events & players each pass, without going overboard, and over a long enough timeline eventually touching every single player and event.
@@ -64,8 +75,15 @@ async function rollingUpdate() {
     return logError(
       'Skipping attempt to update while update/scan is running'
     )
-  if (!dbUsageIsOkay())
-    return logError('Too close to db usage cap to scan')
+  if (!dbUsageIsOkay()) {
+    updateTimeout = setTimeout(
+      rollingUpdate,
+      Math.round(aDayInMilliseconds / 2)
+    ) // try again in 12 hours
+    return logError(
+      'Too close to db usage cap to update, postponing...'
+    )
+  }
   isUpdating = true
   logInfo('starting rolling update')
   let someEvents, players
@@ -93,20 +111,24 @@ async function rollingUpdate() {
     'players.'
   )
   isUpdating = false
+  updateTimeout = setTimeout(
+    rollingUpdate,
+    Math.round(aDayInMilliseconds / 20.03)
+  ) // run again in a few hours
 }
 
 function dbUsageIsOkay() {
   const limit = 0.7
   const { reads, writes, deletes } = db.getLimitProximity()
-  // low(
-  //   'db daily usage:',
-  //   parseInt(reads * 100) + '%',
-  //   'reads,',
-  //   parseInt(writes * 100) + '%',
-  //   'writes,',
-  //   parseInt(deletes * 100) + '%',
-  //   'deletes'
-  // )
+  low(
+    'db daily usage:',
+    parseInt(reads * 100) + '%',
+    'reads,',
+    parseInt(writes * 100) + '%',
+    'writes,',
+    parseInt(deletes * 100) + '%',
+    'deletes'
+  )
   if (reads > limit || writes > limit || deletes > limit) return false
   return true
 }

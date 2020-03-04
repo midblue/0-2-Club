@@ -390,8 +390,8 @@ async function matchPoints(
       if (pastMatches.length >= 10)
         p({
           title: `Old Rivals`,
-          context: `You've played against ${opponentTag} ${pastMatches.length} times before`,
-          value: 2,
+          context: `You've played against ${opponentTag} ${pastMatches.length} times`,
+          value: 1,
         })
 
       const winPercentUpToAndIncludingEvent =

@@ -1,6 +1,6 @@
 <template>
   <div class="eventslisting">
-    <template v-if="events">
+    <template v-if="events.length">
       <div>
         <EventListing
           v-for="event in events"
@@ -35,7 +35,10 @@ export default {
   },
   computed: {
     events() {
-      return this.$store.state.player.participatedInEvents
+      if (!this.$store.state.player.participatedInEvents) return []
+      return [...this.$store.state.player.participatedInEvents].sort(
+        (a, b) => b.date - a.date
+      )
     },
     level() {
       return this.$store.state.player.level.level

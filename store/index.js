@@ -18,4 +18,7 @@ export const mutations = {
   setPlayer(state, payload) {
     for (let p in payload) state.player[p] = payload[p]
   },
+  clearPlayer(state) {
+    state.player = {}
+  },
 }

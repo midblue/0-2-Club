@@ -120,9 +120,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-$widthu: 60px;
-$width: 50px;
-$widthd: 40px;
+$widthu: 80px;
+$width: $widthu - 10px;
+$widthd: $widthu - 20px;
 .awardholder {
   position: relative;
   width: $widthu;
@@ -177,12 +177,12 @@ $widthd: 40px;
 }
 
 .label {
-  font-size: 0.75em;
+  font-size: 0.8em;
   // color: white;
   opacity: 0.6;
   pointer-events: none;
   position: absolute;
-  top: 5%;
+  top: 7%;
   left: 50%;
   transform: translateX(-50%);
   letter-spacing: -0.5px;
@@ -193,7 +193,7 @@ $widthd: 40px;
   pointer-events: none;
   color: white;
   position: absolute;
-  bottom: 0%;
+  bottom: 2%;
   text-align: center;
   left: 50%;
   transform: translateX(-50%);

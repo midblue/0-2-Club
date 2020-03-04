@@ -15,10 +15,6 @@
         <input v-model="searchUrl" autofocus placeholder="Enter a smash.gg URL..." />
         <button class="low" type="submit" @click="searchFor">Add</button>
       </form>
-      <div class="sub" v-if="!player.id">
-        If you give us one tournament you've been in, we should be
-        able to find more automatically!
-      </div>
     </template>
   </div>
 </template>
@@ -61,7 +57,7 @@ export default {
             this.$store.commit('setIsLoading', false)
 
             if (res.data && !res.data.err) {
-              this.$store.dispatch('notifications/notify', `Added that event!`)
+              this.$store.dispatch('notifications/notify', `Done!`)
               this.$emit('events', [res.data])
             } else
               this.$store.dispatch(
@@ -151,6 +147,7 @@ form {
 input {
   flex: 1;
   padding: 11px 10px;
+  max-width: 600px;
 }
 
 div.sub {

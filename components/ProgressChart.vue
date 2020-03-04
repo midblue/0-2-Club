@@ -26,35 +26,29 @@
             rivalSearchTag = null
             rivalId = peer.id
           "
-          ><div
+        >
+          <div
             v-if="peer.img"
             :style="{
               'background-image': `url('${peer.img}')`,
             }"
             class="playericon"
           ></div>
-          {{ peer.tag }}</span
-        >
+          {{ peer.tag }}
+        </span>
 
         <form class="search" @submit.prevent>
-          <input
-            v-model="inputRivalSearchTag"
-            placeholder="Search for a user..."
-          />
+          <input v-model="inputRivalSearchTag" placeholder="Search for a user..." />
           <button
             class="low"
             type="submit"
             v-if="inputRivalSearchTag"
             @click="searchForRival"
-          >
-            Search
-          </button>
+          >Search</button>
         </form>
       </div>
       <div class="clear">
-        <button class="low" v-if="rivalTag" @click="resetRival">
-          Clear
-        </button>
+        <button class="low" v-if="rivalTag" @click="resetRival">Clear</button>
       </div>
     </div>
   </div>
@@ -128,7 +122,9 @@ export default {
   },
   computed: {
     points() {
-      return this.$store.state.player.points
+      return [...(this.$store.state.player.points || [])].sort(
+        (a, b) => a.date - b.date
+      )
     },
     peers() {
       return this.$store.state.player.peers
@@ -171,8 +167,7 @@ export default {
 
       const data = generateData(this.pointsToUse)
       let rivalData
-      if (this.rivalPoints)
-        rivalData = generateData(this.rivalPointsToUse)
+      if (this.rivalPoints) rivalData = generateData(this.rivalPointsToUse)
 
       // const ctx = document.getElementById('line-chart').getContext('2d')
       // const gradient = ctx.createLinearGradient(0, 120, 0, 30)
@@ -188,9 +183,7 @@ export default {
           {
             ...this.defaultDatasetOptions,
             label: this.player.tag,
-            backgroundColor: getComputedStyle(
-              document.documentElement
-            )
+            backgroundColor: getComputedStyle(document.documentElement)
               .getPropertyValue('--l' + this.level)
               .replace('100%)', '75%)'),
             data,
@@ -231,9 +224,9 @@ export default {
           'notifications/notify',
           `Input a player tag to compare to.`
         )
-      const url = `/api/points/${
-        this.player.game
-      }/tag/${encodeURIComponent(this.inputRivalSearchTag)}/`
+      const url = `/api/points/${this.player.game}/tag/${encodeURIComponent(
+        this.inputRivalSearchTag
+      )}/`
       axios.get(url).then(res => {
         this.$store.commit('setIsLoading', false)
         if (!res.data || res.data.err) {

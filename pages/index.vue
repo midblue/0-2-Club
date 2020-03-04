@@ -6,9 +6,25 @@
       </div>
       <h3>
         Track your progress, keep improving, and stay motivated —
-        <br />An <span class="highlight">esports fitbit</span> for
+        <br />An
+        <span class="highlight">esports fitbit</span> for
         anyone getting started in competitive gaming.
       </h3>
+
+      <div v-if="savedEntries.length">
+        <h4>Recent Searches</h4>
+        <div
+          v-for="entry, index in savedEntries.slice(0, 5)"
+          :key="'e'+index"
+          class="savedentry buttonbox"
+        >
+          <div class="holder" @click="go(null, entry.tag, entry.game)">
+            <h3>{{entry.tag}}</h3>
+            <div class="sub">{{entry.game}}</div>
+          </div>
+          <div class="delete" @click="removeEntry(entry.tag, entry.game)">✖</div>
+        </div>
+      </div>
 
       <PanelButton>
         <div class="mainselector">
@@ -20,11 +36,7 @@
 
           <!-- Game -->
           <div class="game">
-            <ModelSelect
-              :options="gameOptions"
-              v-model="inputGame"
-              placeholder="Your game"
-            />
+            <ModelSelect :options="gameOptions" v-model="inputGame" placeholder="Your game" />
           </div>
         </div>
         <template #button>
@@ -49,48 +61,77 @@
         events analyzed so far.
       </div>-->
 
-      <div>
-        <b>See it in action:</b>
-        <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/H0P"
-          >H0P</nuxt-link
-        >・
-        <nuxt-link to="/g/Super%20Smash%20Bros.%20Melee/t/DoodleDork"
-          >DoodleDork</nuxt-link
-        >・
-        <nuxt-link to="/g/Super%20Smash%20Bros.%20Ultimate/t/Fluffy"
-          >Fluffy</nuxt-link
-        >
+      <div class="intro">
+        <div class="imgholder">
+          <img src="/img/home/3.png" />
+        </div>
+        <div class="text">
+          <h3>See Your Growth</h3>
+          <div>
+            If you feel like you've been leveling up this year, now you
+            can prove it. Your progress is charted over time, and you
+            can compare your growth with your peers.
+          </div>
+        </div>
+
+        <div class="imgholder right">
+          <img src="/img/home/1.png" style="max-height: 175px" />
+        </div>
+        <div class="text left">
+          <h3>Points for All</h3>
+          <div>
+            In training, victory isn't as important as growth and
+            consistency. Lose a tight set to a strong player? That's
+            worth some points. Support your local scene? Points city.
+          </div>
+        </div>
+
+        <div class="imgholder">
+          <img src="/img/home/4.png" />
+        </div>
+        <div class="text">
+          <h3>Hassle-Free Data</h3>
+          <div>
+            Just link us one tournament with you in it, and we'll
+            automatically snag more. Currently supports all 1v1
+            tournaments for any game hosted through smash.gg.
+          </div>
+        </div>
+      </div>
+
+      <div class="inaction">
+        <h3>See it in action:</h3>
+        <div>
+          <div class="savedentry buttonbox" @click="go(true, 'H0P', 'Super Smash Bros. Melee')">
+            <div class="holder">
+              <h4>H0P</h4>
+              <div class="sub">Super Smash Bros. Melee</div>
+            </div>
+          </div>
+          <div
+            class="savedentry buttonbox"
+            @click="go(true, 'DoodleDork', 'Super Smash Bros. Melee')"
+          >
+            <div class="holder">
+              <h4>DoodleDork</h4>
+              <div class="sub">Super Smash Bros. Melee</div>
+            </div>
+          </div>
+          <div
+            class="savedentry buttonbox"
+            @click="go(true, 'Fluffy', 'Super Smash Bros. Ultimate')"
+          >
+            <div class="holder">
+              <h4>Fluffy</h4>
+              <div class="sub">Super Smash Bros. Ultimate</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <br />
       <br />
       <hr />
-      <br />
-      <br v-if="!isMobile" />
-
-      <div class="intro">
-        <div class="text">
-          <h3>See Your Growth</h3>
-          If you feel like you've been leveling up this year, now you
-          can prove it. Your progress is charted over time, and you
-          can compare your growth with your peers.
-        </div>
-
-        <div class="text">
-          <h3>Points for All</h3>
-          In training, victory isn't as important as growth and
-          consistency. Lose a tight set to a strong player? That's
-          worth some points. Support your local scene? Points city.
-        </div>
-
-        <div class="text">
-          <h3>Easy Data Handling</h3>
-          Just link us one tournament with you in it, and we'll
-          automatically snag more. Currently supports all 1v1
-          tournaments for any game hosted through smash.gg.
-        </div>
-      </div>
-
       <br />
       <br />
 
@@ -106,14 +147,11 @@
                     new Date(patchNotes[0].date).getTime() <
                     7 * 24 * 60 * 60 * 1000
                 "
-                >New!</span
-              >
+              >New!</span>
             </h4>
           </summary>
-          <div v-for="(patch, index) in patchNotes" :key="index">
-            <div class="sub">
-              {{ new Date(patch.date).toLocaleDateString() }}
-            </div>
+          <div v-for="(patch, index) in patchNotes" :key="index" class="patchnote">
+            <div class="sub">{{ new Date(patch.date).toLocaleDateString() }}</div>
             <div>{{ patch.content }}</div>
           </div>
         </details>
@@ -126,11 +164,9 @@
 import axios from '~/plugins/axios'
 import PanelButton from '~/components/PanelButton'
 import { ModelSelect } from 'vue-search-select'
-const {
-  parseParticipantTag,
-  parseIp,
-} = require('~/common/functions').default
+const { parseParticipantTag, parseIp } = require('~/common/functions').default
 const patchNotes = require('~/assets/patchNotes').default
+const { get, set, remove } = require('~/assets/storage').default
 
 export default {
   scrollToTop: true,
@@ -173,6 +209,7 @@ export default {
       },
       inputTag: '',
       gameOptions: [],
+      savedEntries: [],
     }
   },
   computed: {
@@ -182,17 +219,37 @@ export default {
   },
   mounted() {
     this.gameOptions = this.games.map(g => ({ value: g, text: g }))
+    this.$store.commit('clearPlayer')
+    const saved = get('pastSearches')
+    if (saved) this.savedEntries = JSON.parse(saved)
   },
   methods: {
-    go() {
-      const tag = parseParticipantTag(this.inputTag)
+    addSavedEntry(tag, game) {
+      let saved = get('pastSearches')
+      if (!saved) saved = []
+      else saved = JSON.parse(saved)
+      if (saved.find(s => s.tag === tag && s.game === game)) return
+      saved.unshift({ tag, game })
+      set('pastSearches', JSON.stringify(saved.slice(0, 5)))
+    },
+    removeEntry(tag, game) {
+      let saved = get('pastSearches')
+      if (!saved) return
+      else saved = JSON.parse(saved)
+      const index = saved.findIndex(s => s.tag === tag && s.game === game)
+      if (index === -1) return
+      saved.splice(index, 1)
+      this.savedEntries = saved
+      set('pastSearches', JSON.stringify(saved))
+    },
+    go(event, passedTag, passedGame) {
+      const tag = passedTag || parseParticipantTag(this.inputTag)
+      const game = passedGame || this.inputGame.value
       if (!tag) return this.notify('You need to enter a tag!')
-      if (!this.inputGame.value)
-        return this.notify('You need to pick a game!')
+      if (!game) return this.notify('You need to pick a game!')
+      this.addSavedEntry(tag, game)
       return this.$router.push(
-        `/g/${encodeURIComponent(
-          this.inputGame.value
-        )}/t/${encodeURIComponent(tag)}`
+        `/g/${encodeURIComponent(game)}/t/${encodeURIComponent(tag)}`
       )
     },
     notify(message) {
@@ -210,6 +267,54 @@ export default {
 
 .negmartop {
   margin-top: -40px;
+}
+
+h4 {
+  margin-bottom: 0.5em;
+  margin-top: 3em;
+}
+
+.savedentry {
+  position: relative;
+  min-width: 200px;
+  cursor: pointer;
+  margin-right: 20px;
+  margin-bottom: 20px;
+
+  .holder {
+    width: 100%;
+    height: 100%;
+    padding: 10px 15px;
+    transition: background 0.3s;
+
+    &:hover {
+      background: var(--active);
+    }
+  }
+
+  .delete {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--gray);
+    transition: all 0.3s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: var(--l11);
+      color: white;
+    }
+  }
+
+  h4,
+  h3 {
+    margin: 0;
+  }
 }
 
 .mainselector {
@@ -249,27 +354,91 @@ export default {
   }
 }
 
-.intro {
-  .text {
-    max-width: 400px;
-    margin-bottom: 50px;
-  }
-}
-
 .fullsize {
   margin: 0;
   width: 100%;
   height: 100%;
 }
 
+.intro {
+  margin: 120px 5%;
+  display: grid;
+  grid-template-columns: 47% 47%;
+  grid-gap: 130px 6%;
+  grid-auto-flow: dense;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    grid-gap: 30px;
+  }
+
+  .imgholder {
+    position: relative;
+    @media (max-width: 768px) {
+      display: flex;
+      justify-content: center;
+    }
+
+    img {
+      max-width: 100%;
+      @media (max-width: 768px) {
+        max-width: 85%;
+      }
+    }
+  }
+
+  .text {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    @media (max-width: 768px) {
+      padding-bottom: 50px;
+    }
+
+    h3 {
+      margin-top: 0;
+    }
+  }
+
+  .left {
+    grid-column: 1 /2;
+  }
+  .right {
+    grid-column: -2/-1;
+  }
+}
+
+.inaction {
+  h3 {
+    width: 100%;
+    text-align: center;
+  }
+
+  & > div {
+    display: flex;
+    justify-content: center;
+
+    @media (max-width: 768px) {
+      display: block;
+    }
+  }
+}
+
 .patchnotes {
   details {
     summary {
+      margin-bottom: 15px;
       * {
         display: inline-block;
         margin: 0;
       }
     }
+  }
+
+  .patchnote {
+    margin-bottom: 15px;
   }
 }
 </style>

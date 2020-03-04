@@ -2,8 +2,7 @@
   <section>
     <h1>
       We found multiple
-      <span class="highlight">{{ player.tag }}</span
-      >s!
+      <span class="highlight">{{ player.tag }}</span>s!
     </h1>
     <h2>Which are you?</h2>
     <nuxt-link
@@ -32,9 +31,7 @@
     <br />
     <br />
     <br />
-    <button class="low" @click="combineAll">
-      These are all the same person
-    </button>
+    <button class="low" @click="combineAll">These are all the same person</button>
   </section>
 </template>
 
@@ -56,11 +53,7 @@ export default {
         return error({ statusCode: 404, message: 'Not found.' })
     }
     return axios
-      .get(
-        `/api/points/${params.game}/tag/${encodeURIComponent(
-          params.tag
-        )}/`
-      )
+      .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)
       .then(res => {
         if (!res.data.disambiguation)
           return redirect(`/g/${params.game}/t/${params.tag}`)
@@ -106,7 +99,7 @@ export default {
   methods: {
     combineAll() {
       const really = confirm(
-        'Wait, really? This will irreparably combine all of the players shown here into one single tag. Is that really what you want?'
+        'Wait, really? This will irreversibly combine all of the players shown here into one single tag. Is that really what you want?'
       )
       if (!really) return
       const idWithMostEvents = this.disambiguation.reduce(
@@ -128,9 +121,7 @@ export default {
         )
         .then(res => {
           if (res.data && !res.data.err) {
-            this.$router.push(
-              `/g/${this.player.game}/t/${this.player.tag}`
-            )
+            this.$router.push(`/g/${this.player.game}/t/${this.player.tag}`)
           } else console.log(err)
         })
     },

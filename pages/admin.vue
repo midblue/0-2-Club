@@ -160,7 +160,9 @@ export default {
       return this.$store.state.isMobile
     },
   },
-  mounted() {},
+  mounted() {
+    this.$store.commit('clearPlayer')
+  },
   methods: {
     scanForNewEvents() {
       this.$store.commit('setIsLoading', true)

@@ -1,5 +1,9 @@
 export default [
   {
+    date: 'March 4, 2020',
+    content: `Awards have nice icons, searches now autosave, and the homepage looks a lot better.`,
+  },
+  {
     date: 'February 23, 2020',
     content: `Massively updated the backend to update more cleanly. Also, awards give points now!`,
   },

@@ -466,8 +466,8 @@ async function getEvent(tournamentSlug, eventSlug) {
               `(${JSON.stringify(
                 (!moreSets ? 'no data at all!' : null) ||
                   moreSets.data.error ||
-                  moreSets.data.data.error ||
-                  moreSets.data.data.errors,
+                  moreSets.data.errors ||
+                  moreSets.data,
                 null,
                 2
               )})`

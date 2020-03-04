@@ -1,7 +1,5 @@
 <template>
-  <div
-    v-if="achievedAwards.length > 0 || awardsInProgress.length > 0"
-  >
+  <div v-if="achievedAwards.length > 0 || awardsInProgress.length > 0">
     <h2 class="awardslabel">Awards</h2>
     <div class="awards">
       <Award
@@ -68,7 +66,7 @@ export default {
 .awards {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(auto-fit, 60px);
+  grid-template-columns: repeat(auto-fit, 80px);
   grid-gap: 0px;
 }
 

@@ -40,7 +40,8 @@ module.exports = {
         for (let e of events) {
           const newEvent = await this.event({
             service,
-            id: e.id,
+            tournamentSlug: e.tournamentSlug,
+            eventSlug: e.eventSlug,
             game,
           })
           loadedEvents.push(newEvent)

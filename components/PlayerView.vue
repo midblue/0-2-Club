@@ -20,25 +20,21 @@
           <br />It should look something like
           <code
             v-html="
-              `https://smash.gg/tournament/<b><i>[tournament name]</i></b>/events/<b><i>[event name]</i></b>/overview`
+              `https://smash.gg/tournament/<b><i>[tournament name]</i></b>/events/`
             "
-          ></code
-          >.
+          ></code>.
         </div>
       </div>
     </template>
 
-    <template v-else>
+    <template v-if="displayEvents">
       <div class="level">
         <h3>
           <span
             class="colorpad multiply"
             :style="{ background: `var(--l${level.level})` }"
-            >Level {{ level.level }} — {{ level.label }}</span
-          >
-          <InfoTooltip>
-            Get points by competing in tournaments to level up!
-          </InfoTooltip>
+          >Level {{ level.level }} — {{ level.label }}</span>
+          <InfoTooltip>Get points by competing in tournaments to level up!</InfoTooltip>
 
           <client-only>
             <social-sharing
@@ -53,9 +49,9 @@
               inline-template
             >
               <div class="social">
-                <network network="facebook">
+                <!-- <network network="facebook">
                   <div class="facebookicon"></div>
-                </network>
+                </network>-->
                 <network network="twitter">
                   <div class="twittericon"></div>
                 </network>
@@ -92,11 +88,7 @@
         class="eventsearch"
       />
     </div>
-    <EventsListing
-      :events="displayEvents"
-      :level="level.level"
-      :game="player.game"
-    />
+    <EventsListing :events="displayEvents" :level="level.level" :game="player.game" />
 
     <template v-if="peers && peers.length > 0">
       <hr />
@@ -107,10 +99,7 @@
         </div>
         <div>
           <span v-for="peer in peers">
-            <nuxt-link
-              v-if="peer"
-              :to="`/g/${player.game}/i/${peer.id}`"
-            >
+            <nuxt-link v-if="peer" :to="`/g/${player.game}/i/${peer.id}`">
               <div
                 v-if="peer.img"
                 :style="{
@@ -119,11 +108,7 @@
                 class="playericon"
               ></div>
             </nuxt-link>
-            <nuxt-link
-              :to="`/g/${player.game}/i/${peer.id}`"
-              v-html="peer.tag"
-            ></nuxt-link
-            >&nbsp;&nbsp;
+            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`" v-html="peer.tag"></nuxt-link>&nbsp;&nbsp;
           </span>
         </div>
       </div>
@@ -141,7 +126,7 @@ import Stats from '~/components/Stats'
 import Awards from '~/components/Awards/Awards'
 import levels from '~/common/levels'
 import axios from 'axios'
-const calculateAwards = require('~/api/points/awards').default
+const calculateAwards = require('~/common/awards').default
 
 export default {
   props: {
@@ -182,7 +167,7 @@ export default {
         (this.points
           ? this.points.reduce((total, { value }) => total + value, 0)
           : 0) +
-        this.awards.reduce((total, { points }) => total + points, 0)
+        (this.awards || []).reduce((total, { points }) => total + points, 0)
       )
     },
     level() {
@@ -198,10 +183,7 @@ export default {
   watch: {
     checkForUpdates(willCheck, wasChecking) {
       if (willCheck !== wasChecking && willCheck) {
-        this.checkForUpdatesInterval = setInterval(
-          this.reCheckPoints,
-          8000
-        )
+        this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 8000)
       } else {
         clearInterval(this.checkForUpdatesInterval)
       }

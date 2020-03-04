@@ -275,9 +275,9 @@ hr {
 }
 
 .colorpad {
-  display: inline-block;
+  display: inline;
   padding: 1px 5px;
-  text-align: center;
+  // text-align: center;
 }
 
 .inline {
@@ -288,6 +288,7 @@ h1 {
   font-size: 6rem;
   line-height: 0.95;
   margin-bottom: 0.1em;
+  margin-top: 0.5em;
 
   @media (max-width: 768px) {
     font-size: 4rem;
@@ -328,6 +329,12 @@ code {
   background-color: var(--grayd);
   background-size: cover;
   background-position: center center;
+
+  &.med {
+    top: 0;
+    height: 30px;
+    width: 30px;
+  }
 
   &.big {
     top: 4px;

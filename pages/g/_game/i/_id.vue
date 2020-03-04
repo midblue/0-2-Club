@@ -54,6 +54,7 @@ export default {
   },
   components: { PlayerView },
   head() {
+    if (!this.player.tag) return {}
     const data = {
       title: this.player.tag,
       meta: [

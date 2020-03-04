@@ -25,9 +25,7 @@ export default {
     return axios
       .get(
         ipInfo
-          ? `/api/points/${params.game}/tag/${encodeURIComponent(
-              params.tag
-            )}/`
+          ? `/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`
           : `/api/points/${params.game}/tag/${encodeURIComponent(
               params.tag
             )}/active`
@@ -50,6 +48,7 @@ export default {
   },
   components: { PlayerView },
   head() {
+    if (!this.player.id) return {}
     const data = {
       title: this.player.tag,
       meta: [
@@ -88,7 +87,7 @@ export default {
   },
   computed: {
     level() {
-      return this.$store.state.player.level
+      return this.$store.state.player.level || {}
     },
   },
 }

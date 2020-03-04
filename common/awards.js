@@ -1,4 +1,4 @@
-const { getPlacingRatio } = require('../../common/functions').default
+const { getPlacingRatio } = require('./functions').default
 
 // ? awards for:
 // consistently attending tournaments x weeks in a row
@@ -76,7 +76,7 @@ function bestStreak(player, events) {
     },
     { total: 0 }
   )
-  const levels = [0, 3, 4, 5, 6, 7, 8, 9, 10, 20, 40, 100, 1000]
+  const levels = [0, 3, 4, 5, 6, 7, 8, 10, 15, 20, 40, 100, 1000]
 
   const title = `Streakin'`
   const total = bestStreak.total

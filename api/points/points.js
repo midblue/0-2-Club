@@ -294,7 +294,7 @@ async function matchPoints(
       if (winStreak > 2 && inLosers)
         p({
           title: `Losers' Bracket Run`,
-          context: `${winStreak} wins in lower bracket`,
+          context: `${winStreak} wins after a loss`,
           value: 2,
         })
 

@@ -22,6 +22,11 @@
     >More for {{ player.tag }}</div>
 
     <br />
+    <nuxt-link to="/g/Super Smash Bros. Melee/t/H0P">H0P</nuxt-link>
+    <nuxt-link to="/g/Super Smash Bros. Melee/t/DoodleDork">DoodleDork</nuxt-link>
+    <nuxt-link to="/g/Super Smash Bros. Ultimate/t/Fluffy">Fluffy</nuxt-link>
+
+    <br />
 
     <div class="color" style="background: var(--l0l)"></div>
     <div class="color" style="background: var(--l1l)"></div>

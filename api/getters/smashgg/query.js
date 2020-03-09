@@ -9,7 +9,8 @@ const logError = logger('smashgg', 'yellow')
 
 const rateLimiter = require('../../scripts/rateLimiter')
 const limiter = new rateLimiter(12, 10000)
-const perQueryPage = 100
+const perSetQueryPage = 35
+const perStandingQueryPage = 70
 
 async function makeQuery(query, variables) {
   // log('querying smashgg api:', query.substring(7, query.indexOf('(')))
@@ -54,7 +55,9 @@ query EventInfo($slug: String, $page: Int!) {
       id
       name
       slug
-      ownerId
+      owner {
+        id
+      }
     }
     standings (query: {
       page: $page,
@@ -67,7 +70,6 @@ query EventInfo($slug: String, $page: Int!) {
         id
         placement
         entrant {
-          id
           participants {
             player {
               id
@@ -90,16 +92,25 @@ query EventInfo($slug: String, $page: Int!) {
       }
       nodes {
         completedAt
-        winnerId
-        entrant1Score
-        entrant2Score
         slots {
+          standing {
+            placement
+            stats {
+              score {
+                value
+              }
+            }
+          }
           entrant {
-            id
             participants {
               player {
                 id
                 gamerTag
+              }
+              user {
+                images {
+                 url
+                }
               }
             }
           }
@@ -128,24 +139,24 @@ query EventsInfo($slug: String) {
 const queryPlayerSets = `
 query PlayerSets ($id: ID!) {
   player(id: $id) {
-    recentSets {
-      slots {
-        slotIndex
-      }
-      event {
-        id
-        name
-        state
-        slug
-        videogame {
-          name
+    sets(
+      page: 1, 
+      perPage: 220, 
+      filters: { hideEmpty: true }
+    ) {
+      nodes {
+        event {
+          state
           slug
-        }
-        tournament {
-          id
-          ownerId
-          name
-          slug
+          videogame {
+            name
+          }
+          tournament {
+            owner {
+              id
+            }
+            slug
+          }
         }
       }
     }
@@ -157,7 +168,7 @@ query EventSets($slug: String, $page: Int!) {
   event(slug: $slug) {
     sets(
       page: $page,
-      perPage:  ${perQueryPage},
+      perPage:  ${perSetQueryPage},
       sortType: STANDARD
       filters: {
         hideEmpty: true
@@ -165,19 +176,25 @@ query EventSets($slug: String, $page: Int!) {
     ) {
       nodes {
         completedAt
-        winnerId
-        entrant1Score
-        entrant2Score
         slots {
+          standing {
+            placement
+            stats {
+              score {
+                value
+              }
+            }
+          }
           entrant {
-            id
             participants {
+              user {
+                images {
+                 url
+                }
+              }
               player {
                 id
                 gamerTag
-                images {
-                  url
-                }
               }
             }
           }
@@ -192,7 +209,7 @@ query EventStandings($slug: String, $page: Int!) {
   event(slug: $slug) {
     standings (query: {
       page: $page,
-      perPage: ${perQueryPage}
+      perPage: ${perStandingQueryPage}
     }) {
       nodes {
         id
@@ -203,8 +220,10 @@ query EventStandings($slug: String, $page: Int!) {
             player {
               id
               gamerTag
+            }
+            user {
               images {
-                url
+               url
               }
             }
           }
@@ -256,5 +275,6 @@ module.exports = {
   queryPlayerSets,
   queryTournamentsByOwner,
   queryEventsInTournament,
-  perQueryPage,
+  perSetQueryPage,
+  perStandingQueryPage,
 }

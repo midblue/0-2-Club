@@ -89,6 +89,7 @@ module.exports = {
             id,
             tournamentSlug,
             eventSlug,
+            game,
             retries: retries + 1,
           })
         }

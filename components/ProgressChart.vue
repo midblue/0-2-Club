@@ -146,6 +146,9 @@ export default {
     points() {
       this.fillData()
     },
+    level() {
+      this.fillData()
+    },
     rivalId(newId, oldId) {
       if (newId) {
         this.getRivalPoints()

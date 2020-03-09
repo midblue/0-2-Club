@@ -35,6 +35,7 @@ module.exports = async function(player, skipOwnerIds = []) {
     player,
     skipOwnerIds.length ? newOwnerIds : null
   )
+  let allStubsLength = stubs.length
 
   // filter already queued events
   stubs = stubs.filter(
@@ -47,6 +48,12 @@ module.exports = async function(player, skipOwnerIds = []) {
       )
   )
   willLoad.push(...stubs)
+  if (stubs.length !== allStubsLength)
+    logError(
+      'skipping',
+      allStubsLength - stubs.length,
+      'events that are already being loaded'
+    )
 
   let stubsToBatch = [...stubs]
   const perBatch = 5
@@ -59,6 +66,7 @@ module.exports = async function(player, skipOwnerIds = []) {
     newEvents = newEvents.filter(e => e && !e.err)
     await saveEvents(newEvents, player.game) // save them fully
     stubsToBatch = stubsToBatch.slice(perBatch) // advance to next set
+    // todo could just have a master list that could be appended to by other calls
   }
 
   // return

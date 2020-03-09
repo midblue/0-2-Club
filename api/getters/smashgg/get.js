@@ -8,7 +8,8 @@ const {
   queryPlayerSets,
   queryTournamentsByOwner,
   queryEventsInTournament,
-  perQueryPage,
+  perSetQueryPage,
+  perStandingQueryPage,
 } = require('./query')
 
 const {
@@ -59,6 +60,26 @@ module.exports = {
     const isDone = eventData.state === 'COMPLETED'
     if (!isDone) return { err: 'not done' }
 
+    // it's possible to start loading this while it's waiting for data, so we check again
+    if (
+      currentlyLoadingNewEvents.filter(
+        e => e === tournamentSlug + eventSlug
+      ).length !== 1
+    ) {
+      logError(
+        'skipping double loading this event!',
+        tournamentSlug,
+        eventSlug,
+        tournamentSlug + eventSlug,
+        currentlyLoadingNewEvents
+      )
+      currentlyLoadingNewEvents.splice(
+        currentlyLoadingNewEvents.indexOf(tournamentSlug + slug),
+        1
+      )
+      return { err: 'already loading' }
+    }
+
     const participants = eventData.standings.nodes.map(s => ({
       standing: s.placement,
       of: eventData.standings.nodes.length,
@@ -68,8 +89,10 @@ module.exports = {
       id: s.entrant.participants[0].player.id,
       entrantId: s.entrant.id,
       img:
-        s.entrant.participants[0].player.images.length > 0
-          ? s.entrant.participants[0].player.images[0].url
+        s.entrant.participants[0].user &&
+        s.entrant.participants[0].user.images &&
+        s.entrant.participants[0].user.images.length > 0
+          ? s.entrant.participants[0].user.images[0].url
           : false,
     }))
 
@@ -77,38 +100,50 @@ module.exports = {
       .map(s => {
         const player1 = {
             id: s.slots[0].entrant.participants[0].player.id,
-            entrantId: s.slots[0].entrant.id,
+            placement: s.slots[0].standing.placement,
             tag: parseParticipantTag(
               s.slots[0].entrant.participants[0].player.gamerTag
             ),
-            score: s.entrant1Score,
+            score: s.slots[0].standing.stats.score.value,
             img:
-              s.slots[0].entrant.participants[0].player.images
-                .length > 0
-                ? s.slots[0].entrant.participants[0].player.images[0]
+              s.slots[0].entrant.participants[0].user &&
+              s.slots[0].entrant.participants[0].user.images &&
+              s.slots[0].entrant.participants[0].user.images.length >
+                0
+                ? s.slots[0].entrant.participants[0].user.images[0]
                     .url
                 : false,
           },
           player2 = {
             id: s.slots[1].entrant.participants[0].player.id,
-            entrantId: s.slots[1].entrant.id,
+            placement: s.slots[0].standing.placement,
             tag: parseParticipantTag(
               s.slots[1].entrant.participants[0].player.gamerTag
             ),
-            score: s.entrant2Score,
+            score: s.slots[1].standing.stats.score.value,
             img:
-              s.slots[1].entrant.participants[0].player.images
-                .length > 0
-                ? s.slots[1].entrant.participants[0].player.images[0]
+              s.slots[1].entrant.participants[0].user &&
+              s.slots[1].entrant.participants[0].user.images &&
+              s.slots[1].entrant.participants[0].user.images.length >
+                0
+                ? s.slots[1].entrant.participants[0].user.images[0]
                     .url
                 : false,
           }
-        const winner =
-          player1.entrantId === s.winnerId ? player1 : player2
-        const loser =
-          winner.entrantId === player2.entrantId ? player1 : player2
-        delete winner.entrantId
-        delete loser.entrantId
+        let winner, loser
+        if (player1.score > player2.score) {
+          winner = player1
+          loser = player2
+        } else if (player1.score < player2.score) {
+          winner = player2
+          loser = player1
+        } else if (player1.placement === 1) {
+          winner = player1
+          loser = player2
+        } else {
+          winner = player2
+          loser = player1
+        }
         return {
           date: s.completedAt,
           winnerId: winner.id,
@@ -124,7 +159,7 @@ module.exports = {
       .filter(s => s)
 
     currentlyLoadingNewEvents.splice(
-      currentlyLoadingNewEvents.indexOf(tournamentSlug + slug),
+      currentlyLoadingNewEvents.indexOf(tournamentSlug + eventSlug),
       1
     )
 
@@ -148,7 +183,7 @@ module.exports = {
       service: 'smashgg',
       tournamentSlug,
       tournamentName: eventData.tournament.name,
-      ownerId: eventData.tournament.ownerId,
+      ownerId: eventData.tournament.owner.id,
       participants,
       sets,
     }
@@ -227,14 +262,14 @@ module.exports = {
       const res = await makeQuery(queryPlayerSets, {
         id: player.id,
       })
-      // todo we really can't get MORE?
       let sets
-      if (!res.data.data.player) {
+      if (!res.data.data || !res.data.data.player) {
         logError(
           `Failed to get recent sets for player ${
             player.id
           } on smashgg. (${JSON.stringify(
             res.data.error ||
+              res.data.errors ||
               res.data.data.error ||
               res.data.data.errors,
             null,
@@ -242,7 +277,7 @@ module.exports = {
           )})`
         )
         sets = []
-      } else sets = res.data.data.player.recentSets || []
+      } else sets = res.data.data.player.sets.nodes || []
       let newPlayerSetEvents = await Promise.all(
         sets.map(async set => {
           return new Promise(async resolve => {
@@ -251,8 +286,7 @@ module.exports = {
               set.event.state !== 'COMPLETED' ||
               (onlyFromGame &&
                 gameTitle(set.event.videogame.name) !==
-                  gameTitle(onlyFromGame)) ||
-              set.slots.length > 2
+                  gameTitle(onlyFromGame))
             )
               return resolve()
             const [
@@ -268,7 +302,7 @@ module.exports = {
             })
             if (isNew) {
               ownersFoundFromRecentSets.push(
-                set.event.tournament.ownerId
+                set.event.tournament.owner.id
               )
               resolve({
                 service: 'smashgg',
@@ -411,12 +445,19 @@ async function getEvent(tournamentSlug, eventSlug) {
       !data.data ||
       data.data.error ||
       data.error ||
+      data.errors ||
+      data.data.errors ||
       !data.data.data.event ||
       !data.data.data.event.sets ||
       !data.data.data.event.sets.pageInfo
     ) {
       logError(
-        `Failed to get data for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts})`
+        `Failed to get data for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts})`,
+        data.error ||
+          data.errors ||
+          (data.data
+            ? data.data.error || data.data.errors
+            : 'no data')
       )
       attempts++
       data = null
@@ -431,8 +472,10 @@ async function getEvent(tournamentSlug, eventSlug) {
   const totalSetNumber = data.sets.pageInfo.totalPages,
     totalStandingNumber = data.standings.pageInfo.totalPages
 
-  const totalSetPages = Math.ceil(totalSetNumber / perQueryPage),
-    totalStandingPages = Math.ceil(totalStandingNumber / perQueryPage)
+  const totalSetPages = Math.ceil(totalSetNumber / perSetQueryPage),
+    totalStandingPages = Math.ceil(
+      totalStandingNumber / perStandingQueryPage
+    )
 
   let allSets = []
   for (
@@ -464,7 +507,9 @@ async function getEvent(tournamentSlug, eventSlug) {
               currentSetsPage,
               `for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts})`,
               `(${JSON.stringify(
-                (!moreSets ? 'no data at all!' : null) ||
+                (!moreSets
+                  ? 'no data at all! perQueryPage might be too high.'
+                  : null) ||
                   moreSets.data.error ||
                   moreSets.data.errors ||
                   moreSets.data,
@@ -547,8 +592,6 @@ async function getEvent(tournamentSlug, eventSlug) {
 
 function isNotAlreadyLoading(event) {
   return !currentlyLoadingNewEvents.find(
-    e =>
-      e ===
-      event.tournamentSlug + (event.eventSlug || event.eventSlug)
+    e => e === event.tournamentSlug + (event.eventSlug || event.slug)
   )
 }

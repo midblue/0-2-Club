@@ -19,7 +19,11 @@ module.exports = {
       event.sets.nodes.length > 0
     ) {
       for (let set of event.sets.nodes) {
-        if (!set.winnerId) {
+        if (
+          !set.slots[0].standing.placement ||
+          set.slots[0].standing.placement < 1 ||
+          set.slots[0].standing.placement > 2
+        ) {
           return false
         }
       }
@@ -43,6 +47,8 @@ module.exports = {
           event.sets.nodes[
             Math.floor(Math.random() * event.sets.nodes.length)
           ]
+        if (set.slots.find(s => s.standing.placement > 2))
+          return false // 3 or more players
         if (
           parseParticipantTag(
             set.slots[0].entrant.participants[0].player.gamerTag

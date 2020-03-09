@@ -106,6 +106,7 @@ function bestStreak(player, events) {
 
   const points = level * 10
 
+  if (level < 1) return []
   return [
     {
       title,
@@ -156,6 +157,7 @@ function majors(player, events) {
 
   const points = level * 10
 
+  if (level < 1) return []
   return [
     {
       title,
@@ -232,6 +234,7 @@ function totalGameWins(player, events) {
 
   const points = level * 10
 
+  if (level < 1) return []
   return [
     {
       title,
@@ -300,6 +303,7 @@ function mostWeeksInARow(player, events) {
 
   const points = level * 10
 
+  if (level < 1) return []
   return [
     {
       title,
@@ -368,6 +372,7 @@ function mostInOneWeek(player, events) {
 
   const points = level * 10
 
+  if (level < 1) return []
   return [
     {
       title,
@@ -413,57 +418,62 @@ function yearlyImprovement(player, events) {
 
   const levels = [0, 5, 7.5, 10, 12.5, 15, 20, 30, 40, 50, 100]
 
-  return Object.keys(cumulativePlacingRatiosByYear).map(year => {
-    const isCurrentYear = new Date().getFullYear() === year,
-      improvedPercent = Math.ceil(
-        cumulativePlacingRatiosByYear[year].improvement * 100
+  const awards = Object.keys(cumulativePlacingRatiosByYear).map(
+    year => {
+      const isCurrentYear = new Date().getFullYear() === year,
+        improvedPercent = Math.ceil(
+          cumulativePlacingRatiosByYear[year].improvement * 100
+        )
+
+      const title = `${year} Improvement`
+      const total = improvedPercent
+
+      let level = levels.findIndex(l => improvedPercent < l) - 1
+      if (
+        !level ||
+        improvedPercent <= 0 ||
+        (!isCurrentYear && improvedPercent < levels[1])
       )
+        level = -1 // not started
 
-    const title = `${year} Improvement`
-    const total = improvedPercent
+      const levelStart = levels[level] || 0,
+        levelEnd = levels[level + 1],
+        levelProgress =
+          (improvedPercent - levelStart) / (levelEnd - levelStart)
 
-    let level = levels.findIndex(l => improvedPercent < l) - 1
-    if (
-      !level ||
-      improvedPercent <= 0 ||
-      (!isCurrentYear && improvedPercent < levels[1])
-    )
-      level = -1 // not started
+      const bestAttemptString = `Current: <b>${improvedPercent}%</b> improved placing in ${year}`
 
-    const levelStart = levels[level] || 0,
-      levelEnd = levels[level + 1],
-      levelProgress =
-        (improvedPercent - levelStart) / (levelEnd - levelStart)
+      const levelDescription = `Average placing improved <span style="font-weight: bold; color:var(--l${level});">${Math.round(
+        improvedPercent
+      )}%</span> in ${year}`
 
-    const bestAttemptString = `Current: <b>${improvedPercent}%</b> improved placing in ${year}`
+      const requirements = `Improve average placing by at least <b>${levels[1]}%</b> over the year`
 
-    const levelDescription = `Average placing improved <span style="font-weight: bold; color:var(--l${level});">${Math.round(
-      improvedPercent
-    )}%</span> in ${year}`
+      const img = '/img/awards/yearplacing.png'
 
-    const requirements = `Improve average placing by at least <b>${levels[1]}%</b> over the year`
+      const label = `'${`${year}`.substring(2)}`
 
-    const img = '/img/awards/yearplacing.png'
+      const points = level * 10
 
-    const label = `'${`${year}`.substring(2)}`
-
-    const points = level * 10
-
-    return {
-      title,
-      total,
-      level,
-      levelStart,
-      levelEnd,
-      levelProgress,
-      bestAttemptString,
-      levelDescription,
-      requirements,
-      img,
-      label,
-      points,
+      if (level < 1) return
+      return {
+        title,
+        total,
+        level,
+        levelStart,
+        levelEnd,
+        levelProgress,
+        bestAttemptString,
+        levelDescription,
+        requirements,
+        img,
+        label,
+        points,
+      }
     }
-  })
+  )
+
+  return awards.filter(a => a)
 }
 
 function yearlyAttendance(player, events) {
@@ -475,7 +485,7 @@ function yearlyAttendance(player, events) {
 
   const levels = [0, 5, 10, 15, 20, 30, 50, 75, 100, 1000]
 
-  return Object.keys(eventsPerYear).map(year => {
+  const awards = Object.keys(eventsPerYear).map(year => {
     const isCurrentYear = new Date().getFullYear() === year
 
     const title = `${year} Activity`
@@ -501,6 +511,7 @@ function yearlyAttendance(player, events) {
 
     const points = level * 10
 
+    if (level < 1) return
     return {
       title,
       total,
@@ -516,4 +527,6 @@ function yearlyAttendance(player, events) {
       points,
     }
   })
+
+  return awards.filter(a => a)
 }

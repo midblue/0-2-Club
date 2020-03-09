@@ -80,6 +80,7 @@ resetInterval = setInterval(() => {
   prevWrites = 0
   prevReads = 0
   prevDeletes = 0
+  low('reset db usage counts to 0')
 }, aDayInSeconds * 1000)
 
 module.exports = {

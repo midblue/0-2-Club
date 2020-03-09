@@ -1,4 +1,4 @@
-const ipFilters = require('./vars/ips')
+const ipFilters = require('./vars/ips').default
 const gameTitleDisambiguation = require('./vars/gameTitles')
 
 export default {

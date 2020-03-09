@@ -1,4 +1,4 @@
-module.exports = [
+export default [
   {
     regex: /127.0.0.1/g,
     name: 'localhost',
@@ -9,7 +9,7 @@ module.exports = [
     log: false,
   },
   {
-    regex: /118.111.157.140/g, // todo sometimes not firing intermittently, trailing space?
+    regex: /118.111.157.140/g,
     name: 'Me',
   },
   {

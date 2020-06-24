@@ -93,7 +93,7 @@
   --gray: hsla(0, 0%, 0%, 4%);
   --grayd: hsla(0, 0%, 0%, 10%);
   --grayd2: hsla(0, 0%, 0%, 15%);
-  --grayd3: hsla(0, 0%, 0%, 25%);
+  --grayd3: hsla(0, 0%, 0%, 50%);
 
   --bg: #fbfbfb;
 }
@@ -243,6 +243,17 @@ hr {
   }
 }
 
+.reset {
+  font-size: 1rem;
+}
+
+.caps {
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
 .button,
 .button:visited {
   display: inline-block;
@@ -261,6 +272,10 @@ hr {
 .button:focus {
   border: 2px solid transparent;
   background-color: var(--active);
+}
+
+summary {
+  cursor: pointer;
 }
 
 .sub {
@@ -396,7 +411,7 @@ code {
 .twittericon {
   width: 20px;
   height: 20px;
-  margin: 5px 0 0 10px;
+  margin: 0 3px 0 7px;
   cursor: pointer;
   opacity: 0.5;
   background-size: contain;

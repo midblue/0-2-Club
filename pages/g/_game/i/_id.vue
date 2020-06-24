@@ -75,7 +75,9 @@ export default {
         {
           hid: `og:url`,
           property: 'og:url',
-          content: `http://www.0-2.club/${this.player.game}/i/${this.player.id}/`,
+          content: `http://www.0-2.club/${encodeURIComponent(
+            this.player.game
+          )}/i/${this.player.id}/`,
         },
         {
           property: 'og:description',

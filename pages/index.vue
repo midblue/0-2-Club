@@ -12,7 +12,7 @@
       </h3>
 
       <div v-if="savedEntries.length">
-        <h4>Recent Searches</h4>
+        <h4>Your Recent Searches</h4>
         <div
           v-for="entry, index in savedEntries.slice(0, 5)"
           :key="'e'+index"
@@ -61,44 +61,6 @@
         events analyzed so far.
       </div>-->
 
-      <div class="intro">
-        <div class="imgholder">
-          <img src="/img/home/3.png" />
-        </div>
-        <div class="text">
-          <h3>See Your Growth</h3>
-          <div>
-            If you feel like you've been leveling up this year, now you
-            can prove it. Your progress is charted over time, and you
-            can compare your growth with your peers.
-          </div>
-        </div>
-
-        <div class="imgholder right">
-          <img src="/img/home/1.png" style="max-height: 175px" />
-        </div>
-        <div class="text left">
-          <h3>Points for All</h3>
-          <div>
-            In training, victory isn't as important as growth and
-            consistency. Lose a tight set to a strong player? That's
-            worth some points. Support your local scene? Points city.
-          </div>
-        </div>
-
-        <div class="imgholder">
-          <img src="/img/home/4.png" />
-        </div>
-        <div class="text">
-          <h3>Hassle-Free Data</h3>
-          <div>
-            Just link us one tournament with you in it, and we'll
-            automatically snag more. Currently supports all 1v1
-            tournaments for any game hosted through smash.gg.
-          </div>
-        </div>
-      </div>
-
       <div class="inaction">
         <h3>See it in action:</h3>
         <div>
@@ -129,6 +91,46 @@
         </div>
       </div>
 
+      <hr />
+
+      <div class="intro">
+        <div class="imgholder">
+          <img src="/img/home/3.png" />
+        </div>
+        <div class="text">
+          <h3>See Your Growth</h3>
+          <div>
+            If you feel like you've been leveling up this year, now you
+            can prove it. Your progress is charted over time, and you
+            can compare your growth with your peers.
+          </div>
+        </div>
+
+        <div class="imgholder right">
+          <img src="/img/home/5.png" style="max-height: 200px" />
+        </div>
+        <div class="text left">
+          <h3>Points for All</h3>
+          <div>
+            In training, victory isn't as important as growth and
+            consistency. Lose a tight set to a strong player? That's
+            worth some points. Support your local scene? Points city.
+          </div>
+        </div>
+
+        <div class="imgholder">
+          <img src="/img/home/4.png" />
+        </div>
+        <div class="text">
+          <h3>Hassle-Free Data</h3>
+          <div>
+            Just link us one tournament with you in it, and we'll
+            automatically snag more. Currently supports all 1v1
+            tournaments for any game hosted through smash.gg.
+          </div>
+        </div>
+      </div>
+
       <br />
       <br />
       <hr />
@@ -136,21 +138,30 @@
       <br />
 
       <div class="patchnotes">
-        <details>
-          <summary>
-            <h4>
-              Patch Notes
-              <span
-                class="sub highlight"
-                v-if="
+        <h3>Patch Notes</h3>
+        <div v-for="(patch, index) in patchNotes.slice(0,3)" :key="index" class="patchnote">
+          <div>
+            <span class="sub">{{ new Date(patch.date).toLocaleDateString() }}</span>
+            <span
+              class="highlight"
+              v-if="
                   Date.now() -
-                    new Date(patchNotes[0].date).getTime() <
+                    new Date(patch.date).getTime() <
                     7 * 24 * 60 * 60 * 1000
                 "
-              >New!</span>
-            </h4>
+            >New!</span>
+          </div>
+          <div>{{ patch.content }}</div>
+        </div>
+        <details>
+          <summary>
+            <h4>More</h4>
           </summary>
-          <div v-for="(patch, index) in patchNotes" :key="index" class="patchnote">
+          <div
+            v-for="(patch, index) in patchNotes.slice(3)"
+            :key="'hidden' + index"
+            class="patchnote"
+          >
             <div class="sub">{{ new Date(patch.date).toLocaleDateString() }}</div>
             <div>{{ patch.content }}</div>
           </div>
@@ -361,7 +372,7 @@ h4 {
 }
 
 .intro {
-  margin: 120px 5%;
+  margin: 100px 5%;
   display: grid;
   grid-template-columns: 47% 47%;
   grid-gap: 130px 6%;
@@ -411,6 +422,8 @@ h4 {
 }
 
 .inaction {
+  margin: 120px 0 80px 0;
+
   h3 {
     width: 100%;
     text-align: center;

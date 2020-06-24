@@ -342,7 +342,7 @@ module.exports = {
         new Set(ownersFoundFromRecentSets)
       )
       if (ownersFoundFromRecentSets.length > 0 && !ownerIdsToCheck)
-        log(
+        low(
           `found ${ownersFoundFromRecentSets.length} owner/s from recent sets`
         )
       foundEvents.push(...newPlayerSetEvents)

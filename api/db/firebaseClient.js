@@ -484,10 +484,3 @@ function handleError(label, err) {
   writes = maxWrites
   deletes = maxDeletes
 }
-
-// async function addCountListeners(gameRef) {
-//   gameRef.onSnapshot(querySnapshot => {
-//     console.log(`Received query snapshot of size ${querySnapshot.size}`);
-//     // ...
-//   }
-// }

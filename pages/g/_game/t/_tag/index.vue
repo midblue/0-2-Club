@@ -25,7 +25,9 @@ export default {
     return axios
       .get(
         ipInfo
-          ? `/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`
+          ? `/api/points/${params.game}/tag/${encodeURIComponent(
+              params.tag
+            )}/`
           : `/api/points/${params.game}/tag/${encodeURIComponent(
               params.tag
             )}/active`
@@ -65,7 +67,9 @@ export default {
         {
           hid: `og:url`,
           property: 'og:url',
-          content: `http://www.0-2.club/${this.player.game}/t/${this.player.tag}/`,
+          content: `http://www.0-2.club/${encodeURIComponent(
+            this.player.game
+          )}/t/${encodeURIComponent(this.player.tag)}/`,
         },
         {
           property: 'og:description',

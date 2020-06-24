@@ -25,11 +25,11 @@
         <svg class="progress" width="106px" height="106px" viewBox="0 0 106 106">
           <g fill="none">
             <circle
-              stroke-width="5"
+              stroke-width="3"
               :stroke-dashoffset="315 - 315 * award.levelProgress"
               cx="53"
               cy="53"
-              r="50"
+              r="51.5"
             />
           </g>
         </svg>
@@ -120,7 +120,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-$widthu: 80px;
+$widthu: 100px;
 $width: $widthu - 10px;
 $widthd: $widthu - 20px;
 .awardholder {
@@ -156,11 +156,13 @@ $widthd: $widthu - 20px;
   font-weight: bold;
   box-shadow: 0 5px 10px var(--grayd);
   transition: box-shadow 0.3s;
+  z-index: 1;
 
   &:hover,
   &:active,
   &.focus {
     box-shadow: 0 10px 20px var(--grayd2);
+    z-index: 2;
 
     .tooltip {
       z-index: 3000;

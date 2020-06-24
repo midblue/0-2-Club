@@ -11,7 +11,8 @@
     "precommit": "npm run lint",
     "logs": "heroku logs -a zero-two-club --tail -s app",
     "l": "npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs",
-    "rs": "heroku ps:restart -a zero-two-club && npm run l"
+    "rs": "heroku ps:restart -a zero-two-club && npm run l",
+    "lt": "lt -h \"http://serverless.social\" -p 3000 --allow_invalid_cert"
   },
   "dependencies": {
     "axios": "^0.19.2",

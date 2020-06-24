@@ -2,7 +2,8 @@
   <section>
     <h1>
       We found multiple
-      <span class="highlight">{{ player.tag }}</span>s!
+      <span class="highlight">{{ player.tag }}</span
+      >s!
     </h1>
     <h2>Which are you?</h2>
     <nuxt-link
@@ -31,7 +32,9 @@
     <br />
     <br />
     <br />
-    <button class="low" @click="combineAll">These are all the same person</button>
+    <button class="low" @click="combineAll">
+      These are all the same person
+    </button>
   </section>
 </template>
 
@@ -53,7 +56,11 @@ export default {
         return error({ statusCode: 404, message: 'Not found.' })
     }
     return axios
-      .get(`/api/points/${params.game}/tag/${encodeURIComponent(params.tag)}/`)
+      .get(
+        `/api/points/${params.game}/tag/${encodeURIComponent(
+          params.tag
+        )}/`
+      )
       .then(res => {
         if (!res.data.disambiguation)
           return redirect(`/g/${params.game}/t/${params.tag}`)
@@ -84,7 +91,11 @@ export default {
         {
           hid: `og:url`,
           property: 'og:url',
-          content: `http://www.0-2.club/${this.player.game}/t/${this.player.tag}/disambiguation/`,
+          content: `http://www.0-2.club/${encodeURIComponent(
+            this.player.game
+          )}/t/${encodeURIComponent(
+            this.player.tag
+          )}/disambiguation/`,
         },
       ],
     }
@@ -121,7 +132,9 @@ export default {
         )
         .then(res => {
           if (res.data && !res.data.err) {
-            this.$router.push(`/g/${this.player.game}/t/${this.player.tag}`)
+            this.$router.push(
+              `/g/${this.player.game}/t/${this.player.tag}`
+            )
           } else console.log(err)
         })
     },

@@ -8,7 +8,7 @@
           :style="{ 'background-image': `url('${player.img}')` }"
           class="playericon big"
         />
-        {{ player.tag || 'Id #' + player.id }}
+        <span class="text">{{ player.tag || 'Id #' + player.id }}</span>
       </h1>
     </div>
 
@@ -22,7 +22,8 @@
             v-html="
               `https://smash.gg/tournament/<b><i>[tournament name]</i></b>/events/`
             "
-          ></code>.
+          ></code
+          >.
         </div>
       </div>
     </template>
@@ -30,38 +31,24 @@
     <template v-if="displayEvents">
       <div class="level">
         <h3>
-          <span
-            class="colorpad multiply"
-            :style="{ background: `var(--l${level.level})` }"
-          >Level {{ level.level }} — {{ level.label }}</span>
-          <InfoTooltip>Get points by competing in tournaments to level up!</InfoTooltip>
-
-          <client-only>
-            <social-sharing
-              :url="
-                window ? window.location.href : `http://www.0-2.club/`
-              "
-              :title="`See ${player.tag} on the The 0-2 Club`"
-              :description="
-                `Level ${level.level}: ${level.label} in ${player.game}`
-              "
-              hashtags="esports"
-              inline-template
+          <span>
+            <span
+              class="colorpad multiply"
+              :style="{ background: `var(--l${level.level})` }"
+              >Level {{ level.level }} — {{ level.label }}</span
             >
-              <div class="social">
-                <!-- <network network="facebook">
-                  <div class="facebookicon"></div>
-                </network>-->
-                <network network="twitter">
-                  <div class="twittericon"></div>
-                </network>
-              </div>
-            </social-sharing>
-          </client-only>
+            <InfoTooltip
+              >Get points by competing in tournaments to level up!</InfoTooltip
+            >
+          </span>
+
+          <Share v-if="!isMobile" />
         </h3>
 
         <XPBar :totalPoints="totalPoints" :events="displayEvents" />
       </div>
+
+      <Share class="mobileshare" v-if="isMobile" />
     </template>
 
     <ProgressChart
@@ -88,7 +75,11 @@
         class="eventsearch"
       />
     </div>
-    <EventsListing :events="displayEvents" :level="level.level" :game="player.game" />
+    <EventsListing
+      :events="displayEvents"
+      :level="level.level"
+      :game="player.game"
+    />
 
     <template v-if="peers && peers.length > 0">
       <hr />
@@ -98,7 +89,7 @@
           <b>Related Players</b>
         </div>
         <div>
-          <span v-for="peer in peers">
+          <span v-for="peer in peers" :key="peer.id">
             <nuxt-link v-if="peer" :to="`/g/${player.game}/i/${peer.id}`">
               <div
                 v-if="peer.img"
@@ -108,7 +99,11 @@
                 class="playericon"
               ></div>
             </nuxt-link>
-            <nuxt-link :to="`/g/${player.game}/i/${peer.id}`" v-html="peer.tag"></nuxt-link>&nbsp;&nbsp;
+            <nuxt-link
+              :to="`/g/${player.game}/i/${peer.id}`"
+              v-html="peer.tag"
+            ></nuxt-link
+            >&nbsp;&nbsp;
           </span>
         </div>
       </div>
@@ -123,6 +118,7 @@ import EventsListing from '~/components/EventsListing'
 import ProgressChart from '~/components/ProgressChart'
 import XPBar from '~/components/XPBar'
 import Stats from '~/components/Stats'
+import Share from '~/components/Share'
 import Awards from '~/components/Awards/Awards'
 import levels from '~/common/levels'
 import axios from 'axios'
@@ -139,11 +135,11 @@ export default {
     ProgressChart,
     XPBar,
     Stats,
+    Share,
     Awards,
   },
   data() {
     return {
-      window: null,
       player: {},
       peers: [],
       points: [],
@@ -199,9 +195,6 @@ export default {
       awards: this.awards,
     })
   },
-  mounted() {
-    this.window = window
-  },
   beforeDestroy() {
     clearInterval(this.checkForUpdatesInterval)
   },
@@ -215,7 +208,7 @@ export default {
           if (res.data && !res.data.err) {
             if (res.data.disambiguation) {
               return this.$router.replace(
-                `/g/${this.player.game}/t/${this.player.tag}/disambiguation`
+                `/g/${this.player.game}/t/${this.player.tag}/disambiguation`,
               )
             }
             for (let prop in res.data) {
@@ -248,12 +241,18 @@ export default {
 <style scoped lang="scss">
 .tag {
   margin-top: 1em;
+
   h1 {
     margin-bottom: 0px;
 
     .sub {
       font-size: 0.85rem;
       margin-bottom: 10px;
+    }
+
+    .text {
+      position: relative;
+      top: -10px;
     }
   }
 
@@ -268,13 +267,14 @@ export default {
   h3 {
     margin-top: 0;
     margin-bottom: 0px;
+    display: flex;
+    justify-content: space-between;
   }
 }
 
-.social {
-  float: right;
+.mobileshare {
   position: relative;
-  display: flex;
+  top: -18px;
 }
 
 .stats {

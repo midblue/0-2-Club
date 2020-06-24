@@ -46,7 +46,7 @@
             </g>
           </svg>
         </nuxt-link>
-        <div class="sub">(Beta! — Things will break.)</div>
+        <div class="sub">(Beta! Things will break.)</div>
       </div>
       <div class="right">
         <a

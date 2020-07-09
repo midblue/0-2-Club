@@ -1,4 +1,4 @@
-export default [
+module.exports = [
   {
     regex: /127.0.0.1/g,
     name: 'localhost',

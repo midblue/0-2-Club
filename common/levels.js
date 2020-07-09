@@ -51,4 +51,4 @@ const levels = [
   },
 ]
 
-export default levels
+module.exports = levels

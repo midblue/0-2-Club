@@ -5,22 +5,22 @@
   "author": "Jasper Stephenson <jasperstephenson@gmail.com>",
   "private": true,
   "scripts": {
-    "dev": "nuxt",
+    "dev": "cross-env NODE_ENV=development nodemon server/index.js --watch .",
     "build": "nuxt build",
-    "start": "nuxt build && nuxt start",
-    "precommit": "npm run lint",
+    "start": "cross-env NODE_ENV=production node server/index.js",
     "logs": "heroku logs -a zero-two-club --tail -s app",
     "l": "npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs || npm run logs",
-    "rs": "heroku ps:restart -a zero-two-club && npm run l",
-    "lt": "lt -h \"http://serverless.social\" -p 3000 --allow_invalid_cert"
+    "rs": "heroku ps:restart -a zero-two-club && npm run l"
   },
   "dependencies": {
     "axios": "^0.19.2",
     "chart.js": "^2.9.3",
     "connect-timeout": "^1.9.0",
+    "cross-env": "^7.0.2",
     "express": "^4.17.1",
     "firebase-admin": "^8.9.2",
     "nuxt": "latest",
+    "socket.io": "^2.3.0",
     "source-map-support": "^0.5.16",
     "vue-chartjs": "^3.5.0",
     "vue-clickaway2": "^2.3.1",

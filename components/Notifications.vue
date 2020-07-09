@@ -3,10 +3,8 @@
     <transition-group name="notification" tag="div">
       <div v-if="isLoading" key="isLoading" class="notification">
         <span>
-          <img
-            class="loader"
-            src="~/assets/img/gridloader.svg"
-          />Loading latest data...
+          <img class="loader" src="~/assets/img/gridloader.svg" />Loading latest
+          data...
         </span>
       </div>
       <div
@@ -14,7 +12,7 @@
         :key="notification + index"
         class="notification"
       >
-        <span>{{ notification }}</span>
+        <span v-html="notification"></span>
       </div>
     </transition-group>
   </div>

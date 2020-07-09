@@ -2,14 +2,14 @@ const axios = require('axios')
 
 const silent = () => {}
 const logger = require('../../scripts/log')
-const log = logger('smashgg', 'gray')
-const low = silent //logger('smashgg', 'gray')
-const logAdd = logger('smashgg', 'green')
-const logError = logger('smashgg', 'yellow')
+const log = logger('smashggq', 'gray')
+const low = silent //logger('smashggq', 'gray')
+const logAdd = logger('smashggq', 'green')
+const logError = logger('smashggq', 'yellow')
 
 const rateLimiter = require('../../scripts/rateLimiter')
 const limiter = new rateLimiter(12, 10000)
-const perSetQueryPage = 35
+const perSetQueryPage = 14
 const perStandingQueryPage = 70
 
 async function makeQuery(query, variables) {
@@ -25,10 +25,17 @@ async function makeQuery(query, variables) {
       variables,
     },
   }
-  // console.log(request)
+  // log(request)
   return limiter.queue(() => {
     return axios(request).catch(error => {
-      logError('axios error:', error)
+      logError(
+        'axios error:',
+        error.response
+          ? error.response.data
+            ? error.response.data.message
+            : error.response.status
+          : error,
+      )
       return
     })
   })

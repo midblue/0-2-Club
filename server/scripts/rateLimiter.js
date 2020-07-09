@@ -1,10 +1,9 @@
-const debug = false
-
-module.exports = function(max, timeSpan) {
+module.exports = function(max, timeSpan, debug = false) {
   return {
     max,
     timeSpan,
     triggeredInTimeSpan: 0,
+    // todo make sure callbacks are called in order of arrival
     queue(callback) {
       return new Promise(async resolve => {
         if (debug && this.triggeredInTimeSpan >= max)
@@ -20,7 +19,7 @@ module.exports = function(max, timeSpan) {
             this.max,
             'per',
             Math.round(this.timeSpan / 1000),
-            'seconds'
+            'seconds',
           )
         setTimeout(() => {
           this.triggeredInTimeSpan--
@@ -28,7 +27,7 @@ module.exports = function(max, timeSpan) {
             console.log(
               'slot freed,',
               this.max - this.triggeredInTimeSpan,
-              'left'
+              'left',
             )
         }, timeSpan)
 

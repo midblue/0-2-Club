@@ -6,23 +6,24 @@
       </div>
       <h3>
         Track your progress, keep improving, and stay motivated —
-        <br />An
-        <span class="highlight">esports fitbit</span> for
-        anyone getting started in competitive gaming.
+        <br />An <span class="highlight">esports fitbit</span> for anyone
+        getting started in competitive gaming.
       </h3>
 
       <div v-if="savedEntries.length">
         <h4>Your Recent Searches</h4>
         <div
-          v-for="entry, index in savedEntries.slice(0, 5)"
-          :key="'e'+index"
+          v-for="(entry, index) in savedEntries.slice(0, 5)"
+          :key="'e' + index"
           class="savedentry buttonbox"
         >
           <div class="holder" @click="go(null, entry.tag, entry.game)">
-            <h3>{{entry.tag}}</h3>
-            <div class="sub">{{entry.game}}</div>
+            <h3>{{ entry.tag }}</h3>
+            <div class="sub">{{ entry.game }}</div>
           </div>
-          <div class="delete" @click="removeEntry(entry.tag, entry.game)">✖</div>
+          <div class="delete" @click="removeEntry(entry.tag, entry.game)">
+            ✖
+          </div>
         </div>
       </div>
 
@@ -35,9 +36,13 @@
           <div class="sub">&nbsp;&nbsp;(No team name necessary!)</div>
 
           <!-- Game -->
-          <div class="game">
-            <ModelSelect :options="gameOptions" v-model="inputGame" placeholder="Your game" />
-          </div>
+          <!-- <div class="game">
+            <ModelSelect
+              :options="gameOptions"
+              v-model="inputGame"
+              placeholder="Your game"
+            />
+          </div> -->
         </div>
         <template #button>
           <button class="fullsize" @click="go">Go</button>
@@ -64,7 +69,10 @@
       <div class="inaction">
         <h3>See it in action:</h3>
         <div>
-          <div class="savedentry buttonbox" @click="go(true, 'H0P', 'Super Smash Bros. Melee')">
+          <div
+            class="savedentry buttonbox"
+            @click="go(true, 'H0P', 'Super Smash Bros. Melee')"
+          >
             <div class="holder">
               <h4>H0P</h4>
               <div class="sub">Super Smash Bros. Melee</div>
@@ -100,9 +108,9 @@
         <div class="text">
           <h3>See Your Growth</h3>
           <div>
-            If you feel like you've been leveling up this year, now you
-            can prove it. Your progress is charted over time, and you
-            can compare your growth with your peers.
+            If you feel like you've been leveling up this year, now you can
+            prove it. Your progress is charted over time, and you can compare
+            your growth with your peers.
           </div>
         </div>
 
@@ -112,9 +120,9 @@
         <div class="text left">
           <h3>Points for All</h3>
           <div>
-            In training, victory isn't as important as growth and
-            consistency. Lose a tight set to a strong player? That's
-            worth some points. Support your local scene? Points city.
+            In training, victory isn't as important as growth and consistency.
+            Lose a tight set to a strong player? That's worth some points.
+            Support your local scene? Points city.
           </div>
         </div>
 
@@ -124,9 +132,9 @@
         <div class="text">
           <h3>Hassle-Free Data</h3>
           <div>
-            Just link us one tournament with you in it, and we'll
-            automatically snag more. Currently supports all 1v1
-            tournaments for any game hosted through smash.gg.
+            Just link us one tournament with you in it, and we'll automatically
+            snag more. Currently supports all 1v1 tournaments for any game
+            hosted through smash.gg.
           </div>
         </div>
       </div>
@@ -139,17 +147,23 @@
 
       <div class="patchnotes">
         <h3>Patch Notes</h3>
-        <div v-for="(patch, index) in patchNotes.slice(0,3)" :key="index" class="patchnote">
+        <div
+          v-for="(patch, index) in patchNotes.slice(0, 3)"
+          :key="index"
+          class="patchnote"
+        >
           <div>
-            <span class="sub">{{ new Date(patch.date).toLocaleDateString() }}</span>
+            <span class="sub">{{
+              new Date(patch.date).toLocaleDateString()
+            }}</span>
             <span
               class="highlight"
               v-if="
-                  Date.now() -
-                    new Date(patch.date).getTime() <
-                    7 * 24 * 60 * 60 * 1000
-                "
-            >New!</span>
+                Date.now() - new Date(patch.date).getTime() <
+                  7 * 24 * 60 * 60 * 1000
+              "
+              >New!</span
+            >
           </div>
           <div>{{ patch.content }}</div>
         </div>
@@ -162,7 +176,9 @@
             :key="'hidden' + index"
             class="patchnote"
           >
-            <div class="sub">{{ new Date(patch.date).toLocaleDateString() }}</div>
+            <div class="sub">
+              {{ new Date(patch.date).toLocaleDateString() }}
+            </div>
             <div>{{ patch.content }}</div>
           </div>
         </details>
@@ -175,9 +191,9 @@
 import axios from '~/plugins/axios'
 import PanelButton from '~/components/PanelButton'
 import { ModelSelect } from 'vue-search-select'
-const { parseParticipantTag, parseIp } = require('~/common/functions').default
-const patchNotes = require('~/assets/patchNotes').default
-const { get, set, remove } = require('~/assets/storage').default
+const { parseParticipantTag, parseIp } = require('~/common/functions')
+const patchNotes = require('~/assets/patchNotes')
+const { get, set, remove } = require('~/assets/storage')
 
 export default {
   scrollToTop: true,
@@ -185,8 +201,8 @@ export default {
     if (req) {
       const ipInfo = parseIp(req)
       if (ipInfo.log)
-        require('~/api/scripts/log')('page:home', 'gray')(
-          ipInfo.name || ipInfo.ip
+        require('~/server/scripts/log')('page:home', 'gray')(
+          ipInfo.name || ipInfo.ip,
         )
       if (!ipInfo.allowed)
         return error({ statusCode: 404, message: 'Not found.' })
@@ -255,12 +271,13 @@ export default {
     },
     go(event, passedTag, passedGame) {
       const tag = passedTag || parseParticipantTag(this.inputTag)
-      const game = passedGame || this.inputGame.value
+      const game =
+        passedGame || this.inputGame.value || 'Super Smash Bros. Melee'
       if (!tag) return this.notify('You need to enter a tag!')
       if (!game) return this.notify('You need to pick a game!')
       this.addSavedEntry(tag, game)
       return this.$router.push(
-        `/g/${encodeURIComponent(game)}/t/${encodeURIComponent(tag)}`
+        `/g/${encodeURIComponent(game)}/t/${encodeURIComponent(tag)}`,
       )
     },
     notify(message) {

@@ -20,6 +20,7 @@
       <div>
         <span
           v-for="peer in peers"
+          :key="peer.id"
           class="comparetotag"
           :class="{ active: rivalId === peer.id }"
           @click="
@@ -38,13 +39,18 @@
         </span>
 
         <form class="search" @submit.prevent>
-          <input v-model="inputRivalSearchTag" placeholder="Search for a user..." />
+          <input
+            v-model="inputRivalSearchTag"
+            placeholder="Search for a user..."
+          />
           <button
             class="low"
             type="submit"
             v-if="inputRivalSearchTag"
             @click="searchForRival"
-          >Search</button>
+          >
+            Search
+          </button>
         </form>
       </div>
       <div class="clear">
@@ -123,7 +129,7 @@ export default {
   computed: {
     points() {
       return [...(this.$store.state.player.points || [])].sort(
-        (a, b) => a.date - b.date
+        (a, b) => a.date - b.date,
       )
     },
     peers() {
@@ -205,7 +211,7 @@ export default {
 
     getRivalPoints() {
       this.$store.commit('setIsLoading', true)
-      const pointsURL = `/api/points/${
+      const pointsURL = `/api/player/${
         this.player.game
       }/id/${encodeURIComponent(this.rivalId)}/`
       axios.get(pointsURL).then(res => {
@@ -225,10 +231,10 @@ export default {
       if (!this.inputRivalSearchTag)
         return this.$store.dispatch(
           'notifications/notify',
-          `Input a player tag to compare to.`
+          `Input a player tag to compare to.`,
         )
-      const url = `/api/points/${this.player.game}/tag/${encodeURIComponent(
-        this.inputRivalSearchTag
+      const url = `/api/player/${this.player.game}/tag/${encodeURIComponent(
+        this.inputRivalSearchTag,
       )}/`
       axios.get(url).then(res => {
         this.$store.commit('setIsLoading', false)
@@ -236,7 +242,7 @@ export default {
           this.rivalId = null
           this.$store.dispatch(
             'notifications/notify',
-            `No user found by the tag ${this.inputRivalSearchTag}.`
+            `No user found by the tag ${this.inputRivalSearchTag}.`,
           )
           this.fillData()
           return

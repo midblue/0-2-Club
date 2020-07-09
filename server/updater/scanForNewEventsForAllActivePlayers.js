@@ -9,7 +9,7 @@ const logAdd = logger('eventscanner', 'green')
 const logInfo = logger('eventscanner', 'blue')
 const logError = logger('eventscanner', 'yellow')
 
-const { gameTitle } = require('../../common/functions').default
+const { gameTitle } = require('../../common/functions')
 
 let games = []
 
@@ -21,16 +21,16 @@ module.exports = async function() {
     for (let game of games) {
       const activePlayers = await db.getActivePlayers(game)
       logInfo(
-        `${
-          activePlayers.length
-        } active player/s found for game ${gameTitle(game)}`
+        `${activePlayers.length} active player/s found for game ${gameTitle(
+          game,
+        )}`,
       )
       db.updateActive(game, activePlayers.length)
       const alreadyCheckedOwnerIds = []
       for (let player of activePlayers) {
         const { newOwnerIds } = await getAndAddNewEventsForPlayer(
           player,
-          alreadyCheckedOwnerIds
+          alreadyCheckedOwnerIds,
         )
         alreadyCheckedOwnerIds.push(...newOwnerIds)
       }

@@ -1,7 +1,7 @@
-const ipFilters = require('./vars/ips').default
+const ipFilters = require('./vars/ips')
 const gameTitleDisambiguation = require('./vars/gameTitles')
 
-export default {
+module.exports = {
   parseParticipantTag(name) {
     const minusTeam = /^(?:[^|]*(?: *[|]+ *)+)?(.*)$/gi.exec(name)
     return minusTeam ? minusTeam[1] : null
@@ -14,15 +14,14 @@ export default {
     if (!Array.isArray(eventsToUse)) {
       console.log(
         'common functions — invalid events passed in to get placing ratio:',
-        eventsToUse
+        eventsToUse,
       )
       return 0.7
     }
     return (
       eventsToUse.reduce(
-        (total, event) =>
-          total + event.standing / event.totalParticipants,
-        0
+        (total, event) => total + event.standing / event.totalParticipants,
+        0,
       ) / eventsToUse.length
     )
   },
@@ -50,9 +49,7 @@ export default {
   },
 
   gameTitle(query) {
-    const unambiguousTitle = gameTitleDisambiguation.find(d =>
-      d(query)
-    )
+    const unambiguousTitle = gameTitleDisambiguation.find(d => d(query))
     if (unambiguousTitle) {
       return unambiguousTitle(query)
     }

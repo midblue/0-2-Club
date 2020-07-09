@@ -37,13 +37,10 @@ module.exports = {
         content: `http://www.0-2.club/`,
       },
     ],
-    link: [
-      { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-    ],
+    link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     script: [
       {
-        src:
-          'https://www.googletagmanager.com/gtag/js?id=G-4QVMMRTV5R',
+        src: 'https://www.googletagmanager.com/gtag/js?id=G-4QVMMRTV5R',
         async: true,
       },
     ],
@@ -55,6 +52,7 @@ module.exports = {
     retry: false,
     timeout: 360000,
   },
-  serverMiddleware: ['~/api/index.js'],
-  watch: ['~/api/*.js', '~/api/*/*.js', '~/api/*/*/*.js'],
+  // serverMiddleware: ['~/server/index.js'],
+  watch: ['~/server/*.js', '~/server/*/*.js', '~/server/*/*/*.js'],
+  telemetry: false,
 }

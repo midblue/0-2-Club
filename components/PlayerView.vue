@@ -53,10 +53,10 @@
 
     <ProgressChart
       v-if="displayEvents"
-      :points="points"
+      :points="player.points"
       :player="player"
       :level="level.level"
-      :peers="peers"
+      :peers="player.peers"
       class="chart"
     />
 
@@ -68,12 +68,7 @@
         <span class="sub">({{ displayEvents.length }})</span>
       </h2>
 
-      <EventSearch
-        :player="player"
-        @events="addedEvents"
-        @loading="checkForUpdates = true"
-        class="eventsearch"
-      />
+      <EventSearch :player="player" class="eventsearch" />
     </div>
     <EventsListing
       :events="displayEvents"
@@ -81,7 +76,7 @@
       :game="player.game"
     />
 
-    <template v-if="peers && peers.length > 0">
+    <template v-if="player.peers && player.peers.length > 0">
       <hr />
 
       <div class="peers" :class="{ flex: !isMobile }">
@@ -89,7 +84,7 @@
           <b>Related Players</b>
         </div>
         <div>
-          <span v-for="peer in peers" :key="peer.id">
+          <span v-for="peer in player.peers" :key="peer.id">
             <nuxt-link v-if="peer" :to="`/g/${player.game}/i/${peer.id}`">
               <div
                 v-if="peer.img"
@@ -122,7 +117,9 @@ import Share from '~/components/Share'
 import Awards from '~/components/Awards/Awards'
 import levels from '~/common/levels'
 import axios from 'axios'
-const calculateAwards = require('~/common/awards').default
+const calculateAwards = require('~/common/awards')
+
+import io from '~/node_modules/socket.io-client/dist/socket.io.js'
 
 export default {
   props: {
@@ -140,18 +137,17 @@ export default {
   },
   data() {
     return {
-      player: {},
-      peers: [],
-      points: [],
       awards: [],
       levels,
-      checkForUpdates: false,
-      checkForUpdatesInterval: null,
+      socket: null,
     }
   },
   computed: {
     isMobile() {
       return this.$store.state.isMobile
+    },
+    player() {
+      return this.$store.state.player
     },
     displayEvents() {
       return this.player.participatedInEvents
@@ -160,8 +156,8 @@ export default {
     },
     totalPoints() {
       return (
-        (this.points
-          ? this.points.reduce((total, { value }) => total + value, 0)
+        (this.player.points
+          ? this.player.points.reduce((total, { value }) => total + value, 0)
           : 0) +
         (this.awards || []).reduce((total, { points }) => total + points, 0)
       )
@@ -176,63 +172,87 @@ export default {
       return { ...this.levels[l], level: l }
     },
   },
-  watch: {
-    checkForUpdates(willCheck, wasChecking) {
-      if (willCheck !== wasChecking && willCheck) {
-        this.checkForUpdatesInterval = setInterval(this.reCheckPoints, 8000)
-      } else {
-        clearInterval(this.checkForUpdatesInterval)
-      }
-    },
-  },
+  watch: {},
   created() {
-    this.player = this.initialPlayer
-    this.points = this.initialPlayer.points
-    this.peers = this.initialPlayer.peers
-    this.awards = calculateAwards(this.player)
     this.$store.commit('setPlayer', {
       ...this.initialPlayer,
       awards: this.awards,
     })
+    this.recalculateAwards()
+  },
+  mounted() {
+    if (
+      !this.initialPlayer.game ||
+      (!this.initialPlayer.id && !this.initialPlayer.tag)
+    )
+      return
+    this.socket = io.connect('/')
+    this.socket.emit(
+      'join',
+      `${this.initialPlayer.game}/${this.initialPlayer.id ||
+        this.initialPlayer.tag}`,
+    )
+    this.socket.emit('join', `${this.initialPlayer.game}`)
+
+    this.socket.on('startEventSearch', data => {
+      this.$store.commit('setIsLoading', true)
+    })
+    this.socket.on('newEvents', this.gotNewEvents)
+    this.socket.on('notification', n => {
+      this.$store.commit('setIsLoading', true)
+      this.$store.dispatch('notifications/notify', n)
+    })
+    this.socket.on('endEventSearch', async data => {
+      await this.refreshPlayer()
+      this.$store.commit('setIsLoading', false)
+      this.$store.dispatch('notifications/notify', `Up to date!`)
+    })
   },
   beforeDestroy() {
-    clearInterval(this.checkForUpdatesInterval)
+    this.socket.emit(
+      'leave',
+      `${this.initialPlayer.game}/${this.initialPlayer.id}`,
+    )
+    this.socket.emit('leave', `${this.initialPlayer.game}`)
+    this.$store.commit('clearPlayer')
+    this.$store.commit('setIsLoading', false)
   },
   methods: {
-    reCheckPoints() {
-      return new Promise(async resolve => {
-        const url = this.player.id
-          ? `/api/points/${this.player.game}/id/${this.player.id}/`
-          : `/api/points/${this.player.game}/tag/${this.player.tag}/`
-        await axios.get(url).then(res => {
-          if (res.data && !res.data.err) {
-            if (res.data.disambiguation) {
-              return this.$router.replace(
-                `/g/${this.player.game}/t/${this.player.tag}/disambiguation`,
-              )
-            }
-            for (let prop in res.data) {
-              this.$set(this.player, prop, res.data[prop])
-              this.$store.commit('setPlayer', res.data)
-            }
-            if (res.data.peers) this.peers = res.data.peers
-            this.points = null
-            this.awards = null
-            this.$nextTick(() => {
-              this.points = res.data.points
-              this.awards = calculateAwards(this.player)
-              this.$store.commit('setPlayer', {
-                points: this.points,
-                awards: this.awards,
-              })
-            })
-          }
-        })
-      })
+    gotNewEvents(newEvents) {
+      const newEventsWithPlayer = newEvents.filter(
+        newEvent =>
+          !(this.player.participatedInEvents || []).find(
+            e => e.id === newEvent.id,
+          ) &&
+          (!this.player.id ||
+            newEvent.participants.find(
+              participant => participant.id === this.player.id,
+            )),
+      )
+      if (!newEventsWithPlayer.length) return
+      this.$store.dispatch(
+        'notifications/notify',
+        `Added ${newEventsWithPlayer.length} more event${
+          newEventsWithPlayer.length === 1 ? '' : 's'
+        } to ${this.player.tag}'s history!`,
+      )
+      this.refreshPlayer()
     },
-    addedEvents(newEvents) {
-      this.checkForUpdates = false
-      this.reCheckPoints()
+    refreshPlayer() {
+      return axios
+        .get(
+          this.player.id
+            ? `/api/player/${this.player.game}/id/${this.player.id}`
+            : `/api/player/${this.player.game}/tag/${this.player.tag}`,
+        )
+        .then(res => {
+          if (res.data && res.data.disambiguation) return this.$router.go()
+          this.$store.commit('setPlayer', res.data)
+          this.recalculateAwards()
+        })
+    },
+    recalculateAwards() {
+      this.awards = calculateAwards(this.player)
     },
   },
 }
@@ -252,7 +272,7 @@ export default {
 
     .text {
       position: relative;
-      top: -10px;
+      top: -5px;
     }
   }
 

@@ -1,6 +1,6 @@
 const points = require('../points/points')
 const db = require('./firebaseClient')
-const { gameTitle } = require('../../common/functions').default
+const { gameTitle } = require('../../common/functions')
 const prep = require('./dbDataPrep')
 
 const logger = require('../scripts/log')
@@ -33,21 +33,18 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
           id: fromDb.redirect,
         })
 
-      if (
-        !loadedPlayers[participantData.id] &&
-        (!fromDb || !fromDb.error)
-      )
+      if (!loadedPlayers[participantData.id] && (!fromDb || !fromDb.error))
         loadedPlayers[participantData.id] = fromDb || {}
 
       loadedPlayers[participantData.id][
         'participantData' + event.id
       ] = participantData
       return loadedPlayers[participantData.id]
-    })
+    }),
   )
   if (players.find(p => !p)) {
     return logError(
-      `Failed to add event ${event.name} @ ${event.tournamentName}, firebase error (likely quota)`
+      `Failed to add event ${event.name} @ ${event.tournamentName}, firebase error (likely quota)`,
     )
   }
   clearTimeout(clearLoadedPlayers)
@@ -58,27 +55,25 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
       // is new
       p = prep.makeNewPlayerToSaveFromEvent(
         event,
-        p['participantData' + event.id]
+        p['participantData' + event.id],
       )
       loadedPlayers[p.id] = p
     } else {
       const eventParticipantData = prep.makeParticipantDataToSaveFromEvent(
         event,
-        p['participantData' + event.id]
+        p['participantData' + event.id],
       )
       if (!loadedPlayers[p.id].participatedInEvents) {
         logError(
           `should have participatedInEvents but don't for`,
           loadedPlayers[p.id].tag,
           loadedPlayers[p.id].id,
-          loadedPlayers[p.id]
+          loadedPlayers[p.id],
         )
       }
       const alreadyExistsIndex = loadedPlayers[
         p.id
-      ].participatedInEvents.findIndex(
-        e => e.id === eventParticipantData.id
-      )
+      ].participatedInEvents.findIndex(e => e.id === eventParticipantData.id)
       if (alreadyExistsIndex >= 0) {
         loadedPlayers[p.id].participatedInEvents[
           alreadyExistsIndex
@@ -87,12 +82,10 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
         logError(
           'updated participant data for',
           loadedPlayers[p.id].tag,
-          `(event ${eventParticipantData.name} @ ${eventParticipantData.tournamentName})`
+          `(event ${eventParticipantData.name} @ ${eventParticipantData.tournamentName})`,
         )
       } else {
-        loadedPlayers[p.id].participatedInEvents.push(
-          eventParticipantData
-        )
+        loadedPlayers[p.id].participatedInEvents.push(eventParticipantData)
       }
     }
     delete loadedPlayers[p.id]['participantData' + event.id]
@@ -106,7 +99,7 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
     players.map(async player => {
       let newPoints = await points.get(player, event.id, players)
       player.points.push(...newPoints)
-    })
+    }),
   )
   clearTimeout(clearLoadedPlayers)
 
@@ -119,19 +112,19 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
       .filter(
         p =>
           !onlyUpdatePlayers &&
-          loadedPlayers[p.id].participatedInEvents.length <= 1
+          loadedPlayers[p.id].participatedInEvents.length <= 1,
       )
       .map(p => db.addPlayer(loadedPlayers[p.id])),
     ...players
       .filter(
         p =>
           onlyUpdatePlayers ||
-          loadedPlayers[p.id].participatedInEvents.length > 1
+          loadedPlayers[p.id].participatedInEvents.length > 1,
       )
       .map(p => db.updatePlayer(loadedPlayers[p.id])),
   ])
   logAdd(
-    `done saving ${players.length} players' data for ${event.eventSlug} @ ${event.tournamentSlug}`
+    `done saving ${players.length} players' data for ${event.eventSlug} @ ${event.tournamentSlug}`,
   )
 
   clearTimeout(clearLoadedPlayers)

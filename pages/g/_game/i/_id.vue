@@ -5,7 +5,7 @@
 <script>
 import axios from '~/plugins/axios'
 import PlayerView from '~/components/PlayerView'
-const { parseIp } = require('~/common/functions').default
+const { parseIp } = require('~/common/functions')
 import levels from '~/common/levels'
 
 export default {
@@ -16,10 +16,10 @@ export default {
       ipInfo = parseIp(req)
       if (!ipInfo.allowed) {
         if (ipInfo.log)
-          require('~/api/scripts/log')('page:id', 'gray')(
+          require('~/server/scripts/log')('page:id', 'gray')(
             ipInfo.name || ipInfo.ip,
             params.game,
-            params.id
+            params.id,
           )
         return error({ statusCode: 404, message: 'Not found.' })
       }
@@ -27,17 +27,17 @@ export default {
     return axios
       .get(
         ipInfo
-          ? `/api/points/${params.game}/id/${params.id}`
-          : `/api/points/${params.game}/id/${params.id}/active`
+          ? `/api/player/${params.game}/id/${params.id}`
+          : `/api/player/${params.game}/id/${params.id}/active`,
       )
       .then(res => {
         if (res.data && !res.data.err && !res.data.disambiguation) {
           if (req && ipInfo.log)
-            require('~/api/scripts/log')('page:id', 'gray')(
+            require('~/server/scripts/log')('page:id', 'gray')(
               ipInfo.name || ipInfo.ip,
               params.game,
               params.id,
-              res.data.tag
+              res.data.tag,
             )
           // todo set active if not a named ip, or if browsing (localhost)
           return { player: res.data }
@@ -76,16 +76,17 @@ export default {
           hid: `og:url`,
           property: 'og:url',
           content: `http://www.0-2.club/${encodeURIComponent(
-            this.player.game
+            this.player.game,
           )}/i/${this.player.id}/`,
-        },
-        {
-          property: 'og:description',
-          hid: `og:description`,
-          content: `Level ${this.level.level}: ${this.level.label} in ${this.player.game}`,
         },
       ],
     }
+    if (this.level)
+      data.meta.push({
+        property: 'og:description',
+        hid: `og:description`,
+        content: `Level ${this.level.level}: ${this.level.label} in ${this.player.game}`,
+      })
     if (this.player.img)
       data.meta.push({
         hid: `og:image`,

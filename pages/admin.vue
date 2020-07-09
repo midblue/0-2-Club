@@ -10,7 +10,9 @@
       v-for="(event, index) in presetEvents"
       :key="'event' + index"
       @click="loadEvent(index)"
-    >Load {{ event.eventSlug }} {{ event.tournamentSlug }}</div>
+    >
+      Load {{ event.eventSlug }} {{ event.tournamentSlug }}
+    </div>
 
     <br />
 
@@ -19,11 +21,15 @@
       v-for="(player, index) in presetPlayers"
       :key="'p' + index"
       @click="moreForPlayer(player)"
-    >More for {{ player.tag }}</div>
+    >
+      More for {{ player.tag }}
+    </div>
 
     <br />
     <nuxt-link to="/g/Super Smash Bros. Melee/t/H0P">H0P</nuxt-link>
-    <nuxt-link to="/g/Super Smash Bros. Melee/t/DoodleDork">DoodleDork</nuxt-link>
+    <nuxt-link to="/g/Super Smash Bros. Melee/t/DoodleDork"
+      >DoodleDork</nuxt-link
+    >
     <nuxt-link to="/g/Super Smash Bros. Ultimate/t/Fluffy">Fluffy</nuxt-link>
 
     <br />
@@ -81,15 +87,16 @@
 
 <script>
 import axios from '~/plugins/axios'
-const { parseIp } = require('~/common/functions').default
+const { parseIp } = require('~/common/functions')
+import io from '~/node_modules/socket.io-client/dist/socket.io.js'
 
 export default {
   scrollToTop: true,
   async asyncData({ req, error }) {
     if (req) {
       const ipInfo = parseIp(req)
-      require('~/api/scripts/log')('page:admin', 'gray')(
-        ipInfo.name || ipInfo.ip
+      require('~/server/scripts/log')('page:admin', 'gray')(
+        ipInfo.name || ipInfo.ip,
       )
       if (!ipInfo.allowed)
         return error({ statusCode: 404, message: 'Not found.' })
@@ -167,6 +174,10 @@ export default {
   },
   mounted() {
     this.$store.commit('clearPlayer')
+
+    const socket = io.connect('/')
+    socket.emit('watchId', 1234)
+    socket.on('newEvent', data => console.log(data))
   },
   methods: {
     scanForNewEvents() {
@@ -188,7 +199,7 @@ export default {
       this.$store.commit('setIsLoading', true)
       axios
         .get(
-          `/api/event/${event.service}/${event.game}/${event.tournamentSlug}/${event.eventSlug}/`
+          `/api/event/${event.service}/${event.game}/${event.tournamentSlug}/${event.eventSlug}/`,
         )
         .then(res => {
           this.$store.commit('setIsLoading', false)
@@ -198,7 +209,7 @@ export default {
           } else
             this.$store.dispatch(
               'notifications/notify',
-              `We didn't find an event at that URL! Check to make sure that it has /tournament/ AND /event/ in it.`
+              `We didn't find an event at that URL! Check to make sure that it has /tournament/ AND /event/ in it.`,
             )
         })
     },

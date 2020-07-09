@@ -1,3 +1,5 @@
+const vue = require('vue')
+
 export const state = () => ({
   isLoading: false,
   isMobile: false,
@@ -16,7 +18,9 @@ export const mutations = {
     state.winWidth = winWidth
   },
   setPlayer(state, payload) {
-    for (let p in payload) state.player[p] = payload[p]
+    for (let p in payload) {
+      state.player = { ...state.player, [p]: payload[p] }
+    }
   },
   clearPlayer(state) {
     state.player = {}

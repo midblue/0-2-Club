@@ -9,7 +9,7 @@ function storageCheck() {
     } catch (e) {
       localStorageAvailable = false
       console.log(
-        'LocalStorage is unavailable. Reverting to Cookies as a fallback.'
+        'LocalStorage is unavailable. Reverting to Cookies as a fallback.',
       )
     }
   } else localStorageAvailable = false
@@ -40,22 +40,19 @@ function getCookie(key) {
   for (let i = 0; i < ca.length; i++) {
     let c = ca[i]
     while (c.charAt(0) == ' ') c = c.substring(1)
-    if (c.indexOf(name) == 0)
-      return c.substring(name.length, c.length)
+    if (c.indexOf(name) == 0) return c.substring(name.length, c.length)
   }
   return ''
 }
 
 function setCookie(key, value, remove = false) {
   const d = new Date()
-  d.setTime(
-    d.getTime() + 365 * 24 * 60 * 60 * 1000 * (remove ? -1 : 1)
-  )
+  d.setTime(d.getTime() + 365 * 24 * 60 * 60 * 1000 * (remove ? -1 : 1))
   const expires = 'expires=' + d.toUTCString()
   document.cookie = key + '=' + value + ';' + expires + ';path=/'
 }
 
-export default {
+module.exports = {
   set: set,
   remove: remove,
   get: get,

@@ -1,4 +1,4 @@
-const { getPlacingRatio } = require('./functions').default
+const { getPlacingRatio } = require('./functions')
 
 // ? awards for:
 // consistently attending tournaments x weeks in a row
@@ -7,7 +7,7 @@ const { getPlacingRatio } = require('./functions').default
 // lifetime total x unique opponents
 // x total rivals / rivals beat
 
-export default function(player) {
+module.exports = function(player) {
   if (!player || !player.participatedInEvents) return []
 
   // ! getting WEIRD error here trying to sort these on combined players
@@ -19,7 +19,7 @@ export default function(player) {
     .map(e => e.date)
     .sort((a, b) => a - b)
   const chronologicalEvents = orderedDates.map(d =>
-    player.participatedInEvents.find(e => e.date === d)
+    player.participatedInEvents.find(e => e.date === d),
   )
 
   const awards = getAwards(player, chronologicalEvents)
@@ -63,7 +63,7 @@ function bestStreak(player, events) {
     (highest, point) => {
       if (point.context.indexOf('wins in a row') > -1) {
         const wins = parseInt(
-          point.context.substring(0, point.context.indexOf(' '))
+          point.context.substring(0, point.context.indexOf(' ')),
         )
         if (wins > highest.total)
           return {
@@ -74,7 +74,7 @@ function bestStreak(player, events) {
       }
       return highest
     },
-    { total: 0 }
+    { total: 0 },
   )
   const levels = [0, 3, 4, 5, 6, 7, 8, 10, 15, 20, 40, 100, 1000]
 
@@ -89,13 +89,13 @@ function bestStreak(player, events) {
     levelProgress = (total - levelStart) / (levelEnd - levelStart)
 
   const bestAttemptString = `Best: ${total} on ${new Date(
-    bestStreak.date * 1000
+    bestStreak.date * 1000,
   ).toLocaleDateString()}`
 
   const levelDescription = `Won <span style="font-weight: bold; color:var(--l${level});">${total}</span> set${
     total === 1 ? '' : 's'
   } in a row at ${bestStreak.name} on ${new Date(
-    bestStreak.date * 1000
+    bestStreak.date * 1000,
   ).toLocaleDateString()}`
 
   const requirements = `Level 1: Win <span style="font-weight: bold;">${levels[1]}</span> sets in a row`
@@ -186,9 +186,7 @@ function totalGameWins(player, events) {
         else
           return (
             total +
-            (match.loserScore && match.loserScore >= 0
-              ? match.loserScore
-              : 0)
+            (match.loserScore && match.loserScore >= 0 ? match.loserScore : 0)
           )
       }, 0)
     )
@@ -217,8 +215,7 @@ function totalGameWins(player, events) {
 
   const levelStart = levels[level] || 0,
     levelEnd = levels[level + 1],
-    levelProgress =
-      (totalGameWins - levelStart) / (levelEnd - levelStart)
+    levelProgress = (totalGameWins - levelStart) / (levelEnd - levelStart)
 
   const bestAttemptString = `Current: ${totalGameWins}`
 
@@ -286,13 +283,13 @@ function mostWeeksInARow(player, events) {
     levelProgress = (total - levelStart) / (levelEnd - levelStart)
 
   const bestAttemptString = `Best: ${total} on ${new Date(
-    mostWeeksInARow.start * 1000
+    mostWeeksInARow.start * 1000,
   ).toLocaleDateString()}`
 
   const levelDescription = `Attended events <span style="font-weight: bold; color:var(--l${level});">${total}</span> week${
     total === 1 ? '' : 's'
   } in a row, starting on ${new Date(
-    mostWeeksInARow.start * 1000
+    mostWeeksInARow.start * 1000,
   ).toLocaleDateString()}`
 
   const requirements = `Attend an event for at least <b>${levels[1]}</b> consecutive weeks`
@@ -355,13 +352,13 @@ function mostInOneWeek(player, events) {
     levelProgress = (total - levelStart) / (levelEnd - levelStart)
 
   const bestAttemptString = `Best: <b>${total}</b> on ${new Date(
-    mostInOneWeek.start * 1000
+    mostInOneWeek.start * 1000,
   ).toLocaleDateString()}`
 
   const levelDescription = `Attended <span style="font-weight: bold; color:var(--l${level});">${total}</span> event${
     total === 1 ? '' : 's'
   } in one week, starting on ${new Date(
-    mostInOneWeek.start * 1000
+    mostInOneWeek.start * 1000,
   ).toLocaleDateString()}`
 
   const requirements = `Attend at least <b>${levels[1]}</b> events in one week`
@@ -418,60 +415,57 @@ function yearlyImprovement(player, events) {
 
   const levels = [0, 5, 7.5, 10, 12.5, 15, 20, 30, 40, 50, 100]
 
-  const awards = Object.keys(cumulativePlacingRatiosByYear).map(
-    year => {
-      const isCurrentYear = new Date().getFullYear() === year,
-        improvedPercent = Math.ceil(
-          cumulativePlacingRatiosByYear[year].improvement * 100
-        )
-
-      const title = `${year} Improvement`
-      const total = improvedPercent
-
-      let level = levels.findIndex(l => improvedPercent < l) - 1
-      if (
-        !level ||
-        improvedPercent <= 0 ||
-        (!isCurrentYear && improvedPercent < levels[1])
+  const awards = Object.keys(cumulativePlacingRatiosByYear).map(year => {
+    const isCurrentYear = new Date().getFullYear() === year,
+      improvedPercent = Math.ceil(
+        cumulativePlacingRatiosByYear[year].improvement * 100,
       )
-        level = -1 // not started
 
-      const levelStart = levels[level] || 0,
-        levelEnd = levels[level + 1],
-        levelProgress =
-          (improvedPercent - levelStart) / (levelEnd - levelStart)
+    const title = `${year} Improvement`
+    const total = improvedPercent
 
-      const bestAttemptString = `Current: <b>${improvedPercent}%</b> improved placing in ${year}`
+    let level = levels.findIndex(l => improvedPercent < l) - 1
+    if (
+      !level ||
+      improvedPercent <= 0 ||
+      (!isCurrentYear && improvedPercent < levels[1])
+    )
+      level = -1 // not started
 
-      const levelDescription = `Average placing improved <span style="font-weight: bold; color:var(--l${level});">${Math.round(
-        improvedPercent
-      )}%</span> in ${year}`
+    const levelStart = levels[level] || 0,
+      levelEnd = levels[level + 1],
+      levelProgress = (improvedPercent - levelStart) / (levelEnd - levelStart)
 
-      const requirements = `Improve average placing by at least <b>${levels[1]}%</b> over the year`
+    const bestAttemptString = `Current: <b>${improvedPercent}%</b> improved placing in ${year}`
 
-      const img = '/img/awards/yearplacing.png'
+    const levelDescription = `Average placing improved <span style="font-weight: bold; color:var(--l${level});">${Math.round(
+      improvedPercent,
+    )}%</span> in ${year}`
 
-      const label = `'${`${year}`.substring(2)}`
+    const requirements = `Improve average placing by at least <b>${levels[1]}%</b> over the year`
 
-      const points = level * 10
+    const img = '/img/awards/yearplacing.png'
 
-      if (level < 1) return
-      return {
-        title,
-        total,
-        level,
-        levelStart,
-        levelEnd,
-        levelProgress,
-        bestAttemptString,
-        levelDescription,
-        requirements,
-        img,
-        label,
-        points,
-      }
+    const label = `'${`${year}`.substring(2)}`
+
+    const points = level * 10
+
+    if (level < 1) return
+    return {
+      title,
+      total,
+      level,
+      levelStart,
+      levelEnd,
+      levelProgress,
+      bestAttemptString,
+      levelDescription,
+      requirements,
+      img,
+      label,
+      points,
     }
-  )
+  })
 
   return awards.filter(a => a)
 }

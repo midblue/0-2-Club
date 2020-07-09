@@ -1,4 +1,4 @@
-export default [
+module.exports = [
   {
     date: 'March 4, 2020',
     content: `Awards have nice icons, searches now autosave, and the homepage looks a lot better.`,

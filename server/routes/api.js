@@ -18,47 +18,38 @@ router.get('/stats', async (req, res, next) => {
 })
 
 /* GET player with points by game and tag. */
-router.get(
-  '/points/:game/tag/:tag/:active*?',
-  async (req, res, next) => {
-    const game = decodeURIComponent(req.params.game)
-    const tag = decodeURIComponent(req.params.tag)
-    const setActive = !!req.params.active
-    // log('player with points by tag:', tag)
-    const foundPoints = await get.player({
-      game,
-      tag,
-      setActive,
-    })
-    if (foundPoints) {
-      res.json(foundPoints)
-    } else {
-      res.json({ err: 'No player in database by that tag.' })
-    }
+router.get('/player/:game/tag/:tag/:active*?', async (req, res, next) => {
+  const game = decodeURIComponent(req.params.game)
+  const tag = decodeURIComponent(req.params.tag)
+  const setActive = !!req.params.active
+  // log('player with points by tag:', tag)
+  const foundPoints = await get.player({
+    game,
+    tag,
+    setActive,
+  })
+  if (foundPoints) {
+    res.json(foundPoints)
+  } else {
+    res.json({ err: 'No player in database by that tag.' })
   }
-)
+})
 
 /* GET player with points by game and id. */
-router.get(
-  '/points/:game/id/:id/:active*?',
-  async (req, res, next) => {
-    const game = decodeURIComponent(req.params.game)
-    const id = parseInt(decodeURIComponent(req.params.id))
-    const setActive = !!req.params.active
-    const foundPoints = await get.player({ game, id, setActive })
-    if (foundPoints) {
-      res.json(foundPoints)
-    } else {
-      res.json({ err: 'No player in database by that id.' })
-    }
+router.get('/player/:game/id/:id/:active*?', async (req, res, next) => {
+  const game = decodeURIComponent(req.params.game)
+  const id = parseInt(decodeURIComponent(req.params.id))
+  const setActive = !!req.params.active
+  const foundPoints = await get.player({ game, id, setActive })
+  if (foundPoints) {
+    res.json(foundPoints)
+  } else {
+    res.json({ err: 'No player in database by that id.' })
   }
-)
+})
 
 /* GET get manually added event data */
-router.get(
-  '/event/:service/:game/:tournamentSlug/:eventSlug',
-  handleEvent
-)
+router.get('/event/:service/:game/:tournamentSlug/:eventSlug', handleEvent)
 router.get('/event/:service/:game/:tournamentSlug', handleEvent)
 async function handleEvent(req, res, next) {
   // log('event by url')
@@ -68,13 +59,13 @@ async function handleEvent(req, res, next) {
   const eventSlug = req.params.eventSlug
     ? decodeURIComponent(req.params.eventSlug)
     : undefined
-  const eventData = await get.event({
+  await get.event({
     service,
     tournamentSlug,
     eventSlug,
     game,
   })
-  res.json(eventData)
+  res.json({ success: true })
 }
 
 /* GET more events for player */
@@ -83,11 +74,11 @@ router.get('/more/:game/:id/', async (req, res, next) => {
   const id = parseInt(decodeURIComponent(req.params.id))
   // log('more events for player', id)
   get.logToDb('more')
-  const moreEvents = await get.moreEventsForPlayer({
+  get.moreEventStubsForPlayer({
     game,
     id,
   })
-  res.json(moreEvents)
+  res.json({ success: true })
 })
 
 /* GET combine all instances of a tag into one id */
@@ -109,10 +100,7 @@ router.get('/combine/:game/:tag/:id/', async (req, res, next) => {
 let lastScan = 0
 const minimumScanInterval = 3 * 60 * 60 * 1000
 router.get('/scan/', async (req, res, next) => {
-  if (
-    req.ip !== '127.0.0.1' &&
-    Date.now() - lastScan < minimumScanInterval
-  ) {
+  if (req.ip !== '127.0.0.1' && Date.now() - lastScan < minimumScanInterval) {
     res.json({ complete: false })
     return log('skipping scan (last was too recent)')
   }

@@ -40,27 +40,23 @@
 
 <script>
 import axios from '~/plugins/axios'
-const { parseIp } = require('~/common/functions').default
+const { parseIp } = require('~/common/functions')
 
 export default {
   asyncData({ params, error, redirect, req }) {
     if (req) {
       const ipInfo = parseIp(req)
       if (ipInfo.log)
-        require('~/api/scripts/log')('page:disamb', 'gray')(
+        require('~/server/scripts/log')('page:disamb', 'gray')(
           ipInfo.name || ipInfo.ip,
           params.game,
-          params.tag
+          params.tag,
         )
       if (!ipInfo.allowed)
         return error({ statusCode: 404, message: 'Not found.' })
     }
     return axios
-      .get(
-        `/api/points/${params.game}/tag/${encodeURIComponent(
-          params.tag
-        )}/`
-      )
+      .get(`/api/player/${params.game}/tag/${encodeURIComponent(params.tag)}/`)
       .then(res => {
         if (!res.data.disambiguation)
           return redirect(`/g/${params.game}/t/${params.tag}`)
@@ -92,10 +88,8 @@ export default {
           hid: `og:url`,
           property: 'og:url',
           content: `http://www.0-2.club/${encodeURIComponent(
-            this.player.game
-          )}/t/${encodeURIComponent(
-            this.player.tag
-          )}/disambiguation/`,
+            this.player.game,
+          )}/t/${encodeURIComponent(this.player.tag)}/disambiguation/`,
         },
       ],
     }
@@ -110,7 +104,7 @@ export default {
   methods: {
     combineAll() {
       const really = confirm(
-        'Wait, really? This will irreversibly combine all of the players shown here into one single tag. Is that really what you want?'
+        'Wait, really? This will irreversibly combine all of the players shown here into one single tag. Is that really what you want?',
       )
       if (!really) return
       const idWithMostEvents = this.disambiguation.reduce(
@@ -122,19 +116,17 @@ export default {
             }
           return mostEvents
         },
-        { total: 0 }
+        { total: 0 },
       ).id
       return axios
         .get(
           `/api/combine/${this.player.game}/${encodeURIComponent(
-            this.player.tag
-          )}/${idWithMostEvents}`
+            this.player.tag,
+          )}/${idWithMostEvents}`,
         )
         .then(res => {
           if (res.data && !res.data.err) {
-            this.$router.push(
-              `/g/${this.player.game}/t/${this.player.tag}`
-            )
+            this.$router.push(`/g/${this.player.game}/t/${this.player.tag}`)
           } else console.log(err)
         })
     },

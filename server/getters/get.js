@@ -8,7 +8,9 @@ const low = logger('get', 'gray')
 const log = logger('get', 'white')
 const logAdd = logger('get', 'green')
 const logError = logger('get', 'yellow')
-const { gameTitle } = require('../../common/functions').default
+const { gameTitle } = require('../../common/functions')
+
+const io = require('../io/io')()
 
 module.exports = {
   async dbStats() {
@@ -24,19 +26,19 @@ module.exports = {
     retries = 0,
     onlyUpdatePlayers = false,
   }) {
-    if (!service)
-      return logError('A service is required to get an event.')
+    if (!service) return logError('A service is required to get an event.')
     if (!(id || tournamentSlug))
       return logError(
-        'An id, tournamentSlug, or slug is required to get an event.'
+        'An id, tournamentSlug, or slug is required to get an event.',
       )
     return new Promise(async resolve => {
       if (!id && !eventSlug) {
         // if this is just a tournament slug, we need to get the events from it first
-        const events = await services[
-          service
-        ].eventsForGameInTournament(game, tournamentSlug)
-        const loadedEvents = []
+        const events = await services[service].eventsForGameInTournament(
+          game,
+          tournamentSlug,
+        )
+        const newEvents = []
         for (let e of events) {
           const newEvent = await this.event({
             service,
@@ -44,9 +46,9 @@ module.exports = {
             eventSlug: e.eventSlug,
             game,
           })
-          loadedEvents.push(newEvent)
+          newEvents.push(newEvent)
         }
-        return resolve(loadedEvents)
+        return resolve(newEvents)
       }
 
       let loadedEntry
@@ -63,7 +65,7 @@ module.exports = {
             'found existing event in db:',
             loadedEntry.name,
             '-',
-            loadedEntry.tournamentName
+            loadedEntry.tournamentName,
           )
           return resolve(loadedEntry)
         }
@@ -80,7 +82,7 @@ module.exports = {
           'at',
           tournamentSlug,
           ':',
-          e.code || e.err || e.error || e
+          e.code || e.err || e.error || e,
         )
         if (retries < 10) {
           low(`retrying... (attempt ${retries + 2})`)
@@ -95,8 +97,10 @@ module.exports = {
         }
       }
 
-      if (loadedEntry && !loadedEntry.err)
+      if (loadedEntry && !loadedEntry.err) {
         await addSingleEvent(loadedEntry, onlyUpdatePlayers)
+        io.to(game).emit('newEvents', [loadedEntry])
+      }
 
       resolve(loadedEntry)
     })
@@ -109,8 +113,7 @@ module.exports = {
       id,
       tag,
     })
-    if (Array.isArray(loadedPlayer))
-      return { disambiguation: loadedPlayer }
+    if (Array.isArray(loadedPlayer)) return { disambiguation: loadedPlayer }
     if (loadedPlayer && setActive) db.setPlayerActive(loadedPlayer)
     // if (loadedPlayer)
     //   log('returning player', loadedPlayer.tag, loadedPlayer.id)
@@ -123,13 +126,12 @@ module.exports = {
   },
 
   async setActive({ game, id, tag, player }) {
-    if (!player)
-      player = await this.player({ game: gameTitle(game), id, tag })
+    if (!player) player = await this.player({ game: gameTitle(game), id, tag })
     if (!player || player.disambiguation) return
     db.setPlayerActive(player)
   },
 
-  async moreEventsForPlayer({ game, id, tag }) {
+  async moreEventStubsForPlayer({ game, id, tag }) {
     if (!game || (!id && !tag)) return []
     const loadedPlayer = await this.player({
       game: gameTitle(game),
@@ -150,7 +152,7 @@ module.exports = {
         'disambiguation required to get more events for',
         gameTitle(game),
         id,
-        tag
+        tag,
       )
       return []
     }
@@ -171,17 +173,15 @@ module.exports = {
 
 function collatePointsIntoPlayerData(player) {
   if (!player) return
-  const collatedEvents = (player.participatedInEvents || []).map(
-    event => {
-      return {
-        ...event,
-        points: (player.points || []).filter(
-          point =>
-            point.eventSlug === event.eventSlug &&
-            point.tournamentSlug === event.tournamentSlug
-        ),
-      }
+  const collatedEvents = (player.participatedInEvents || []).map(event => {
+    return {
+      ...event,
+      points: (player.points || []).filter(
+        point =>
+          point.eventSlug === event.eventSlug &&
+          point.tournamentSlug === event.tournamentSlug,
+      ),
     }
-  )
+  })
   return { ...player, participatedInEvents: collatedEvents }
 }

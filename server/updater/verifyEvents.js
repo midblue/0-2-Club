@@ -10,21 +10,17 @@ const logError = logger('verifyevents', 'yellow')
 
 module.exports = async function(events) {
   if (!events || !events.length) return []
-  const gotPlayers = [] // this is a little funky tbh
+  const gotPlayers = [] // ! this is a little funky tbh
   const toFix = await checkForAccuracy(events, gotPlayers)
   if (toFix.length) {
-    logError(
-      'Found error in data for',
-      toFix.length,
-      'event/s, resolving...'
-    )
+    logError('Found error in data for', toFix.length, 'event/s, resolving...')
     await fixEventDataErrors(toFix, events)
   } else
     low(
       events.length,
       `events' data starting with`,
       events[0].tournamentName,
-      'seems complete and accurate'
+      'seems complete and accurate',
     )
   return gotPlayers
 }
@@ -33,10 +29,8 @@ async function checkForAccuracy(events, gotPlayers) {
   const eventsToDeleteAndReAdd = []
   await Promise.all(
     events.map(async event =>
-      eventsToDeleteAndReAdd.push(
-        await checkSingleEvent(event, gotPlayers)
-      )
-    )
+      eventsToDeleteAndReAdd.push(await checkSingleEvent(event, gotPlayers)),
+    ),
   )
   return eventsToDeleteAndReAdd.filter(e => e)
 }
@@ -45,23 +39,16 @@ async function checkSingleEvent(event, gotPlayers) {
   let willDeleteAndReAdd = false
   await Promise.all(
     event.participants.map(async participant => {
-      const player = await db.getPlayerById(
-        event.game,
-        participant.id
-      )
+      const player = await db.getPlayerById(event.game, participant.id)
       if (!player) {
         logError('Missing player', participant.tag, participant.id)
         willDeleteAndReAdd = true
         return
       }
-      if (
-        !gotPlayers.find(
-          p => p.id === player.id && p.game === player.game
-        )
-      )
+      if (!gotPlayers.find(p => p.id === player.id && p.game === player.game))
         gotPlayers.push(player)
       const playerInEvent = (player.participatedInEvents || []).find(
-        e => e.id === event.id
+        e => e.id === event.id,
       )
       // todo batch these
       if (!playerInEvent && !player.redirect) {
@@ -72,11 +59,11 @@ async function checkSingleEvent(event, gotPlayers) {
           event.service,
           'entry for',
           participant.tag,
-          participant.id
+          participant.id,
         )
         willDeleteAndReAdd = true
       }
-    })
+    }),
   )
   if (willDeleteAndReAdd) return event
 }
@@ -100,7 +87,7 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
   log(
     'will remove entry from',
     Object.keys(affectedPlayers).length,
-    'players...'
+    'players...',
   )
 
   let updatedPlayersNum = 0
@@ -108,25 +95,20 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
   await Promise.all(
     Object.keys(affectedPlayers).map(async id => {
       return new Promise(async resolve => {
-        const player = await db.getPlayerById(
-          affectedPlayers[id][0].game,
-          id
-        )
+        const player = await db.getPlayerById(affectedPlayers[id][0].game, id)
         if (!player) {
           logError('attempted to fix player that does not exist:', id)
           return resolve()
         }
         updatedPlayersNum++
-        const participatedInEvents = (
-          player.participatedInEvents || []
-        ).filter(
-          e => !affectedPlayers[id].find(stub => stub.id === e.id)
+        const participatedInEvents = (player.participatedInEvents || []).filter(
+          e => !affectedPlayers[id].find(stub => stub.id === e.id),
         )
         player.participatedInEvents = participatedInEvents
         await db.updatePlayer(player)
         resolve()
       })
-    })
+    }),
   )
 
   log('deleted record of event/s from', updatedPlayersNum, 'players')

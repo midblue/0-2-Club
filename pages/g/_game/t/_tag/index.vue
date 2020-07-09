@@ -5,7 +5,7 @@
 <script>
 import axios from '~/plugins/axios'
 import PlayerView from '~/components/PlayerView'
-const { parseIp } = require('~/common/functions').default
+const { parseIp } = require('~/common/functions')
 
 export default {
   scrollToTop: true,
@@ -14,10 +14,10 @@ export default {
     if (req) {
       ipInfo = parseIp(req)
       if (ipInfo.log)
-        require('~/api/scripts/log')('page:tag', 'gray')(
+        require('~/server/scripts/log')('page:tag', 'gray')(
           ipInfo.name || ipInfo.ip,
           params.game,
-          params.tag
+          params.tag,
         )
       if (!ipInfo.allowed)
         return error({ statusCode: 404, message: 'Not found.' })
@@ -25,12 +25,10 @@ export default {
     return axios
       .get(
         ipInfo
-          ? `/api/points/${params.game}/tag/${encodeURIComponent(
-              params.tag
-            )}/`
-          : `/api/points/${params.game}/tag/${encodeURIComponent(
-              params.tag
-            )}/active`
+          ? `/api/player/${params.game}/tag/${encodeURIComponent(params.tag)}/`
+          : `/api/player/${params.game}/tag/${encodeURIComponent(
+              params.tag,
+            )}/active`,
       )
       .then(res => {
         if (res.data && !res.data.err && !res.data.disambiguation)
@@ -68,7 +66,7 @@ export default {
           hid: `og:url`,
           property: 'og:url',
           content: `http://www.0-2.club/${encodeURIComponent(
-            this.player.game
+            this.player.game,
           )}/t/${encodeURIComponent(this.player.tag)}/`,
         },
         {

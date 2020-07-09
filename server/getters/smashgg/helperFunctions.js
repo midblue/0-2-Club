@@ -1,7 +1,4 @@
-const {
-  parseParticipantTag,
-  gameTitle,
-} = require('../../../common/functions').default
+const { parseParticipantTag, gameTitle } = require('../../../common/functions')
 
 const silent = () => {}
 const logger = require('../../scripts/log')
@@ -13,11 +10,7 @@ const logError = logger('smashgg', 'yellow')
 module.exports = {
   isComplete(event) {
     if (event.state !== 'COMPLETED') return false
-    if (
-      event.sets &&
-      event.sets.nodes &&
-      event.sets.nodes.length > 0
-    ) {
+    if (event.sets && event.sets.nodes && event.sets.nodes.length > 0) {
       for (let set of event.sets.nodes) {
         if (
           !set.slots[0].standing.placement ||
@@ -44,17 +37,14 @@ module.exports = {
       let isProbablyDoubles = 0
       for (let c = 0; c < 6; c++) {
         const set =
-          event.sets.nodes[
-            Math.floor(Math.random() * event.sets.nodes.length)
-          ]
-        if (set.slots.find(s => s.standing.placement > 2))
-          return false // 3 or more players
+          event.sets.nodes[Math.floor(Math.random() * event.sets.nodes.length)]
+        if (set.slots.find(s => s.standing.placement > 2)) return false // 3 or more players
         if (
           parseParticipantTag(
-            set.slots[0].entrant.participants[0].player.gamerTag
+            set.slots[0].entrant.participants[0].player.gamerTag,
           ).indexOf('/') > -1 ||
           parseParticipantTag(
-            set.slots[1].entrant.participants[0].player.gamerTag
+            set.slots[1].entrant.participants[0].player.gamerTag,
           ).indexOf('/') > -1
         )
           isProbablyDoubles++
@@ -72,11 +62,10 @@ module.exports = {
               .filter(
                 event =>
                   (!game ||
-                    gameTitle(event.videogame.name) ===
-                      gameTitle(game)) &&
+                    gameTitle(event.videogame.name) === gameTitle(game)) &&
                   event.state === 'COMPLETED' &&
                   event.sets.nodes &&
-                  event.sets.nodes.length > 0
+                  event.sets.nodes.length > 0,
               )
               .map(event => {
                 const [
@@ -84,7 +73,7 @@ module.exports = {
                   tournamentSlug,
                   eventSlug,
                 ] = /tournament\/([^/]*)\/event\/([^/]*)/g.exec(
-                  event.slug || event.eventSlug
+                  event.slug || event.eventSlug,
                 )
                 return {
                   service: 'smashgg',

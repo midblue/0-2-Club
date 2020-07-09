@@ -1,6 +1,8 @@
 const points = require('../points/points')
 const db = require('./firebaseClient')
 
+const io = require('../io/io')()
+
 const logger = require('../scripts/log')
 const low = logger('points&peers1', 'gray')
 const log = logger('points&peers1', 'white')
@@ -8,27 +10,51 @@ const logAdd = logger('points&peers1', 'green')
 const logInfo = logger('points&peers1', 'blue')
 const logError = logger('points&peers1', 'yellow')
 
-const minUpdateCutoff = 10 * 1000
+const minUpdateCutoff = 2 * 60 * 1000
 
-module.exports = async function({ game, id, tag }) {
+module.exports = async function({ game, id, tag }, forceUpdate = false) {
   // * player object might not be fully up-to-date, so grab it again
   const player = await db.getPlayer({ game, id, tag })
   if (!player) return logError('player not found!', game, id, tag)
 
-  // if (player.lastUpdated * 1000 || 0 > Date.now() - minUpdateCutoff)
-  //   return low(
-  //     'Not updating',
-  //     player.tag,
-  //     '— was updated very recently',
-  //     player.lastUpdated * 1000,
-  //     Date.now() - minUpdateCutoff,
-  //   )
+  if (
+    !forceUpdate &&
+    Date.now() - (player.lastUpdated * 1000 || 0) < minUpdateCutoff
+  )
+    return low(
+      'Not updating',
+      player.tag,
+      '— was updated very recently',
+      `(${((Date.now() - (player.lastUpdated * 1000 || 0)) / 1000 / 60).toFixed(
+        2,
+      )} minutes ago)`,
+    )
 
+  io.to(`${player.game}/${player.id}`).emit(
+    'notification',
+    'Updating points & peers...',
+  )
+  io.to(`${player.game}/${player.tag}`).emit(
+    'notification',
+    'Updating points & peers...',
+  )
+  // just for logging purposes
+  const lengths = {
+    prevPoints: (player.points || []).length,
+    prevPeers: (player.peers || []).length,
+  }
   // get points
   let playerWithUnsavedPoints = await recalculatePoints(player)
 
   // then, get peers
   let playerWithUnsavedPeers = await recalculatePeers(player)
+
+  lengths.newPoints = playerWithUnsavedPoints
+    ? playerWithUnsavedPoints.points.length
+    : 0
+  lengths.newPeers = playerWithUnsavedPeers
+    ? playerWithUnsavedPeers.peers.length
+    : 0
 
   if (playerWithUnsavedPeers) player.peers = playerWithUnsavedPeers.peers
   if (playerWithUnsavedPoints) player.points = playerWithUnsavedPoints.points
@@ -36,7 +62,13 @@ module.exports = async function({ game, id, tag }) {
   await db.updatePlayer(player)
   if (!playerWithUnsavedPeers && !playerWithUnsavedPoints)
     low('nothing to save for player', player.tag)
-  else logAdd(`saved points/peers/+ for ${player.tag}`)
+  else
+    logAdd(
+      `saved points/peers/+ for ${player.tag} (points: ${lengths.prevPoints}->${lengths.newPoints}, peers: ${lengths.prevPeers}->${lengths.newPeers})`,
+    )
+
+  io.to(`${player.game}/${player.id}`).emit('playerFullyUpdated', player)
+  io.to(`${player.game}/${player.tag}`).emit('playerFullyUpdated', player)
 
   return player
 }

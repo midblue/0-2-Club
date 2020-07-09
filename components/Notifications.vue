@@ -1,18 +1,18 @@
 <template>
   <div class="notifications">
     <transition-group name="notification" tag="div">
-      <div v-if="isLoading" key="isLoading" class="notification">
-        <span>
-          <img class="loader" src="~/assets/img/gridloader.svg" />Loading latest
-          data...
-        </span>
-      </div>
       <div
         v-for="(notification, index) in notifications"
         :key="notification + index"
         class="notification"
       >
         <span v-html="notification"></span>
+      </div>
+      <div v-if="isLoading" key="isLoading" class="notification">
+        <span>
+          <img class="loader" src="~/assets/img/gridloader.svg" />Loading latest
+          data...
+        </span>
       </div>
     </transition-group>
   </div>

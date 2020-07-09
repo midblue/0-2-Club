@@ -202,7 +202,7 @@ export default {
       this.$store.commit('setIsLoading', true)
       this.$store.dispatch('notifications/notify', n)
     })
-    this.socket.on('endEventSearch', async data => {
+    this.socket.on('playerFullyUpdated', async data => {
       await this.refreshPlayer()
       this.$store.commit('setIsLoading', false)
       this.$store.dispatch('notifications/notify', `Up to date!`)
@@ -230,12 +230,18 @@ export default {
             )),
       )
       if (!newEventsWithPlayer.length) return
-      this.$store.dispatch(
-        'notifications/notify',
-        `Added ${newEventsWithPlayer.length} more event${
-          newEventsWithPlayer.length === 1 ? '' : 's'
-        } to ${this.player.tag}'s history!`,
-      )
+      if (newEventsWithPlayer.length > 1)
+        this.$store.dispatch(
+          'notifications/notify',
+          `Added ${newEventsWithPlayer.length} more event${
+            newEventsWithPlayer.length === 1 ? '' : 's'
+          } to ${this.player.tag}'s history!`,
+        )
+      else
+        this.$store.dispatch(
+          'notifications/notify',
+          `Added ${newEventsWithPlayer[0].name} @ ${newEventsWithPlayer[0].tournamentName} to ${this.player.tag}'s history!`,
+        )
       this.refreshPlayer()
     },
     refreshPlayer() {

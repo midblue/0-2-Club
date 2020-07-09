@@ -5,6 +5,7 @@ const log = logger('api', 'gray')
 
 const get = require('../getters/get')
 const updateManager = require('../updater/updateManager')
+const updateSinglePlayerPointsAndPeers = require('../db/updateSinglePlayerPointsAndPeers')
 
 router.get('/test', (req, res) => {
   res.json({ test: 'success' })
@@ -23,13 +24,14 @@ router.get('/player/:game/tag/:tag/:active*?', async (req, res, next) => {
   const tag = decodeURIComponent(req.params.tag)
   const setActive = !!req.params.active
   // log('player with points by tag:', tag)
-  const foundPoints = await get.player({
+  const foundPlayer = await get.player({
     game,
     tag,
     setActive,
   })
-  if (foundPoints) {
-    res.json(foundPoints)
+  if (foundPlayer) {
+    if (setActive) updateSinglePlayerPointsAndPeers(foundPlayer)
+    res.json(foundPlayer)
   } else {
     res.json({ err: 'No player in database by that tag.' })
   }
@@ -40,9 +42,10 @@ router.get('/player/:game/id/:id/:active*?', async (req, res, next) => {
   const game = decodeURIComponent(req.params.game)
   const id = parseInt(decodeURIComponent(req.params.id))
   const setActive = !!req.params.active
-  const foundPoints = await get.player({ game, id, setActive })
-  if (foundPoints) {
-    res.json(foundPoints)
+  const foundPlayer = await get.player({ game, id, setActive })
+  if (foundPlayer) {
+    if (setActive) updateSinglePlayerPointsAndPeers(foundPlayer)
+    res.json(foundPlayer)
   } else {
     res.json({ err: 'No player in database by that id.' })
   }

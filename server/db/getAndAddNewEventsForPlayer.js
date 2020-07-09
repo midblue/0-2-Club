@@ -28,15 +28,20 @@ module.exports = async function(player, skipOwnerIds = []) {
   if (Array.isArray(player)) return [] // cancel on disambig
 
   io.to(`${player.game}/${player.id}`).emit('startEventSearch')
+  io.to(`${player.game}/${player.tag}`).emit('startEventSearch')
   log('looking for new events for', player.tag)
 
   io.to(`${player.game}/${player.id}`).emit(
     'notification',
     'Checking for potential new events...',
   )
+  io.to(`${player.game}/${player.tag}`).emit(
+    'notification',
+    'Checking for potential new events...',
+  )
   const newOwnerIds = getOwnerIds(player, skipOwnerIds)
 
-  const maxNewEvents = 50
+  const maxNewEvents = 30
   let stubs = (
     await getMoreEventStubs(player, skipOwnerIds.length ? newOwnerIds : null)
   ).slice(0, maxNewEvents)
@@ -47,6 +52,10 @@ module.exports = async function(player, skipOwnerIds = []) {
       'notification',
       `<span>Found ${stubs.length} events that you <i>might</i> be in.</span>`,
     )
+  io.to(`${player.game}/${player.tag}`).emit(
+    'notification',
+    `<span>Found ${stubs.length} events that you <i>might</i> be in.</span>`,
+  )
 
   // filter already queued events
   stubs = stubs.filter(
@@ -102,6 +111,11 @@ module.exports = async function(player, skipOwnerIds = []) {
         `Loaded ${1} of ${remainingStubs.length +
           1} remaining potential events...`,
       )
+      io.to(`${player.game}/${player.tag}`).emit(
+        'notification',
+        `Loaded ${1} of ${remainingStubs.length +
+          1} remaining potential events...`,
+      )
       io.to(`${player.game}`).emit('newEvents', [loadedEventData])
 
       // remainingStubs = remainingStubs.slice(perBatch) // advance to next set
@@ -122,16 +136,7 @@ module.exports = async function(player, skipOwnerIds = []) {
     low('no new events found for', player.tag)
   }
 
-  io.to(`${player.game}/${player.id}`).emit(
-    'notification',
-    'Updating points & peers...',
-  )
-  const fullyUpdatedPlayer = await updateSinglePlayerPointsAndPeers(player)
-
-  io.to(`${player.game}/${player.id}`).emit(
-    'endEventSearch',
-    fullyUpdatedPlayer,
-  )
+  await updateSinglePlayerPointsAndPeers(player, true)
 
   return { newOwnerIds }
 }

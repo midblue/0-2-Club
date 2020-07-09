@@ -357,18 +357,17 @@ module.exports = {
     writes++
   },
 
-  async updatePlayer(player) {
+  async updatePlayer(player, setLastUpdated = true) {
     const playerData = prep.pruneUndefined(player)
     memoizedPlayers.set(player.id + player.game, playerData)
     const gameRef = await getGameRef(player.game)
     let playerRef = gameRef.collection('players').doc(`${player.id}`)
+    const newData = { ...playerData }
+    if (setLastUpdated) newData.lastUpdated = parseInt(Date.now() / 1000)
     await playerRef
       .set(
         // switched to .set because .update was slow
-        {
-          ...playerData,
-          lastUpdated: parseInt(Date.now() / 1000),
-        },
+        newData,
         { merge: true },
       )
       .catch(err => {

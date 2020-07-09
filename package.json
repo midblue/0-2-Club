@@ -19,7 +19,7 @@
     "cross-env": "^7.0.2",
     "express": "^4.17.1",
     "firebase-admin": "^8.9.2",
-    "nuxt": "latest",
+    "nuxt": "^2.13.3",
     "socket.io": "^2.3.0",
     "source-map-support": "^0.5.16",
     "vue-chartjs": "^3.5.0",
@@ -28,9 +28,9 @@
     "vue-social-sharing": "^2.4.7"
   },
   "devDependencies": {
-    "node-sass": "^4.13.1",
-    "sass-loader": "^8.0.2",
     "dotenv": "^8.2.0",
+    "node-sass": "^4.14.1",
+    "sass-loader": "^8.0.2",
     "smashgg.js": "^4.1.10"
   }
 }

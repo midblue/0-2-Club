@@ -34,6 +34,8 @@ async function makeQuery(query, variables) {
           ? error.response.data
             ? error.response.data.message
             : error.response.status
+            ? error.response.status
+            : error
           : error,
       )
       return

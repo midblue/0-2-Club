@@ -75,51 +75,41 @@ module.exports = async function(player, skipOwnerIds = []) {
       'events that are already being loaded',
     )
 
-  let remainingStubs = [...stubs]
-  let shouldContinue = remainingStubs.length > 0
-  if (shouldContinue) {
-    let currentStub = remainingStubs.shift()
-    let preloadedEventData = services[currentStub.service].event(currentStub)
-    log('preloading', currentStub.eventSlug, currentStub.tournamentSlug)
+  if (stubs.length) {
+    await Promise.all(
+      stubs.map(async stub => {
+        let loadedEventData = await services[stub.service].event(stub)
+        log('loading', stub.eventSlug, stub.tournamentSlug)
+        await saveEvents([loadedEventData], player.game) // save event fully
+        io.to(`${player.game}`).emit('newEvents', [loadedEventData])
+      }),
+    )
 
-    while (shouldContinue) {
-      // log(
-      //   `batching up to ${perBatch} of ${remainingStubs.length} remaining new events... (${willLoad.length} total)`,
-      // )
-      // const currentStubs = remainingStubs.slice(0, perBatch) // grab a subset
-      // let newEvents = await services[stub.service].event(stub(currentStubs)) // get data
-      // newEvents = newEvents.filter(e => e && !e.err)
+    // let remainingStubs = [...stubs]
+    // let shouldContinue = remainingStubs.length > 0
+    // if (shouldContinue) {
+    //   let currentStub = remainingStubs.shift()
+    //   let preloadedEventData = services[currentStub.service].event(currentStub)
+    //   log('preloading', currentStub.eventSlug, currentStub.tournamentSlug)
 
-      // grab preloaded event data
-      preloadedEventData = await preloadedEventData
-      const loadedEventData = preloadedEventData
-      const saveComplete = saveEvents([loadedEventData], player.game) // save event fully
+    //   while (shouldContinue) {
+    //     // grab preloaded event data
+    //     preloadedEventData = await preloadedEventData
+    //     const loadedEventData = preloadedEventData
+    //     const saveComplete = saveEvents([loadedEventData], player.game) // save event fully
 
-      shouldContinue = remainingStubs.length > 0
+    //     shouldContinue = remainingStubs.length > 0
 
-      // preload next event data
-      if (shouldContinue) {
-        currentStub = remainingStubs.shift()
-        preloadedEventData = services[currentStub.service].event(currentStub)
-        log('preloading', currentStub.eventSlug, currentStub.tournamentSlug)
-      }
+    //     // preload next event data
+    //     if (shouldContinue) {
+    //       currentStub = remainingStubs.shift()
+    //       preloadedEventData = services[currentStub.service].event(currentStub)
+    //     }
 
-      await saveComplete
+    //     await saveComplete
 
-      // io.to(`${player.game}/${player.id}`).emit(
-      //   'notification',
-      //   `Loaded ${1} of ${remainingStubs.length +
-      //     1} remaining potential events...`,
-      // )
-      // io.to(`${player.game}/${player.tag}`).emit(
-      //   'notification',
-      //   `Loaded ${1} of ${remainingStubs.length +
-      //     1} remaining potential events...`,
-      // )
-      io.to(`${player.game}`).emit('newEvents', [loadedEventData])
-
-      // remainingStubs = remainingStubs.slice(perBatch) // advance to next set
-    }
+    //     io.to(`${player.game}`).emit('newEvents', [loadedEventData])
+    //   }
 
     stubs.forEach(s =>
       willLoad.splice(
@@ -144,7 +134,7 @@ module.exports = async function(player, skipOwnerIds = []) {
 async function saveEvents(newEvents, game) {
   const uniqueParticipants = []
 
-  newEvents = newEvents.filter(e => e)
+  newEvents = newEvents.filter(e => e).filter(e => e.participants)
 
   for (let e of newEvents) {
     uniqueParticipants.push(

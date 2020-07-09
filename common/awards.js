@@ -86,7 +86,8 @@ function bestStreak(player, events) {
 
   const levelStart = levels[level] || 0,
     levelEnd = levels[level + 1],
-    levelProgress = (total - levelStart) / (levelEnd - levelStart)
+    levelProgress = total / levelEnd
+  // levelProgress = (total - levelStart) / (levelEnd - levelStart)
 
   const bestAttemptString = `Best: ${total} on ${new Date(
     bestStreak.date * 1000,
@@ -141,7 +142,7 @@ function majors(player, events) {
 
   const levelStart = levels[level] || 0,
     levelEnd = levels[level + 1],
-    levelProgress = (total - levelStart) / (levelEnd - levelStart)
+    levelProgress = total / levelEnd
 
   const bestAttemptString = ``
 
@@ -280,7 +281,7 @@ function mostWeeksInARow(player, events) {
 
   const levelStart = levels[level] || 0,
     levelEnd = levels[level + 1],
-    levelProgress = (total - levelStart) / (levelEnd - levelStart)
+    levelProgress = total / levelEnd
 
   const bestAttemptString = `Best: ${total} on ${new Date(
     mostWeeksInARow.start * 1000,
@@ -349,7 +350,7 @@ function mostInOneWeek(player, events) {
 
   const levelStart = levels[level] || 0,
     levelEnd = levels[level + 1],
-    levelProgress = (total - levelStart) / (levelEnd - levelStart)
+    levelProgress = total / levelEnd
 
   const bestAttemptString = `Best: <b>${total}</b> on ${new Date(
     mostInOneWeek.start * 1000,
@@ -491,7 +492,7 @@ function yearlyAttendance(player, events) {
 
     const levelStart = levels[level] || 0,
       levelEnd = levels[level + 1],
-      levelProgress = (total - levelStart) / (levelEnd - levelStart)
+      levelProgress = total / levelEnd
 
     const bestAttemptString = `Current: <b>${total}%</b> events this year`
 

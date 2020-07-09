@@ -2,7 +2,7 @@
   <div class="eventsearch">
     <button
       class="low marr"
-      v-if="player.id && player.tag && !hasLoadedGetMore"
+      v-if="player.id && player.tag && !hasLoadedGetMore && !updatedTooRecently"
       @click="getMore"
     >
       Auto-Scan For Recent Events
@@ -41,6 +41,11 @@ export default {
       searchUrl:
         'https://smash.gg/tournament/battle-gateway-21-1/events/melee-singles-vs/standings?page=2',
     }
+  },
+  computed: {
+    updatedTooRecently() {
+      return Date.now() - (this.player.lastUpdated || 0) * 1000 < 30 * 60 * 1000
+    },
   },
   watch: {},
   mounted() {},

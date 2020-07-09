@@ -65,6 +65,8 @@ import levels from '~/common/levels'
 import LineChart from './LineChart.js'
 import axios from 'axios'
 
+// todo really wish peers linked to their page here
+
 export default {
   props: {},
   components: { LineChart },

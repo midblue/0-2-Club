@@ -62,13 +62,13 @@ module.exports = async function({ game, id, tag }, forceUpdate = false) {
   await db.updatePlayer(player)
   if (!playerWithUnsavedPeers && !playerWithUnsavedPoints)
     low('nothing to save for player', player.tag)
-  else
+  else {
     logAdd(
       `saved points/peers/+ for ${player.tag} (points: ${lengths.prevPoints}->${lengths.newPoints}, peers: ${lengths.prevPeers}->${lengths.newPeers})`,
     )
-
-  io.to(`${player.game}/${player.id}`).emit('playerFullyUpdated', player)
-  io.to(`${player.game}/${player.tag}`).emit('playerFullyUpdated', player)
+    io.to(`${player.game}/${player.id}`).emit('playerFullyUpdated', player)
+    io.to(`${player.game}/${player.tag}`).emit('playerFullyUpdated', player)
+  }
 
   return player
 }

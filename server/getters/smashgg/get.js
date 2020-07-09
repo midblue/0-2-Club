@@ -348,7 +348,7 @@ module.exports = {
       ownerIds.map(async ownerId => {
         let data = null,
           attempts = 0
-        while (data === null && attempts < 3) {
+        while (data === null && attempts < 2) {
           data = await makeQuery(queryTournamentsByOwner, {
             page: 1,
             ownerId,

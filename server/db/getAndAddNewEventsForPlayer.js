@@ -106,16 +106,16 @@ module.exports = async function(player, skipOwnerIds = []) {
 
       await saveComplete
 
-      io.to(`${player.game}/${player.id}`).emit(
-        'notification',
-        `Loaded ${1} of ${remainingStubs.length +
-          1} remaining potential events...`,
-      )
-      io.to(`${player.game}/${player.tag}`).emit(
-        'notification',
-        `Loaded ${1} of ${remainingStubs.length +
-          1} remaining potential events...`,
-      )
+      // io.to(`${player.game}/${player.id}`).emit(
+      //   'notification',
+      //   `Loaded ${1} of ${remainingStubs.length +
+      //     1} remaining potential events...`,
+      // )
+      // io.to(`${player.game}/${player.tag}`).emit(
+      //   'notification',
+      //   `Loaded ${1} of ${remainingStubs.length +
+      //     1} remaining potential events...`,
+      // )
       io.to(`${player.game}`).emit('newEvents', [loadedEventData])
 
       // remainingStubs = remainingStubs.slice(perBatch) // advance to next set

@@ -57,7 +57,11 @@ module.exports = async function(players, quick = false) {
   if (playersToUpdate.length) {
     low('saving updated players to database...')
     await Promise.all(playersToUpdate.map(p => db.updatePlayer(p, !quick)))
-    logAdd(`saved points/peers/+ for ${playersToUpdate.length} player/s`)
+    logAdd(
+      `saved ${quick ? 'fast ' : ''}points/peers/+ for ${
+        playersToUpdate.length
+      } player/s`,
+    )
   }
 }
 

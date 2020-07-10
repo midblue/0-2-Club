@@ -27,27 +27,23 @@ clearTimeout(scanTimeout)
 clearTimeout(udpdateTimeout) // these are here for hot reloading
 scanTimeout = setTimeout(
   scanForNewEvents,
-  Math.round(aDayInMilliseconds * 1.997)
+  Math.round(aDayInMilliseconds * 1.997),
 )
 udpdateTimeout = setTimeout(
   rollingUpdate,
-  Math.round(aDayInMilliseconds / 20.03)
+  Math.round(aDayInMilliseconds / 60.03),
 )
 
 // this will add new events for active players.
 async function scanForNewEvents() {
   if (isUpdating || isScanning)
-    return logError(
-      'Skipping attempt to scan while update/scan is running'
-    )
+    return logError('Skipping attempt to scan while update/scan is running')
   if (!dbUsageIsOkay()) {
     scanTimeout = setTimeout(
       scanForNewEvents,
-      Math.round(aDayInMilliseconds / 2)
+      Math.round(aDayInMilliseconds / 2),
     ) // try again in 12 hours
-    return logError(
-      'Too close to db usage cap to scan, postponing...'
-    )
+    return logError('Too close to db usage cap to scan, postponing...')
   }
   isScanning = true
   logInfo('starting scan for new events')
@@ -65,30 +61,26 @@ async function scanForNewEvents() {
   isScanning = false
   scanTimeout = setTimeout(
     scanForNewEvents,
-    Math.round(aDayInMilliseconds * 1.997)
+    Math.round(aDayInMilliseconds * 1.997),
   ) // run again in 2 days
 }
 
 // the goal here is to update a fairly consistent number of events & players each pass, without going overboard, and over a long enough timeline eventually touching every single player and event.
 async function rollingUpdate() {
   if (isUpdating || isScanning)
-    return logError(
-      'Skipping attempt to update while update/scan is running'
-    )
+    return logError('Skipping attempt to update while update/scan is running')
   if (!dbUsageIsOkay()) {
     updateTimeout = setTimeout(
       rollingUpdate,
-      Math.round(aDayInMilliseconds / 2)
+      Math.round(aDayInMilliseconds / 2),
     ) // try again in 12 hours
-    return logError(
-      'Too close to db usage cap to update, postponing...'
-    )
+    return logError('Too close to db usage cap to update, postponing...')
   }
   isUpdating = true
   logInfo('starting rolling update')
   let someEvents, players
   try {
-    someEvents = await db.getSomeEvents(3)
+    someEvents = await db.getSomeEvents(1)
 
     players = await verifyEvents(someEvents)
 
@@ -108,12 +100,12 @@ async function rollingUpdate() {
     someEvents.length,
     'events and',
     players.length,
-    'players.'
+    'players.',
   )
   isUpdating = false
   updateTimeout = setTimeout(
     rollingUpdate,
-    Math.round(aDayInMilliseconds / 20.03)
+    Math.round(aDayInMilliseconds / 20.03),
   ) // run again in a few hours
 }
 
@@ -127,7 +119,7 @@ function dbUsageIsOkay() {
     parseInt(writes * 100) + '%',
     'writes,',
     parseInt(deletes * 100) + '%',
-    'deletes'
+    'deletes',
   )
   if (reads > limit || writes > limit || deletes > limit) return false
   return true

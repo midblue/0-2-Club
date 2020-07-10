@@ -128,6 +128,9 @@ module.exports = async function(player, skipOwnerIds = []) {
 
   await updateSinglePlayerPointsAndPeers(player, true)
 
+  io.to(`${player.game}/${player.id}`).emit('endEventSearch')
+  io.to(`${player.game}/${player.tag}`).emit('endEventSearch')
+
   return { newOwnerIds }
 }
 

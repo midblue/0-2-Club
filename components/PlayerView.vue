@@ -204,6 +204,9 @@ export default {
     })
     this.socket.on('playerFullyUpdated', async data => {
       await this.refreshPlayer()
+    })
+    this.socket.on('endEventSearch', async data => {
+      await this.refreshPlayer()
       this.$store.commit('setIsLoading', false)
       this.$store.dispatch('notifications/notify', `Up to date!`)
     })

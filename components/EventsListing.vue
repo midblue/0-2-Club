@@ -3,11 +3,12 @@
     <template v-if="displayEvents.length">
       <div>
         <EventListing
-          v-for="event in displayEvents"
+          v-for="(event, index) in displayEvents"
           :key="event.eventSlug + event.tournamentSlug"
           :event="event"
           :level="level"
           :game="game"
+          :openByDefault="index === 0"
         />
         <div class="sub disclaimer">
           <b>See something wrong?</b> Check back in a day or two — we fully

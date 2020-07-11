@@ -1,17 +1,21 @@
 <template>
-  <div class="panel" :class="{ open }" @click="open = !open">
-    <h3 :class="{ open }">
+  <div class="panel" :class="{ open }" @click="open ? null : (open = !open)">
+    <h3 :class="{ open }" @click.stop="open = !open">
       <span
         v-if="event.points.reduce((t, p) => t + p.value, 0)"
-        class="colorpad"
+        class="colorpad points"
         :style="{ background: `var(--l${level})` }"
-        >+{{ event.points.reduce((t, p) => t + p.value, 0) }}</span
+        ><span>+{{ event.points.reduce((t, p) => t + p.value, 0) }}</span></span
       >
-      {{ event.tournamentName }}
-      <span class="sub">
-        {{ event.name }} ({{
-          new Date(event.date * 1000).toLocaleDateString()
-        }})
+      <span class="title">
+        <span class="tournamentname">{{
+          event.tournamentName.replace(/ fe?a?tu?r?i?n?g?\.? .*/gi, '')
+        }}</span>
+        <br v-if="open" />
+        <span class="sub eventname">
+          {{ event.name.replace(/ fe?a?tu?r?i?n?g?\.? .*/gi, '') }}
+          ({{ new Date(event.date * 1000).toLocaleDateString() }})
+        </span>
       </span>
     </h3>
     <template v-if="open">
@@ -76,13 +80,14 @@
 <script>
 export default {
   props: {
+    openByDefault: { default: false },
     event: {},
     level: {},
     game: {},
   },
   data() {
     return {
-      open: false,
+      open: this.openByDefault,
     }
   },
   computed: {},
@@ -91,21 +96,52 @@ export default {
 
 <style scoped lang="scss">
 .panel {
-  // cursor: pointer;
-
   &:not(.open) {
     padding-top: 1.5em;
     padding-bottom: 1.5em;
+    cursor: pointer;
   }
 }
 
 h3 {
-  line-height: 1.1;
+  line-height: 1;
   margin-top: 0;
+  cursor: pointer;
+  display: flex;
 
   &:not(.open) {
     font-size: 1.2em;
     margin-bottom: 0;
+  }
+
+  .points {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5em;
+    padding: 0.15em 0.35em;
+    position: relative;
+    top: -0.1em;
+
+    span {
+      position: relative;
+      top: 0.05em;
+    }
+  }
+
+  .title {
+    line-height: 1.1;
+    flex: 1;
+
+    .tournamentname {
+      font-size: 1.2em;
+    }
+  }
+
+  &.open {
+    .points {
+      padding: 0.15em 0.5em;
+    }
   }
 }
 

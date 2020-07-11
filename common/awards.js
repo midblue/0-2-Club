@@ -1,11 +1,10 @@
 const { getPlacingRatio } = require('./functions')
 
 // ? awards for:
-// consistently attending tournaments x weeks in a row
 // attending tournaments in a series
-// improving win ratio x% in x weeks
 // lifetime total x unique opponents
 // x total rivals / rivals beat
+// todo podium finishes
 
 module.exports = function(player) {
   if (!player || !player.participatedInEvents) return []

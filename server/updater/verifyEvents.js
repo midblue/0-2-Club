@@ -36,14 +36,14 @@ async function checkForAccuracy(events, gotPlayers) {
 }
 
 async function checkSingleEvent(event, gotPlayers) {
-  let willDeleteAndReAdd = false
-  const missingEventsForPlayerCount = 0
+  const missingEventsForPlayerCount = 0,
+    missingPlayersCount = 0
   await Promise.all(
     event.participants.map(async participant => {
       const player = await db.getPlayerById(event.game, participant.id)
       if (!player) {
         logError('Missing player', participant.tag, participant.id)
-        willDeleteAndReAdd = true
+        missingPlayersCount++
         return
       }
       if (!gotPlayers.find(p => p.id === player.id && p.game === player.game))
@@ -51,10 +51,12 @@ async function checkSingleEvent(event, gotPlayers) {
       const playerInEvent = (player.participatedInEvents || []).find(
         e => e.id === event.id,
       )
-      if (!playerInEvent && !player.redirect) missingEventsForPlayerCount++
+      if (!playerInEvent && !player.redirect) {
+        missingEventsForPlayerCount++
+      }
     }),
   )
-  if (missingEventsForPlayerCount > 0) {
+  if (missingEventsForPlayerCount > 0 || missingPlayersCount > 0) {
     logError(
       'Missing event',
       event.tournamentName,
@@ -62,7 +64,9 @@ async function checkSingleEvent(event, gotPlayers) {
       event.service,
       'entry for',
       missingEventsForPlayerCount,
-      'players',
+      'players, and missing',
+      missingPlayersCount,
+      'players in event.',
     )
     return event
   }

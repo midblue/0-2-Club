@@ -80,13 +80,13 @@ async function rollingUpdate() {
   logInfo('starting rolling update')
   let someEvents, players
   try {
-    someEvents = await db.getSomeEvents(1)
+    someEvents = await db.getSomeEvents(2)
 
     players = await verifyEvents(someEvents)
 
     await verifyPlayers(players)
 
-    await updatePlayersPointsAndPeers(players)
+    await updatePlayersPointsAndPeers(players, true) // could get too heavy here, so switching to quick mode
 
     await db.logUsage()
   } catch (e) {

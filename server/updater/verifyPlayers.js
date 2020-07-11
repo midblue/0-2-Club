@@ -22,7 +22,7 @@ module.exports = async function(players) {
         e =>
           e.service === event.service &&
           e.id === event.id &&
-          e.game === event.game
+          e.game === event.game,
       )
       let exists
       if (!known)
@@ -32,32 +32,38 @@ module.exports = async function(players) {
           game: player.game,
         })
       if (known || !exists) {
-        logError(
-          'Missing event',
-          event.tournamentName,
-          event.id,
-          event.service,
-          'in db. Found through',
-          player.tag,
-          player.id
-        )
         player.participatedInEvents.splice(index, 1)
-        knownMissing.push({
-          service: event.service,
-          id: event.id,
-          game: player.game,
-        })
         didUpdate = true
+
+        if (
+          !knownMissing.find(
+            km =>
+              km.service === event.service &&
+              km.id === event.id &&
+              km.game === event.game,
+          )
+        )
+          knownMissing.push({
+            service: event.service,
+            id: event.id,
+            game: player.game,
+          })
       }
     }
     if (didUpdate) {
       updated.push(player)
     }
   }
+  if (knownMissing.length)
+    logError(
+      'Missing events',
+      knownMissing.map(e => e.tournamentName).join(', '),
+      'in db.',
+    )
+
   if (updated.length) {
     low(`will update ${updated.length} players...`)
     await Promise.all(updated.map(p => db.updatePlayer(p)))
     logAdd(`updated ${updated.length} players`)
-  } else
-    low(`${players.length} players' data seems complete and accurate`)
+  } else low(`${players.length} players' data seems complete and accurate`)
 }

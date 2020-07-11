@@ -37,6 +37,7 @@ async function checkForAccuracy(events, gotPlayers) {
 
 async function checkSingleEvent(event, gotPlayers) {
   let willDeleteAndReAdd = false
+  const missingEventsForPlayerCount = 0
   await Promise.all(
     event.participants.map(async participant => {
       const player = await db.getPlayerById(event.game, participant.id)
@@ -50,22 +51,21 @@ async function checkSingleEvent(event, gotPlayers) {
       const playerInEvent = (player.participatedInEvents || []).find(
         e => e.id === event.id,
       )
-      // todo batch these
-      if (!playerInEvent && !player.redirect) {
-        logError(
-          'Missing event',
-          event.tournamentName,
-          event.id,
-          event.service,
-          'entry for',
-          participant.tag,
-          participant.id,
-        )
-        willDeleteAndReAdd = true
-      }
+      if (!playerInEvent && !player.redirect) missingEventsForPlayerCount++
     }),
   )
-  if (willDeleteAndReAdd) return event
+  if (missingEventsForPlayerCount > 0) {
+    logError(
+      'Missing event',
+      event.tournamentName,
+      event.id,
+      event.service,
+      'entry for',
+      missingEventsForPlayerCount,
+      'players',
+    )
+    return event
+  }
 }
 
 async function fixEventDataErrors(eventsToDeleteAndReAdd) {
@@ -81,10 +81,10 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
     }
     db.deleteEvent(event.id, event.service, event.game)
 
-    log('deleted event', event.name, event.tournamentName)
+    // log('deleted event', event.name, event.tournamentName)
   }
 
-  log(
+  low(
     'will remove entry from',
     Object.keys(affectedPlayers).length,
     'players...',
@@ -113,7 +113,7 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
 
   log('deleted record of event/s from', updatedPlayersNum, 'players')
 
-  log(`readding ${eventsToDeleteAndReAdd.length} event/s...`)
+  low(`readding ${eventsToDeleteAndReAdd.length} event/s...`)
 
   for (let event of eventsToDeleteAndReAdd) {
     await get.event({

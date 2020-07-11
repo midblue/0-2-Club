@@ -1,5 +1,5 @@
 <template>
-  <div class="panel" :class="{ open }">
+  <div class="panel" :class="{ open }" @click="open = !open">
     <h3 :class="{ open }">
       <span
         v-if="event.points.reduce((t, p) => t + p.value, 0)"
@@ -82,7 +82,7 @@ export default {
   },
   data() {
     return {
-      open: true,
+      open: false,
     }
   },
   computed: {},

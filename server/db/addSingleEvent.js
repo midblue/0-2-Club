@@ -49,6 +49,8 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
   }
   clearTimeout(clearLoadedPlayers)
 
+  const updatedExistingCount = 0
+
   // make full player data out of participants
   players = players.map(p => {
     if (!p.id) {
@@ -78,12 +80,7 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
         loadedPlayers[p.id].participatedInEvents[
           alreadyExistsIndex
         ] = eventParticipantData
-        // todo batch these
-        logError(
-          'updated participant data for',
-          loadedPlayers[p.id].tag,
-          `(event ${eventParticipantData.name} @ ${eventParticipantData.tournamentName})`,
-        )
+        updatedExistingCount++
       } else {
         loadedPlayers[p.id].participatedInEvents.push(eventParticipantData)
       }
@@ -92,6 +89,9 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
     return loadedPlayers[p.id]
   })
   clearTimeout(clearLoadedPlayers)
+
+  if (updatedExistingCount > 0)
+    logError('updated participant data for', updatedExistingCount, `players`)
 
   // calculate points, as far as possible
   // * without access to All Players, only opponent points from THIS event are possible... so we only calculate ones from this event.

@@ -224,7 +224,12 @@ module.exports = {
           data.events.currentCountedInRollingUpdate || 0
       })
 
-    log('getting some events starting from', getSomeEventsStartingPoint)
+    log(
+      'getting',
+      numberOfEvents,
+      'event/s starting from',
+      getSomeEventsStartingPoint,
+    )
 
     return db
       .collectionGroup('events')

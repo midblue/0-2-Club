@@ -36,7 +36,7 @@ async function checkForAccuracy(events, gotPlayers) {
 }
 
 async function checkSingleEvent(event, gotPlayers) {
-  const missingEventsForPlayerCount = 0,
+  let missingEventsForPlayerCount = 0,
     missingPlayersCount = 0
   await Promise.all(
     event.participants.map(async participant => {

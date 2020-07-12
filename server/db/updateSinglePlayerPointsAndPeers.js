@@ -27,7 +27,9 @@ module.exports = async function({ game, id, tag }, forceUpdate = false) {
       '— was updated very recently',
       `(${((Date.now() - (player.lastUpdated * 1000 || 0)) / 1000 / 60).toFixed(
         2,
-      )} minutes ago)`,
+      )} minutes ago, min update period is ${minUpdateCutoff /
+        1000 /
+        60} mins)`,
     )
 
   io.to(`${player.game}/${player.id}`).emit(

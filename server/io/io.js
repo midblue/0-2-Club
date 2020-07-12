@@ -13,7 +13,7 @@ module.exports = server => {
   const instantiatedIo = require('socket.io')(server)
   instantiatedIo.on('connection', socket => {
     socket.on('join', id => {
-      low('watching', id)
+      // low('watching', id)
       socket.join(id)
     })
     socket.on('leave', id => {

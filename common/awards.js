@@ -215,7 +215,7 @@ function totalGameWins(player, events) {
 
   const levelStart = levels[level] || 0,
     levelEnd = levels[level + 1],
-    levelProgress = (totalGameWins - levelStart) / (levelEnd - levelStart)
+    levelProgress = totalGameWins / levelEnd
 
   const bestAttemptString = `Current: ${totalGameWins}`
 

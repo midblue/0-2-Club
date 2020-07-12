@@ -181,6 +181,7 @@ export default {
       awards: this.awards,
     })
     this.recalculateAwards()
+    this.socketSetup()
   },
   mounted() {
     this.socketSetup()
@@ -197,6 +198,7 @@ export default {
   methods: {
     socketSetup() {
       if (
+        !process.client ||
         this.socket ||
         !this.initialPlayer.game ||
         (!this.initialPlayer.id && !this.initialPlayer.tag)

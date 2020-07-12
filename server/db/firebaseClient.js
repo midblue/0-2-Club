@@ -58,6 +58,7 @@ statsRef.get().then(doc => {
 // /*
 // ! wipe db for a game
 db.collection('games/Super Smash Bros. Melee/events')
+  .limit(50)
   .get()
   .then(res => {
     res.docs.forEach(doc =>
@@ -65,6 +66,7 @@ db.collection('games/Super Smash Bros. Melee/events')
     )
   })
 db.collection('games/Super Smash Bros. Melee/players')
+  .limit(50)
   .get()
   .then(res => {
     res.docs.forEach(doc =>

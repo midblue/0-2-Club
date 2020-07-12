@@ -181,35 +181,10 @@ export default {
     this.recalculateAwards()
   },
   created() {
-    if (
-      !this.initialPlayer.game ||
-      (!this.initialPlayer.id && !this.initialPlayer.tag)
-    )
-      return
-    this.socket = io.connect('/')
-    this.socket.emit(
-      'join',
-      `${this.initialPlayer.game}/${this.initialPlayer.id ||
-        this.initialPlayer.tag}`,
-    )
-    this.socket.emit('join', `${this.initialPlayer.game}`)
-
-    this.socket.on('startEventSearch', data => {
-      this.$store.commit('setIsLoading', true)
-    })
-    this.socket.on('newEvents', this.gotNewEvents)
-    this.socket.on('notification', n => {
-      this.$store.commit('setIsLoading', true)
-      this.$store.dispatch('notifications/notify', n)
-    })
-    this.socket.on('playerFullyUpdated', async data => {
-      await this.refreshPlayer()
-    })
-    this.socket.on('endEventSearch', async data => {
-      await this.refreshPlayer()
-      this.$store.commit('setIsLoading', false)
-      this.$store.dispatch('notifications/notify', `Up to date!`)
-    })
+    socketSetup()
+  },
+  mounted() {
+    socketSetup()
   },
   beforeDestroy() {
     this.socket.emit(
@@ -221,6 +196,39 @@ export default {
     this.$store.commit('setIsLoading', false)
   },
   methods: {
+    socketSetup() {
+      if (
+        this.socket ||
+        !document ||
+        !this.initialPlayer.game ||
+        (!this.initialPlayer.id && !this.initialPlayer.tag)
+      )
+        return
+      this.socket = io.connect('/')
+      this.socket.emit(
+        'join',
+        `${this.initialPlayer.game}/${this.initialPlayer.id ||
+          this.initialPlayer.tag}`,
+      )
+      this.socket.emit('join', `${this.initialPlayer.game}`)
+
+      this.socket.on('startEventSearch', data => {
+        this.$store.commit('setIsLoading', true)
+      })
+      this.socket.on('newEvents', this.gotNewEvents)
+      this.socket.on('notification', n => {
+        this.$store.commit('setIsLoading', true)
+        this.$store.dispatch('notifications/notify', n)
+      })
+      this.socket.on('playerFullyUpdated', async data => {
+        await this.refreshPlayer()
+      })
+      this.socket.on('endEventSearch', async data => {
+        await this.refreshPlayer()
+        this.$store.commit('setIsLoading', false)
+        this.$store.dispatch('notifications/notify', `Up to date!`)
+      })
+    },
     gotNewEvents(newEvents) {
       const newEventsWithPlayer = newEvents.filter(
         newEvent =>

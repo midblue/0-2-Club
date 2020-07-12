@@ -34,7 +34,6 @@ module.exports = async function(players) {
       if (known || !exists) {
         player.participatedInEvents.splice(index, 1)
         didUpdate = true
-
         if (
           !knownMissing.find(
             km =>
@@ -57,8 +56,8 @@ module.exports = async function(players) {
   if (knownMissing.length)
     logError(
       'Missing events',
-      knownMissing.map(e => e.tournamentName).join(', '),
-      'in db.',
+      knownMissing.map(e => e.id).join(', '),
+      'in db, removed from player histories',
     )
 
   if (updated.length) {

@@ -8,7 +8,9 @@
           :style="{ 'background-image': `url('${player.img}')` }"
           class="playericon big"
         />
-        <span class="text">{{ player.tag || 'Id #' + player.id }}</span>
+        <span class="text">{{
+          player.tag || initialPlayer.tag || 'Id #' + player.id
+        }}</span>
       </h1>
     </div>
 
@@ -180,9 +182,6 @@ export default {
     })
     this.recalculateAwards()
   },
-  created() {
-    this.socketSetup()
-  },
   mounted() {
     this.socketSetup()
   },
@@ -199,7 +198,6 @@ export default {
     socketSetup() {
       if (
         this.socket ||
-        !document ||
         !this.initialPlayer.game ||
         (!this.initialPlayer.id && !this.initialPlayer.tag)
       )

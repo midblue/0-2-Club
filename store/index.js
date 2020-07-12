@@ -1,5 +1,3 @@
-const vue = require('vue')
-
 export const state = () => ({
   isLoading: false,
   isMobile: false,

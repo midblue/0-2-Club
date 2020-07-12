@@ -49,7 +49,7 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
   }
   clearTimeout(clearLoadedPlayers)
 
-  const updatedExistingCount = 0
+  let updatedExistingCount = 0
 
   // make full player data out of participants
   players = players.map(p => {

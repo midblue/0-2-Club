@@ -57,22 +57,25 @@ statsRef.get().then(doc => {
 
 // /*
 // ! wipe db for a game
-db.collection('games/Super Smash Bros. Melee/events')
-  .limit(50)
-  .get()
-  .then(res => {
-    res.docs.forEach(doc =>
-      db.doc('games/Super Smash Bros. Melee/events/' + doc.id).delete(),
-    )
-  })
-db.collection('games/Super Smash Bros. Melee/players')
-  .limit(50)
-  .get()
-  .then(res => {
-    res.docs.forEach(doc =>
-      db.doc('games/Super Smash Bros. Melee/players/' + doc.id).delete(),
-    )
-  })
+setInterval(() => {
+  db.collection('games/Super Smash Bros. Melee/events')
+    .limit(50)
+    .get()
+    .then(res => {
+      res.docs.forEach(doc =>
+        db.doc('games/Super Smash Bros. Melee/events/' + doc.id).delete(),
+      )
+    })
+  db.collection('games/Super Smash Bros. Melee/players')
+    .limit(50)
+    .get()
+    .then(res => {
+      res.docs.forEach(doc =>
+        db.doc('games/Super Smash Bros. Melee/players/' + doc.id).delete(),
+      )
+    })
+}, 5000)
+
 // */
 
 setInterval(() => {

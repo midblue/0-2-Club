@@ -98,8 +98,11 @@ async function recalculatePeers(player) {
         game: player.game,
       })
       if (!event || !event.participants) return
-      const playerStanding = event.participants.find(p => p.id === player.id)
-        .standing
+      const foundPlayer = event.participants.find(
+        p => p.id === player.id || p.id === player.redirect,
+      )
+      if (!foundPlayer) return
+      const playerStanding = foundPlayer.standing
       event.participants.forEach(({ id, tag, img, standing }) => {
         if (tag !== player.tag) {
           const standingSimilarity =

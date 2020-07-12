@@ -15,6 +15,6 @@ export const mutations = {
 export const actions = {
   notify({ commit }, notification) {
     commit('add', notification)
-    setTimeout(() => commit('remove'), 4000)
+    setTimeout(() => commit('remove'), 5000)
   },
 }

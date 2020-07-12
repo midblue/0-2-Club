@@ -91,13 +91,20 @@ module.exports = async function(player, skipOwnerIds = []) {
     if (shouldContinue) {
       let currentStub = remainingStubs.shift()
       let preloadedEventData = services[currentStub.service].event(currentStub)
-      log('preloading', currentStub.eventSlug, currentStub.tournamentSlug)
+      let doneSaving
+      log(
+        'preloading',
+        currentStub.eventSlug,
+        currentStub.tournamentSlug,
+        `(${remainingStubs.length} left in queue)`,
+      )
 
       while (shouldContinue) {
         // grab preloaded event data
         preloadedEventData = await preloadedEventData
         const loadedEventData = preloadedEventData
-        saveEvents([loadedEventData], player.game) // save event fully
+        await doneSaving // previous event is saved
+        doneSaving = saveEvents([loadedEventData], player.game) // save event fully
           .then(() =>
             io.to(`${player.game}`).emit('newEvents', [loadedEventData]),
           )

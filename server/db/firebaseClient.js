@@ -55,7 +55,7 @@ statsRef.get().then(doc => {
   deletes = usage.deletes || 0
 })
 
-// /*
+/*
 // ! wipe db for a game
 setInterval(() => {
   db.collection('games/Super Smash Bros. Melee/events')
@@ -76,7 +76,7 @@ setInterval(() => {
     })
 }, 5000)
 
-// */
+*/
 
 setInterval(() => {
   if (writes !== prevWrites || reads !== prevReads || deletes !== prevDeletes)

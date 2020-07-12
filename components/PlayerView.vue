@@ -181,10 +181,10 @@ export default {
     this.recalculateAwards()
   },
   created() {
-    socketSetup()
+    this.socketSetup()
   },
   mounted() {
-    socketSetup()
+    this.socketSetup()
   },
   beforeDestroy() {
     this.socket.emit(

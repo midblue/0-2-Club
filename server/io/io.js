@@ -1,9 +1,9 @@
 const logger = require('../scripts/log')
-const low = logger('io_init', 'gray')
-const log = logger('io_init', 'white')
-const logAdd = logger('io_init', 'green')
-const logInfo = logger('io_init', 'blue')
-const logError = logger('io_init', 'yellow')
+const low = logger('io', 'gray')
+const log = logger('io', 'white')
+const logAdd = logger('io', 'green')
+const logInfo = logger('io', 'blue')
+const logError = logger('io', 'yellow')
 
 let io = null
 

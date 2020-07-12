@@ -180,7 +180,7 @@ export default {
     })
     this.recalculateAwards()
   },
-  mounted() {
+  created() {
     if (
       !this.initialPlayer.game ||
       (!this.initialPlayer.id && !this.initialPlayer.tag)

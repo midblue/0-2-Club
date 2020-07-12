@@ -434,7 +434,7 @@ function yearlyImprovement(player, events) {
 
     const levelStart = levels[level] || 0,
       levelEnd = levels[level + 1],
-      levelProgress = (improvedPercent - levelStart) / (levelEnd - levelStart)
+      levelProgress = improvedPercent / levelEnd
 
     const bestAttemptString = `Current: <b>${improvedPercent}%</b> improved placing in ${year}`
 

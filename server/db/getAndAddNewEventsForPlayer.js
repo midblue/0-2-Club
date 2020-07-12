@@ -76,40 +76,41 @@ module.exports = async function(player, skipOwnerIds = []) {
     )
 
   if (stubs.length) {
-    await Promise.all(
-      stubs.map(async stub => {
-        let loadedEventData = await services[stub.service].event(stub)
-        log('loading', stub.eventSlug, stub.tournamentSlug)
-        await saveEvents([loadedEventData], player.game) // save event fully
-        io.to(`${player.game}`).emit('newEvents', [loadedEventData])
-      }),
-    )
-
-    // let remainingStubs = [...stubs]
-    // let shouldContinue = remainingStubs.length > 0
-    // if (shouldContinue) {
-    //   let currentStub = remainingStubs.shift()
-    //   let preloadedEventData = services[currentStub.service].event(currentStub)
-    //   log('preloading', currentStub.eventSlug, currentStub.tournamentSlug)
-
-    //   while (shouldContinue) {
-    //     // grab preloaded event data
-    //     preloadedEventData = await preloadedEventData
-    //     const loadedEventData = preloadedEventData
-    //     const saveComplete = saveEvents([loadedEventData], player.game) // save event fully
-
-    //     shouldContinue = remainingStubs.length > 0
-
-    //     // preload next event data
-    //     if (shouldContinue) {
-    //       currentStub = remainingStubs.shift()
-    //       preloadedEventData = services[currentStub.service].event(currentStub)
-    //     }
-
-    //     await saveComplete
-
+    // ! this is faster, but has serious race condition potential.... can't do it this way.
+    // await Promise.all(
+    //   stubs.map(async stub => {
+    //     let loadedEventData = await services[stub.service].event(stub)
+    //     log('loading', stub.eventSlug, stub.tournamentSlug)
+    // 		await saveEvents([loadedEventData], player.game) // save event fully
     //     io.to(`${player.game}`).emit('newEvents', [loadedEventData])
-    //   }
+    //   }),
+    // )
+
+    let remainingStubs = [...stubs]
+    let shouldContinue = remainingStubs.length > 0
+    if (shouldContinue) {
+      let currentStub = remainingStubs.shift()
+      let preloadedEventData = services[currentStub.service].event(currentStub)
+      log('preloading', currentStub.eventSlug, currentStub.tournamentSlug)
+
+      while (shouldContinue) {
+        // grab preloaded event data
+        preloadedEventData = await preloadedEventData
+        const loadedEventData = preloadedEventData
+        saveEvents([loadedEventData], player.game) // save event fully
+          .then(() =>
+            io.to(`${player.game}`).emit('newEvents', [loadedEventData]),
+          )
+
+        shouldContinue = remainingStubs.length > 0
+
+        // preload next event data
+        if (shouldContinue) {
+          currentStub = remainingStubs.shift()
+          preloadedEventData = services[currentStub.service].event(currentStub)
+        }
+      }
+    }
 
     stubs.forEach(s =>
       willLoad.splice(

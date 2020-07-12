@@ -66,8 +66,10 @@ module.exports = async function({ game, id, tag }, forceUpdate = false) {
     logAdd(
       `saved points/peers/+ for ${player.tag} (points: ${lengths.prevPoints}->${lengths.newPoints}, peers: ${lengths.prevPeers}->${lengths.newPeers})`,
     )
-    io.to(`${player.game}/${player.id}`).emit('playerFullyUpdated', player)
-    io.to(`${player.game}/${player.tag}`).emit('playerFullyUpdated', player)
+    setTimeout(() => {
+      io.to(`${player.game}/${player.id}`).emit('playerFullyUpdated', player)
+      io.to(`${player.game}/${player.tag}`).emit('playerFullyUpdated', player)
+    }, 500)
   }
 
   return player

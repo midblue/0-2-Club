@@ -64,5 +64,6 @@ module.exports = async function(players) {
     low(`will update ${updated.length} players...`)
     await Promise.all(updated.map(p => db.updatePlayer(p)))
     logAdd(`updated ${updated.length} players`)
+    return updated
   } else low(`${players.length} players' data seems complete and accurate`)
 }

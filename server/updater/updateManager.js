@@ -84,9 +84,9 @@ async function rollingUpdate() {
 
     players = await verifyEvents(someEvents)
 
-    await verifyPlayers(players)
+    const updatedPlayers = await verifyPlayers(players)
 
-    await updatePlayersPointsAndPeers(players, true) // could get too heavy here, so switching to quick mode
+    if (updatedPlayers) await updatePlayersPointsAndPeers(updatedPlayers, true) // could get too heavy here, so switching to quick mode
 
     await db.logUsage()
   } catch (e) {

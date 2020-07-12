@@ -92,12 +92,6 @@ module.exports = async function(player, skipOwnerIds = []) {
       let currentStub = remainingStubs.shift()
       let preloadedEventData = services[currentStub.service].event(currentStub)
       let doneSaving
-      log(
-        'preloading',
-        currentStub.eventSlug,
-        currentStub.tournamentSlug,
-        `(${remainingStubs.length} left in queue)`,
-      )
 
       while (shouldContinue) {
         // grab preloaded event data
@@ -115,6 +109,12 @@ module.exports = async function(player, skipOwnerIds = []) {
         if (shouldContinue) {
           currentStub = remainingStubs.shift()
           preloadedEventData = services[currentStub.service].event(currentStub)
+          log(
+            'preloading',
+            currentStub.eventSlug,
+            currentStub.tournamentSlug,
+            `(${remainingStubs.length} left in queue)`,
+          )
         }
       }
     }
@@ -133,6 +133,7 @@ module.exports = async function(player, skipOwnerIds = []) {
   } else {
     low('no new events found for', player.tag)
   }
+  log('done loading more events for', player.tag)
 
   await updateSinglePlayerPointsAndPeers(player, true)
 

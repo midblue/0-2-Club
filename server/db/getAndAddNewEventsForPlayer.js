@@ -115,7 +115,7 @@ module.exports = async function(player, skipOwnerIds = []) {
             currentStub.tournamentSlug,
             `(${remainingStubs.length} left in queue)`,
           )
-        }
+        } else await doneSaving
       }
     }
 

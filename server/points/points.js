@@ -1,6 +1,8 @@
 const { getPlacingRatio } = require('../../common/functions')
 const db = require('../db/firebaseClient')
 
+// todo make rivals be people who you have an actual close ratio with
+
 module.exports = {
   async get(player, onlyTouchEventId, loadedPlayers = [], quick = false) {
     let points = []
@@ -229,7 +231,7 @@ async function matchPoints(
     let lostGames = match[didWin ? 'loserScore' : 'winnerScore']
     if (!lostGames || lostGames < 0) lostGames = 0
 
-    if (didWin && lostGames > 0)
+    if (didWin && lostGames - wonGames === 1)
       p({
         category: `Progression`,
         title: `Clinched a Close Set`,
@@ -253,7 +255,7 @@ async function matchPoints(
         },
         value: 4,
       })
-    else if (wonGames > 0)
+    else if (wonGames - lostGames === 1)
       p({
         category: `Progression`,
         title: `Played a Close Set`,

@@ -4,7 +4,6 @@ const { getPlacingRatio } = require('./functions')
 // attending tournaments in a series
 // lifetime total x unique opponents
 // x total rivals / rivals beat
-// todo podium finishes
 
 module.exports = function(player) {
   if (!player || !player.participatedInEvents) return []
@@ -30,6 +29,7 @@ function getAwards(player, events) {
   return [
     ...bestStreak(player, events),
     ...totalGameWins(player, events),
+    ...totalPodiumFinishes(player, events),
     ...mostWeeksInARow(player, events),
     ...mostInOneWeek(player, events),
     ...yearlyImprovement(player, events),
@@ -226,6 +226,58 @@ function totalGameWins(player, events) {
   const requirements = `Level 1: Win <span style="font-weight: bold;">${levels[1]}</span> total games`
 
   const img = '/img/awards/totalwins.png'
+
+  const label = ``
+
+  const points = level * 10
+
+  if (level < 1) return []
+  return [
+    {
+      title,
+      total,
+      level,
+      levelStart,
+      levelEnd,
+      levelProgress,
+      bestAttemptString,
+      levelDescription,
+      requirements,
+      img,
+      label,
+      points,
+    },
+  ]
+}
+
+function totalPodiumFinishes(player, events) {
+  const totalPodiumFinishes = events.reduce(
+    (total, event) => total + (event.standing <= 3 ? 1 : 0),
+    0,
+  )
+  const levels = [0, 1, 3, 6, 10, 18, 30, 45, 70, 100, 150, 200, 1000]
+
+  const title = `Podium Position`
+  const total = totalPodiumFinishes
+
+  let level = levels.findIndex(l => totalPodiumFinishes < l) - 1
+  if (totalPodiumFinishes < 1) level = -1 // not started
+
+  const levelStart = levels[level] || 0,
+    levelEnd = levels[level + 1],
+    levelProgress = totalPodiumFinishes / levelEnd
+
+  const bestAttemptString = `Current: ${totalPodiumFinishes}`
+
+  const levelDescription = `Placed in the top 3 <span style="font-weight: bold; color:var(--l${level});">${totalPodiumFinishes}</span> time${
+    totalPodiumFinishes === 1 ? '' : 's'
+  }`
+
+  const requirements = `Level 1: Place in the top 3 <span style="font-weight: bold;">${
+    levels[1]
+  }</span> time${levels[1] === 1 ? '' : 's'}`
+
+  const img = '/img/awards/podium.png'
 
   const label = ``
 

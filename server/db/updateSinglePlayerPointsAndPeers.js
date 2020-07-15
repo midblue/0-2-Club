@@ -66,7 +66,7 @@ module.exports = async function({ game, id, tag }, forceUpdate = false) {
     low('nothing to save for player', player.tag)
   else {
     logAdd(
-      `saved points/peers/+ for ${player.tag} (points: ${lengths.prevPoints}->${lengths.newPoints}, peers: ${lengths.prevPeers}->${lengths.newPeers})`,
+      `saved points/peers for ${player.tag} (points: ${lengths.prevPoints}->${lengths.newPoints}, peers: ${lengths.prevPeers}->${lengths.newPeers})`,
     )
     setTimeout(() => {
       io.to(`${player.game}/${player.id}`).emit('playerFullyUpdated', player)

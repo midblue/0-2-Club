@@ -39,7 +39,6 @@ export default {
               params.id,
               res.data.tag,
             )
-          // todo set active if not a named ip, or if browsing (localhost)
           return { player: res.data }
         } else
           return {

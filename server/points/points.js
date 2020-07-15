@@ -195,6 +195,9 @@ async function eventPoints(
       })
     lastEventDate = event.date
 
+    for (let match of event.matchesWithUser) {
+    }
+
     const mps = await matchPoints(
       event.matchesWithUser,
       event,
@@ -220,6 +223,7 @@ async function matchPoints(
   const chronologicalMatches = matches.sort((a, b) => a.date - b.date)
   let winStreak = 0,
     inLosers = false
+  const opponentsBeat = []
 
   return await chronologicalMatches.reduce(async (pointsArray, match) => {
     const points = []
@@ -278,6 +282,15 @@ async function matchPoints(
         },
         value: 2,
       })
+
+    if (didWin && opponentsBeat.find(t => t === match.loserTag))
+      p({
+        title: `Double Elim!`,
+        context: `Beat ${match.loserTag} twice in one event`,
+        value: 5,
+      })
+    else if (didWin) opponentsBeat.push(match.loserTag)
+
     if (didWin) winStreak++
     else {
       winStreak = 0
@@ -375,7 +388,7 @@ async function matchPoints(
 
     if (pastMatches.length >= 10)
       p({
-        title: `Old Rivals`,
+        title: `Old Nemesis`,
         context: `You've played against ${opponentTag} ${pastMatches.length} times`,
         value: 1,
       })

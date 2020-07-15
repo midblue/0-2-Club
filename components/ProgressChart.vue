@@ -66,6 +66,7 @@ import LineChart from './LineChart.js'
 import axios from 'axios'
 
 // todo really wish peers linked to their page here
+// todo avg. win/loss ratio line chart
 
 export default {
   props: {},

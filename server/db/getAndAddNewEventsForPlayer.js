@@ -108,13 +108,13 @@ module.exports = async function(player, skipOwnerIds = []) {
         // preload next event data
         if (shouldContinue) {
           currentStub = remainingStubs.shift()
-          preloadedEventData = services[currentStub.service].event(currentStub)
           log(
             'preloading',
             currentStub.eventSlug,
             currentStub.tournamentSlug,
             `(${remainingStubs.length} left in queue)`,
           )
+          preloadedEventData = services[currentStub.service].event(currentStub)
         } else await doneSaving
       }
     }
@@ -259,7 +259,7 @@ async function getMoreEventStubs(player, ownerIdsToCheck) {
       return services[s].moreEventStubsForPlayer(
         player,
         ownerIdsToCheck,
-        null, // todo check this to make sure it will work
+        null,
         gameTitle(player.game),
       )
     }),

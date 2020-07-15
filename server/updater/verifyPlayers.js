@@ -9,13 +9,31 @@ const logError = logger('verifyplayers', 'yellow')
 
 module.exports = async function(players) {
   // if a player has a ref to an event that doesn't exist, clear it out.
+  // if a player is missing key data, ...just announce it for now.
   const updated = []
   const knownMissing = []
 
   for (let player of players) {
     let didUpdate = false
 
-    // todo check for basics like missing tag, etc?
+    if (!player.tag) {
+      logError(`No tag found for player ${player.id}!`)
+    }
+    if (!player.id) {
+      logError(`No id found for player ${player.tag}!`)
+    }
+    if (!player.game) {
+      logError(`No game found for player ${player.id}!`)
+    }
+    if (
+      player.redirect &&
+      !(await db.getPlayerById({ game: player.game, id: player.redirect }))
+    ) {
+      logError(
+        `Redirect player is missing for player ${player.tag} (${player.id}, redirected to ${player.redirect})!`,
+      )
+    }
+
     for (let index in player.participatedInEvents) {
       const event = player.participatedInEvents[index]
       const known = knownMissing.find(

@@ -8,8 +8,6 @@ const {
   queryPlayerSets,
   queryTournamentsByOwner,
   queryEventsInTournament,
-  perSetQueryPage,
-  perStandingQueryPage,
 } = require('./query')
 
 const {
@@ -209,7 +207,7 @@ module.exports = {
 
     let foundEvents = []
 
-    async function isUnknownEvent({ tournamentSlug, eventSlug }) {
+    const isUnknownEvent = async ({ tournamentSlug, eventSlug }) => {
       return new Promise(async resolve => {
         // todo takes the bulk of the time when querying for new events
 
@@ -439,7 +437,10 @@ async function getEvent(tournamentSlug, eventSlug) {
   const totalSetNumber = data.sets.pageInfo.totalPages,
     totalStandingNumber = data.standings.pageInfo.totalPages
 
-  // todo dynamically raise/lower perPage!
+  // todo dynamically raise/lower perPage
+
+  let perSetQueryPage = 14
+  let perStandingQueryPage = 70
 
   const totalSetPages = Math.ceil(totalSetNumber / perSetQueryPage),
     totalStandingPages = Math.ceil(totalStandingNumber / perStandingQueryPage)
@@ -459,6 +460,7 @@ async function getEvent(tournamentSlug, eventSlug) {
           moreSets = await makeQuery(queryEventSets, {
             page: currentSetsPage,
             slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
+            perPage: perSetQueryPage,
           })
           if (
             !moreSets ||
@@ -513,6 +515,7 @@ async function getEvent(tournamentSlug, eventSlug) {
           moreStandings = await makeQuery(queryEventStandings, {
             page: currentStandingsPage,
             slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
+            perPage: perStandingQueryPage,
           })
           if (
             !moreStandings ||

@@ -7,13 +7,13 @@
       <h3>
         Track your progress, keep improving, and stay motivated —
         <br />An <span class="highlight">esports fitbit</span> for anyone
-        getting started in competitive gaming.
+        getting started in competitive Melee.<!--gaming.-->
       </h3>
 
       <div v-if="savedEntries.length">
         <h4>Your Recent Searches</h4>
         <div
-          v-for="(entry, index) in savedEntries.slice(0, 5)"
+          v-for="(entry, index) in savedEntries.slice(0, 4)"
           :key="'e' + index"
           class="savedentry buttonbox"
         >
@@ -89,11 +89,11 @@
           </div>
           <div
             class="savedentry buttonbox"
-            @click="go(true, 'Fluffy', 'Super Smash Bros. Ultimate')"
+            @click="go(true, 'Axe', 'Super Smash Bros. Melee')"
           >
             <div class="holder">
-              <h4>Fluffy</h4>
-              <div class="sub">Super Smash Bros. Ultimate</div>
+              <h4>Axe</h4>
+              <div class="sub">Super Smash Bros. Melee</div>
             </div>
           </div>
         </div>
@@ -133,8 +133,9 @@
           <h3>Hassle-Free Data</h3>
           <div>
             Just link us one tournament with you in it, and we'll automatically
-            snag more. Currently supports all 1v1 tournaments for any game
-            hosted through smash.gg.
+            snag more. Currently supports all 1v1 tournaments for Super Smash
+            Bros. Melee.<!-- any game
+            hosted through smash.gg. -->
           </div>
         </div>
       </div>
@@ -321,6 +322,7 @@ h4 {
   }
 
   .delete {
+    user-select: none;
     width: 30px;
     height: 30px;
     position: absolute;

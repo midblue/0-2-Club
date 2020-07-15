@@ -11,11 +11,6 @@ const logError = logger('points&peers', 'yellow')
 const minUpdateCutoff = 5 * 60 * 1000
 
 module.exports = async function(players, quick = false) {
-  // todo THIS is taking TONS of data and time
-  // todo maybe we should just only ever update points & peers for users ONCE THEY GO to their page
-  // todo instead of trying to do everyone forever
-  // todo and then we can have a value for lastUpdatedPnP that won't re-update within 5 mins or so
-
   // weed out players who have been updated too recently
   // — not necessary for quick because it doesn't make any extraneous db calls anyway
   const initialPlayerCount = players.length
@@ -58,7 +53,7 @@ module.exports = async function(players, quick = false) {
     low('saving updated players to database...')
     await Promise.all(playersToUpdate.map(p => db.updatePlayer(p, !quick)))
     logAdd(
-      `saved ${quick ? 'fast ' : ''}points/peers/+ for ${
+      `saved ${quick ? 'fast ' : ''}points/peers for ${
         playersToUpdate.length
       } player/s`,
     )

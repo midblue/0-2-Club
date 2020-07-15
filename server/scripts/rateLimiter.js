@@ -3,7 +3,6 @@ module.exports = function(max, timeSpan, debug = false) {
     max,
     timeSpan,
     triggeredInTimeSpan: 0,
-    // todo make sure callbacks are called in order of arrival
     queue(callback) {
       return new Promise(async resolve => {
         if (debug && this.triggeredInTimeSpan >= max)
@@ -32,7 +31,6 @@ module.exports = function(max, timeSpan, debug = false) {
         }, timeSpan)
 
         const data = await callback()
-
         resolve(data)
       })
     },

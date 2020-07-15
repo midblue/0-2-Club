@@ -1,5 +1,13 @@
 module.exports = [
   {
+    date: 'July 14, 2020',
+    content: `We're getting to close to user-testing territory! We're generally working on building up the database with the bigest events, so that anyone who searches themselves will likely find SOMEthing. In other news, what an ...interesting week! Good riddance to all previously-hidden awful members of the community, and huge respect to those who spoke up. I'm thinking of removing offenders from the club, too. Let me know what you think!`,
+  },
+  {
+    date: 'July 4, 2020',
+    content: `Annnnnd we're back! Now that Slippi is out, I feel the motivation flowing through my veins, don't you? Auto-updating is much better from the user perspective — it now uses websockets to keep you updated as more events are added. Also, we updated the backend to be much more efficient with its database calls, which means we can add more and more events every day!`,
+  },
+  {
     date: 'March 4, 2020',
     content: `Awards have nice icons, searches now autosave, and the homepage looks a lot better.`,
   },

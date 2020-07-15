@@ -9,8 +9,6 @@ const logError = logger('smashggq', 'yellow')
 
 const rateLimiter = require('../../scripts/rateLimiter')
 const limiter = new rateLimiter(12, 10000)
-const perSetQueryPage = 14
-const perStandingQueryPage = 70
 
 async function makeQuery(query, variables) {
   // log('querying smashgg api:', query.substring(7, query.indexOf('(')))
@@ -175,11 +173,11 @@ query PlayerSets ($id: ID!) {
 }`
 
 const queryEventSets = `
-query EventSets($slug: String, $page: Int!) {
+query EventSets($slug: String, $page: Int!, $perPage: Int) {
   event(slug: $slug) {
     sets(
       page: $page,
-      perPage:  ${perSetQueryPage},
+      perPage:  $perPage,
       sortType: STANDARD
       filters: {
         hideEmpty: true
@@ -216,11 +214,11 @@ query EventSets($slug: String, $page: Int!) {
 }`
 
 const queryEventStandings = `
-query EventStandings($slug: String, $page: Int!) {
+query EventStandings($slug: String, $page: Int!, $perPage: Int) {
   event(slug: $slug) {
     standings (query: {
       page: $page,
-      perPage: ${perStandingQueryPage}
+      perPage: $perPage
     }) {
       nodes {
         id
@@ -286,6 +284,4 @@ module.exports = {
   queryPlayerSets,
   queryTournamentsByOwner,
   queryEventsInTournament,
-  perSetQueryPage,
-  perStandingQueryPage,
 }

@@ -8,7 +8,6 @@ const memo = require('../scripts/memo')
 const prep = require('./dbDataPrep')
 
 // todo slowest things
-// updating users in batches!!! adding seems to be instant
 // getting new events from ownerids (can we do concurrently?)
 // getting event data
 
@@ -27,8 +26,6 @@ const db = admin.firestore()
 
 const statsRef = db.collection('stats').doc('default')
 const gamesRef = db.collection('games')
-const increment = admin.firestore.FieldValue.increment(1)
-const decrement = admin.firestore.FieldValue.increment(-1)
 let getSomeEventsStartingPoint, currentEventsCountedInRollingUpdate
 
 const memoizedEvents = memo(300, 'events')

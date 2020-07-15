@@ -15,7 +15,6 @@ let games = []
 
 module.exports = async function() {
   return new Promise(async resolve => {
-    // todo batch these in the same way as events
     games = await db.getGames()
 
     for (let game of games) {

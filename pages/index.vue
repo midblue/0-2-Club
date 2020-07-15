@@ -1,99 +1,86 @@
 <template>
   <section>
     <div>
-      <div class="header">
-        <h1>Welcome to the club.</h1>
-      </div>
-      <h3>
-        Track your progress, keep improving, and stay motivated —
-        <br />An <span class="highlight">esports fitbit</span> for anyone
-        getting started in competitive Melee.<!--gaming.-->
-      </h3>
+      <div class="colorzone">
+        <div class="header">
+          <h1>Welcome to the club.</h1>
+        </div>
+        <h3>
+          Track your progress, keep improving, and stay motivated —
+          <br v-if="!isMobile" /><template v-if="isMobile">an</template
+          ><template v-else>An</template>
+          <span class="highlight">esports fitbit</span> for anyone getting
+          started in competitive Melee.<!--gaming.-->
+        </h3>
 
-      <div v-if="savedEntries.length">
-        <h4>Your Recent Searches</h4>
-        <div
-          v-for="(entry, index) in savedEntries.slice(0, 4)"
-          :key="'e' + index"
-          class="savedentry buttonbox"
-        >
-          <div class="holder" @click="go(null, entry.tag, entry.game)">
-            <h3>{{ entry.tag }}</h3>
-            <div class="sub">{{ entry.game }}</div>
-          </div>
-          <div class="delete" @click="removeEntry(entry.tag, entry.game)">
-            ✖
+        <div v-if="savedEntries.length">
+          <h4>Your Recent Searches</h4>
+          <div
+            v-for="(entry, index) in savedEntries.slice(0, 4)"
+            :key="'e' + index"
+            class="savedentry buttonbox"
+          >
+            <div class="holder" @click="go(null, entry.tag, entry.game)">
+              <h3>{{ entry.tag }}</h3>
+              <div class="sub">{{ entry.game }}</div>
+            </div>
+            <div class="delete" @click="removeEntry(entry.tag, entry.game)">
+              ✖
+            </div>
           </div>
         </div>
-      </div>
 
-      <PanelButton>
-        <div class="mainselector">
-          <!-- Tag -->
-          <div class="tag">
-            <input v-model="inputTag" placeholder="Your tag" />
-          </div>
-          <div class="sub">&nbsp;&nbsp;(No team name necessary!)</div>
+        <PanelButton>
+          <div class="mainselector">
+            <!-- Tag -->
+            <div class="tag">
+              <input v-model="inputTag" placeholder="Your tag" />
+            </div>
+            <div class="sub">&nbsp;&nbsp;(No team name necessary!)</div>
 
-          <!-- Game -->
-          <!-- <div class="game">
+            <!-- Game -->
+            <!-- <div class="game">
             <ModelSelect
               :options="gameOptions"
               v-model="inputGame"
               placeholder="Your game"
             />
           </div> -->
-        </div>
-        <template #button>
-          <button class="fullsize" @click="go">Go</button>
-        </template>
-      </PanelButton>
-
-      <!-- <div class="sub negmartop">
-        {{
-          (Object.values(players) || []).reduce(
-            (total, p) => total + (p || 0),
-            0
-          )
-        }}
-        players and
-        {{
-          (Object.values(events) || []).reduce(
-            (total, e) => total + (e || 0),
-            0
-          )
-        }}
-        events analyzed so far.
-      </div>-->
-
-      <div class="inaction">
-        <h3>See it in action:</h3>
-        <div>
-          <div
-            class="savedentry buttonbox"
-            @click="go(true, 'H0P', 'Super Smash Bros. Melee')"
-          >
-            <div class="holder">
-              <h4>H0P</h4>
-              <div class="sub">Super Smash Bros. Melee</div>
-            </div>
           </div>
-          <div
-            class="savedentry buttonbox"
-            @click="go(true, 'DoodleDork', 'Super Smash Bros. Melee')"
-          >
-            <div class="holder">
-              <h4>DoodleDork</h4>
-              <div class="sub">Super Smash Bros. Melee</div>
+          <template #button>
+            <button class="fullsize" @click="go">Go</button>
+          </template>
+        </PanelButton>
+
+        <div class="inaction" v-if="savedEntries.length === 0">
+          <h3>See it in action:</h3>
+          <div>
+            <div
+              class="savedentry buttonbox"
+              @click="go(true, 'H0P', 'Super Smash Bros. Melee')"
+            >
+              <div class="holder">
+                <h4>H0P</h4>
+                <div class="sub">Super Smash Bros. Melee</div>
+              </div>
             </div>
-          </div>
-          <div
-            class="savedentry buttonbox"
-            @click="go(true, 'Axe', 'Super Smash Bros. Melee')"
-          >
-            <div class="holder">
-              <h4>Axe</h4>
-              <div class="sub">Super Smash Bros. Melee</div>
+            <div
+              class="savedentry buttonbox"
+              @click="go(true, 'DoodleDork', 'Super Smash Bros. Melee')"
+            >
+              <div class="holder">
+                <h4>DoodleDork</h4>
+                <div class="sub">Super Smash Bros. Melee</div>
+              </div>
+            </div>
+            <div
+              class="savedentry buttonbox"
+              @click="go(true, 'Axe', 'Super Smash Bros. Melee')"
+            >
+              <div class="holder">
+                <h4>Axe</h4>
+                <div class="sub">Super Smash Bros. Melee</div>
+              </div>
             </div>
           </div>
         </div>
@@ -303,7 +290,29 @@ h4 {
   margin-top: 3em;
 }
 
+// .colorzone {
+//   position: relative;
+//   color: white;
+
+//   & > * {
+//     position: relative;
+//     z-index: 1;
+//   }
+
+//   &:before {
+//     content: '';
+//     position: absolute;
+//     top: -100%;
+//     left: -1000%;
+//     right: -1000%;
+//     bottom: 0;
+//     background: var(--l1d);
+//     z-index: 0;
+//   }
+// }
+
 .savedentry {
+  color: var(--text);
   position: relative;
   min-width: 200px;
   cursor: pointer;
@@ -451,6 +460,7 @@ h4 {
   & > div {
     display: flex;
     justify-content: center;
+    // todo not working on mobile
 
     @media (max-width: 768px) {
       display: block;

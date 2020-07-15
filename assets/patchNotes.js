@@ -1,7 +1,7 @@
 module.exports = [
   {
-    date: 'July 14, 2020',
-    content: `We're getting to close to user-testing territory! We're generally working on building up the database with the bigest events, so that anyone who searches themselves will likely find SOMEthing. In other news, what an ...interesting week! Good riddance to all previously-hidden awful members of the community, and huge respect to those who spoke up. I'm thinking of removing offenders from the club, too. Let me know what you think!`,
+    date: 'July 10, 2020',
+    content: `We're getting to close to user-testing territory! We're generally working on building up the database with the bigest events, so that anyone who searches themselves will likely find SOMEthing. In other news, what an ...interesting week! Good riddance to all previously-hidden awful members of the community, and huge respect to those who spoke up. I'm thinking of removing offenders from the club, too. Let us know what you think!`,
   },
   {
     date: 'July 4, 2020',

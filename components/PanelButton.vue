@@ -15,6 +15,7 @@ export default {}
 
 <style lang="scss" scoped>
 .combo {
+  color: var(--text);
   position: relative;
   display: grid;
   grid-template-columns: 70% 30%;

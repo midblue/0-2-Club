@@ -16,9 +16,9 @@ module.exports = function(player) {
   const orderedDates = player.participatedInEvents
     .map(e => e.date)
     .sort((a, b) => a - b)
-  const chronologicalEvents = orderedDates.map(d =>
-    player.participatedInEvents.find(e => e.date === d),
-  )
+  const chronologicalEvents = orderedDates
+    .map(d => player.participatedInEvents.find(e => e.date === d))
+    .map(e => ({ ...e, name: e.name.replace(/ fe?a?tu?r?i?n?g?\.? .*/gi, '') }))
 
   const awards = getAwards(player, chronologicalEvents)
 
@@ -75,7 +75,7 @@ function bestStreak(player, events) {
     },
     { total: 0 },
   )
-  const levels = [0, 3, 4, 5, 6, 7, 8, 10, 15, 20, 40, 100, 1000]
+  const levels = [0, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 40, 1000]
 
   const title = `Streakin'`
   const total = bestStreak.total
@@ -131,7 +131,7 @@ function majors(player, events) {
     return total + (event.totalParticipants >= majorCutoff ? 1 : 0)
   }, 0)
 
-  const levels = [0, 1, 2, 3, 5, 7, 10, 15, 20, 100]
+  const levels = [0, 1, 2, 5, 10, 18, 30, 50, 75, 110, 150, 200, 300, 1000]
 
   const title = `Major Competitor`
   const total = majors
@@ -322,7 +322,7 @@ function mostWeeksInARow(player, events) {
       start,
     }
   }, 0)
-  const levels = [0, 3, 4, 5, 7, 9, 12, 20, 30, 52, 104]
+  const levels = [0, 3, 4, 5, 7, 9, 12, 20, 30, 52, 65, 85, 104, 1000]
 
   const title = `Weekly Warrior`
   const total = mostWeeksInARow.total
@@ -391,7 +391,7 @@ function mostInOneWeek(player, events) {
     }
   }, 0)
 
-  const levels = [0, 2, 3, 4, 5, 6, 7, 8, 10, 15, 100]
+  const levels = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 20, 30, 1000]
 
   const title = `Training Mode`
   const total = mostInOneWeek.total
@@ -465,7 +465,23 @@ function yearlyImprovement(player, events) {
       cumulativePlacingRatiosByYear[year].end
   })
 
-  const levels = [0, 5, 7.5, 10, 12.5, 15, 20, 30, 40, 50, 100]
+  const levels = [
+    0,
+    5,
+    7.5,
+    10,
+    12.5,
+    15,
+    17.5,
+    20,
+    22.5,
+    25,
+    35,
+    50,
+    75,
+    100,
+    1000,
+  ]
 
   const awards = Object.keys(cumulativePlacingRatiosByYear).map(year => {
     const isCurrentYear = new Date().getFullYear() === year,
@@ -529,7 +545,7 @@ function yearlyAttendance(player, events) {
     eventsPerYear[year] = (eventsPerYear[year] || 0) + 1
   }
 
-  const levels = [0, 5, 10, 15, 20, 30, 50, 75, 100, 1000]
+  const levels = [0, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 1000]
 
   const awards = Object.keys(eventsPerYear).map(year => {
     const isCurrentYear = new Date().getFullYear() === year

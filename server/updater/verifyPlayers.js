@@ -25,13 +25,15 @@ module.exports = async function(players) {
     if (!player.game) {
       logError(`No game found for player ${player.id}!`)
     }
-    if (
-      player.redirect &&
-      !(await db.getPlayerById({ game: player.game, id: player.redirect }))
-    ) {
-      logError(
-        `Redirect player is missing for player ${player.tag} (${player.id}, redirected to ${player.redirect})!`,
-      )
+    if (player.redirect) {
+      const redirectPlayer = await db.getPlayerById({
+        game: player.game,
+        id: player.redirect,
+      })
+      if (!redirectPlayer || !redirectPlayer.id)
+        logError(
+          `Redirect player is missing for player ${player.tag} (${player.id}, redirected to ${player.redirect})!`,
+        )
     }
 
     for (let index in player.participatedInEvents) {
@@ -42,6 +44,7 @@ module.exports = async function(players) {
           e.id === event.id &&
           e.game === event.game,
       )
+      // todo this is ... weird. what's going on here.
       let exists
       if (!known)
         exists = await db.getEventExists({

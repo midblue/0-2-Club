@@ -32,6 +32,8 @@ export default {
           : `/api/player/${params.game}/id/${params.id}/active`,
       )
       .then(res => {
+        if (res.data.redirect)
+          return redirect(`/g/${params.game}/i/${res.data.redirect}`)
         if (res.data && !res.data.err && !res.data.disambiguation) {
           if (req && ipInfo.log)
             require('~/server/scripts/log')('page:id', 'gray')(

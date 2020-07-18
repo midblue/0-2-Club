@@ -49,6 +49,18 @@ const levels = [
     points: 56 * multiplier,
     label: 'Undisputed Master',
   },
+  {
+    points: 67 * multiplier,
+    label: 'Mountaintop Guru',
+  },
+  {
+    points: 79 * multiplier,
+    label: 'World Destroyer',
+  },
+  {
+    points: 91 * multiplier,
+    label: 'What the F%#k?',
+  },
 ]
 
 module.exports = levels

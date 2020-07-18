@@ -1,8 +1,9 @@
 module.exports = [
   {
-    regex: /127.0.0.1/g,
+    regex: /(127.0.0.1|::1)/g,
     name: 'localhost',
   },
+  // google is 66.249.64.0 - 66.249.95.255
   {
     regex: /66.249./g,
     name: 'Google',

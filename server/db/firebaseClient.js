@@ -28,9 +28,9 @@ const statsRef = db.collection('stats').doc('default')
 const gamesRef = db.collection('games')
 let getSomeEventsStartingPoint, currentEventsCountedInRollingUpdate
 
-const memoizedEvents = memo(300, 'events')
+const memoizedEvents = memo(0, 'events')
 const memoizedKnownEventStubs = memo(2000, 'event stubs')
-const memoizedPlayers = memo(300, 'players')
+const memoizedPlayers = memo(200, 'players')
 
 const aDayInSeconds = 24 * 60 * 60
 
@@ -75,6 +75,7 @@ setInterval(() => {
 
 */
 
+// todo usage estimates are wrong usually, and don't reset at the right time
 setInterval(() => {
   if (writes !== prevWrites || reads !== prevReads || deletes !== prevDeletes)
     low(

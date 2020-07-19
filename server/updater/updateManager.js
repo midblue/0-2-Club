@@ -99,7 +99,7 @@ async function rollingUpdate() {
     'rolling update complete for',
     someEvents.length,
     'events and',
-    players.length,
+    relevantPlayerGamesAndIds.length,
     'players.',
   )
   isUpdating = false

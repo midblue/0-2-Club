@@ -42,10 +42,7 @@ module.exports = async function(playerGamesAndIds) {
     for (let index in player.participatedInEvents) {
       const event = player.participatedInEvents[index]
       let thisEventIsKnownToBeMissing = !!knownMissingEvents.find(
-        e =>
-          e.service === event.service &&
-          e.id === event.id &&
-          e.game === event.game,
+        e => e === event.service + event.id + event.game,
       )
       // todo test this
       if (!thisEventIsKnownToBeMissing) {
@@ -57,11 +54,7 @@ module.exports = async function(playerGamesAndIds) {
           }))
         ) {
           thisEventIsKnownToBeMissing = true
-          knownMissingEvents.push({
-            service: event.service,
-            id: event.id,
-            game: player.game,
-          })
+          knownMissingEvents.push(event.service + event.id + player.game)
         }
       }
       if (thisEventIsKnownToBeMissing) {

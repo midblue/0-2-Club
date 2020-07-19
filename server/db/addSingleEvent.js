@@ -53,7 +53,12 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
 
   // make full player data out of participants
   players = players.map(p => {
-    if (!p.id) {
+    if (
+      !p.id ||
+      !p.tag ||
+      !p.participatedInEvents ||
+      !p.participatedInEvents.length
+    ) {
       // is new
       p = prep.makeNewPlayerToSaveFromEvent(
         event,

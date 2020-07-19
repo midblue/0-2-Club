@@ -119,7 +119,7 @@ router.get('/scan/', async (req, res, next) => {
 
 /* GET run rolling update from admin panel */
 let lastRolling = 0
-const minimumRollingInterval = 1 * 60 * 1000
+const minimumRollingInterval = 0.3 * 60 * 1000
 router.get('/rolling/', async (req, res, next) => {
   if (
     req.ip !== '127.0.0.1' &&

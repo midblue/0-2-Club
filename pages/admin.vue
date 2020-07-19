@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <section v-if="!hide">
     <h1>Admin</h1>
     <pre>{{ JSON.stringify(stats, null, 2) }}</pre>
     <button @click="scanForNewEvents">Scan for New Events</button>
@@ -110,6 +110,7 @@ export default {
   components: {},
   data() {
     return {
+      hide: true,
       presetPlayers: [
         {
           id: '517615',
@@ -172,7 +173,12 @@ export default {
       return this.$store.state.isMobile
     },
   },
+  created() {},
   mounted() {
+    if (process.client && window.prompt('') !== `'`)
+      window.location.replace('http://www.0-2.club/')
+    this.hide = false
+
     this.$store.commit('clearPlayer')
 
     const socket = io.connect('/')

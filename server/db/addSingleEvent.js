@@ -112,6 +112,7 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
 
   // onlyUpdatePlayers exists so that when we re-add an event after deleting it, we still have accurate player counts
   // todo this also breaks nonexistant players tho..?
+
   await Promise.all([
     db.addEvent(event),
     ...players

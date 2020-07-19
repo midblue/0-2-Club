@@ -276,7 +276,7 @@ module.exports = {
             reads++
             writes++
           })
-          return await this.getSomeEvents()
+          return await this.getSomeEvents(numberOfEvents)
         }
         getSomeEventsStartingPoint =
           snapshot.docs[snapshot.docs.length - 1].data().ownerId || 0 // start after last doc next time

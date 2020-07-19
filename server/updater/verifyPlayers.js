@@ -11,7 +11,7 @@ module.exports = async function(players) {
   // if a player has a ref to an event that doesn't exist, clear it out.
   // if a player is missing key data, ...just announce it for now.
   const updated = []
-  const knownMissing = []
+  const knownMissingEvents = []
 
   for (let player of players) {
     let didUpdate = false
@@ -38,46 +38,42 @@ module.exports = async function(players) {
 
     for (let index in player.participatedInEvents) {
       const event = player.participatedInEvents[index]
-      const known = knownMissing.find(
+      let thisEventIsKnownToBeMissing = !!knownMissingEvents.find(
         e =>
           e.service === event.service &&
           e.id === event.id &&
           e.game === event.game,
       )
-      // todo this is ... weird. what's going on here.
-      let exists
-      if (!known)
-        exists = await db.getEventExists({
-          service: event.service,
-          id: event.id,
-          game: player.game,
-        })
-      if (known || !exists) {
-        player.participatedInEvents.splice(index, 1)
-        didUpdate = true
+      // todo test this
+      if (!thisEventIsKnownToBeMissing) {
         if (
-          !knownMissing.find(
-            km =>
-              km.service === event.service &&
-              km.id === event.id &&
-              km.game === event.game,
-          )
-        )
-          knownMissing.push({
+          !(await db.getEventExists({
+            service: event.service,
+            id: event.id,
+            game: player.game,
+          }))
+        ) {
+          thisEventIsKnownToBeMissing = true
+          knownMissingEvents.push({
             service: event.service,
             id: event.id,
             game: player.game,
           })
+        }
+      }
+      if (thisEventIsKnownToBeMissing) {
+        player.participatedInEvents.splice(index, 1)
+        didUpdate = true
       }
     }
     if (didUpdate) {
       updated.push(player)
     }
   }
-  if (knownMissing.length)
+  if (knownMissingEvents.length)
     logError(
       'Missing events',
-      knownMissing, //.map(e => e.id).join(', '),
+      knownMissingEvents, //.map(e => e.id).join(', '),
       'in db, removed from player histories',
     )
 

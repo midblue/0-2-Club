@@ -78,13 +78,13 @@ async function rollingUpdate() {
   }
   isUpdating = true
   logInfo('starting rolling update')
-  let someEvents, relevantPlayerIds
+  let someEvents, relevantPlayerGamesAndIds
   try {
     someEvents = await db.getSomeEvents(2)
 
-    relevantPlayerIds = await verifyEvents(someEvents)
+    relevantPlayerGamesAndIds = await verifyEvents(someEvents)
 
-    const updatedPlayers = await verifyPlayers(relevantPlayerIds)
+    const updatedPlayers = await verifyPlayers(relevantPlayerGamesAndIds)
 
     if (updatedPlayers) await updatePlayersPointsAndPeers(updatedPlayers, true) // could get too heavy here, so switching to quick mode
 

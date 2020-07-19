@@ -7,14 +7,14 @@ const logAdd = logger('verifyplayers', 'green')
 const logInfo = logger('verifyplayers', 'blue')
 const logError = logger('verifyplayers', 'yellow')
 
-module.exports = async function(playerIds) {
+module.exports = async function(playerGamesAndIds) {
   // if a player has a ref to an event that doesn't exist, clear it out.
   // if a player is missing key data, ...just announce it for now.
   const updated = []
   const knownMissingEvents = []
 
-  for (let id of playerIds) {
-    let player = await db.getPlayerById(id) // id actually has a game prop too
+  for (let playerStub of playerGamesAndIds) {
+    let player = await db.getPlayerById(playerStub.game, playerStub.id) // id actually has a game prop too
 
     let didUpdate = false
 

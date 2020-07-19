@@ -105,7 +105,10 @@ const minimumScanInterval = 3 * 60 * 60 * 1000
 router.get('/scan/', async (req, res, next) => {
   if (req.ip !== '127.0.0.1' && Date.now() - lastScan < minimumScanInterval) {
     res.json({ complete: false })
-    return log('skipping scan (last was too recent)')
+    return log(
+      'skipping scan (last was too recent)' +
+        ` (at least ${minimumScanInterval / 1000 / 60} mins)`,
+    )
   }
   log('starting scan')
   lastScan = Date.now()
@@ -123,7 +126,10 @@ router.get('/rolling/', async (req, res, next) => {
     Date.now() - lastRolling < minimumRollingInterval
   ) {
     res.json({ complete: false })
-    return log('skipping rolling update (last was too recent)')
+    return log(
+      'skipping rolling update (last was too recent)' +
+        ` (at least ${minimumRollingInterval / 1000 / 60} mins)`,
+    )
   }
   log('starting rolling update')
   lastRolling = Date.now()

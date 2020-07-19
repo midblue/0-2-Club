@@ -116,7 +116,9 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
   )
   if (nonexistantPlayers.length)
     logError(
-      'attempted to fix players that do not exist:',
+      'attempted to fix',
+      nonexistantPlayers.length,
+      'players that do not exist. Will add',
       nonexistantPlayers.join(', '),
     )
 
@@ -130,7 +132,7 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
       eventSlug: event.eventSlug,
       tournamentSlug: event.tournamentSlug,
       game: event.game,
-      onlyUpdatePlayers: true,
+      // onlyUpdatePlayers: true,
     })
   }
 }

@@ -106,6 +106,7 @@ module.exports = async function(event, onlyUpdatePlayers = false) {
   // * no peers for now, that'll also be handled in the rolling update. if they already had them, they stay the same for now.
 
   // onlyUpdatePlayers exists so that when we re-add an event after deleting it, we still have accurate player counts
+  // todo this also breaks nonexistant players tho..?
   await Promise.all([
     db.addEvent(event),
     ...players

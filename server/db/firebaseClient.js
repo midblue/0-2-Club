@@ -478,7 +478,7 @@ function getGameRef(game) {
 }
 
 function handleError(label, err) {
-  logError(label, err)
+  logError(label, err.code, err.details)
   // most likely over quota, so do this to essentially suspend all updates/scans for the day
   reads = maxReads
   writes = maxWrites

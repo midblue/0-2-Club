@@ -11,7 +11,7 @@ module.exports = async function(playerGamesAndIds) {
   // if a player has a ref to an event that doesn't exist, clear it out.
   // if a player is missing key data, ...just announce it for now.
   const updated = []
-  const knownMissingEvents = []
+  const knownMissingEvents = new Set()
 
   for (let playerStub of playerGamesAndIds) {
     let player = await db.getPlayerById(playerStub.game, playerStub.id) // id actually has a game prop too
@@ -41,8 +41,8 @@ module.exports = async function(playerGamesAndIds) {
 
     for (let index in player.participatedInEvents) {
       const event = player.participatedInEvents[index]
-      let thisEventIsKnownToBeMissing = !!knownMissingEvents.find(
-        e => e === event.service + event.id + event.game,
+      let thisEventIsKnownToBeMissing = !!knownMissingEvents.has(
+        event.service + event.id + event.game,
       )
       // todo test this
       if (!thisEventIsKnownToBeMissing) {
@@ -54,7 +54,7 @@ module.exports = async function(playerGamesAndIds) {
           }))
         ) {
           thisEventIsKnownToBeMissing = true
-          knownMissingEvents.push(event.service + event.id + player.game)
+          knownMissingEvents.add(event.service + event.id + player.game)
         }
       }
       if (thisEventIsKnownToBeMissing) {
@@ -66,10 +66,10 @@ module.exports = async function(playerGamesAndIds) {
       updated.push(player)
     }
   }
-  if (knownMissingEvents.length)
+  if (knownMissingEvents.size)
     logError(
       'Missing events',
-      knownMissingEvents, //.map(e => e.id).join(', '),
+      knownMissingEvents.values, //.map(e => e.id).join(', '),
       'in db, removed from player histories',
     )
 
@@ -78,5 +78,6 @@ module.exports = async function(playerGamesAndIds) {
     await Promise.all(updated.map(p => db.updatePlayer(p)))
     logAdd(`updated ${updated.length} players`)
     return updated
-  } else low(`${players.length} players' data seems complete and accurate`)
+  } else
+    low(`${playerGamesAndIds.length} players' data seems complete and accurate`)
 }

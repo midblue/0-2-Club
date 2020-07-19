@@ -10,8 +10,8 @@ const logError = logger('verifyevents', 'yellow')
 
 module.exports = async function(events) {
   if (!events || !events.length) return []
-  const gotPlayers = [] // ! this is a little funky tbh
-  const toFix = await checkForAccuracy(events, gotPlayers)
+  const relevantPlayerIds = [] // ! this is a little funky tbh
+  const toFix = await checkForAccuracy(events, relevantPlayerIds)
   if (toFix.length) {
     logError('Found error in data for', toFix.length, 'event/s, resolving...')
     await fixEventDataErrors(toFix, events)
@@ -22,20 +22,20 @@ module.exports = async function(events) {
       events[0].tournamentName,
       'seems complete and accurate',
     )
-  return gotPlayers
+  return relevantPlayerIds
 }
 
-async function checkForAccuracy(events, gotPlayers) {
+async function checkForAccuracy(events, relevantPlayerIds) {
   const eventsToDeleteAndReAdd = []
-  await Promise.all(
-    events.map(async event =>
-      eventsToDeleteAndReAdd.push(await checkSingleEvent(event, gotPlayers)),
-    ),
-  )
+  for (let event of events) {
+    eventsToDeleteAndReAdd.push(
+      await checkSingleEvent(event, relevantPlayerIds),
+    )
+  }
   return eventsToDeleteAndReAdd.filter(e => e)
 }
 
-async function checkSingleEvent(event, gotPlayers) {
+async function checkSingleEvent(event, relevantPlayerIds) {
   let missingEventsForPlayerCount = 0,
     missingPlayersCount = 0
   await Promise.all(
@@ -46,8 +46,12 @@ async function checkSingleEvent(event, gotPlayers) {
         missingPlayersCount++
         return
       }
-      if (!gotPlayers.find(p => p.id === player.id && p.game === player.game))
-        gotPlayers.push(player)
+      if (
+        !relevantPlayerIds.find(
+          p => p.id === player.id && p.game === player.game,
+        )
+      )
+        relevantPlayerIds.push({ id: player.id, game: player.game })
       const playerInEvent = (player.participatedInEvents || []).find(
         e => e.id === event.id,
       )

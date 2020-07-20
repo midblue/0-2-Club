@@ -25,7 +25,10 @@ module.exports = {
   },
 
   isSingles(event) {
-    const hasNumbers = /(?:[２３４234][ -]?(?:vs?|on)[ -]?[２３４234]|do?ub(?:le)?[sz]|team[sz])/gi
+    // todo not always right
+    // melee-singles smash-at-york-15-melee-wii-u-singles-waseda-doubles
+    // melee-singles mini-smash-at-york-melee-wii-u-singles-doubles
+    const hasNumbers = /(?:[２３４234][ -]?(?:vs?|on|対)[ -]*[２３４234]|do?u?b(?:le)?[sz]|team[sz])/gi
     if (hasNumbers.exec(event.slug || event.eventSlug)) return false
     if (hasNumbers.exec(event.name || '')) return false
     if (
@@ -38,8 +41,15 @@ module.exports = {
       for (let c = 0; c < 6; c++) {
         const set =
           event.sets.nodes[Math.floor(Math.random() * event.sets.nodes.length)]
+        console.log(
+          set.slots.find(s => s.standing.placement > 2),
+          parseParticipantTag(
+            set.slots[0].entrant.participants[0].player.gamerTag,
+          ),
+        )
         if (set.slots.find(s => s.standing.placement > 2)) return false // 3 or more players
         if (
+          // slashes in participant names
           parseParticipantTag(
             set.slots[0].entrant.participants[0].player.gamerTag,
           ).indexOf('/') > -1 ||

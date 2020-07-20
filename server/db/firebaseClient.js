@@ -111,7 +111,6 @@ const currentMsUntilMidnightInPST =
   60 *
   60 *
   1000
-console.log(currentMsUntilMidnightInPST)
 
 resetInterval = setTimeout(resetCounts, currentMsUntilMidnightInPST)
 

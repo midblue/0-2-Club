@@ -468,9 +468,6 @@ async function getEvent(tournamentSlug, eventSlug) {
 
   if (!isSingles(data)) return { error: 'not singles' }
 
-  console.log('done!')
-  return { error: 'debug' }
-
   return data
 }
 

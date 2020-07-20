@@ -25,6 +25,7 @@ module.exports = async function(players, quick = false) {
       )
   }
 
+  // we were getting oom issues here so, batches.
   const batchSize = 100
   let currentBatchOfPlayersToUpdate = players.splice(0, batchSize)
 

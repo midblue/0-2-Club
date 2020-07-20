@@ -292,7 +292,7 @@ async function matchPoints(
         value: 5,
       })
     else if (didWin) opponentsBeat.push(match.loserTag)
-    if (!didWIn) opponentsLostTo.push(match.winnerTag)
+    if (!didWin) opponentsLostTo.push(match.winnerTag)
 
     if (didWin && opponentsLostTo.find(t => t === match.loserTag))
       p({

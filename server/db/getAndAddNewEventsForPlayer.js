@@ -86,14 +86,16 @@ module.exports = async function(player, skipOwnerIds = []) {
       while (shouldContinue) {
         preloadedEventData = await preloadedEventData // grab preloaded event data
         const loadedEventData = preloadedEventData
-        await doneSaving // previous event is saved
-        doneSaving = saveEvents([loadedEventData], player.game) // save THIS preloaded event fully
-          .then(() =>
-            io.to(`${player.game}`).emit('newEvents', [loadedEventData]),
-          )
+        if (loadedEventData && loadedEventData.participants) {
+          await doneSaving // previous event is saved
+          doneSaving = saveEvents([loadedEventData], player.game) // save THIS preloaded event fully
+            .then(() =>
+              io.to(`${player.game}`).emit('newEvents', [loadedEventData]),
+            )
 
-        // don't try to load the next event yet if this one was huge (heap out of memory possible)
-        if (loadedEventData.participants.length > 100) await doneSaving
+          // don't try to load the next event yet if this one was huge (heap out of memory possible)
+          if (loadedEventData.participants.length > 100) await doneSaving
+        } else logError(`skipping event ${loadedEventData}, bad data`)
 
         shouldContinue = remainingStubs.length > 0
 

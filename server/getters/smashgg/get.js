@@ -69,111 +69,115 @@ module.exports = {
       )
       return { err: 'already loading' }
     }
+    try {
+      const participants = eventData.standings.nodes.map(s => ({
+        standing: s.placement,
+        of: eventData.standings.nodes.length,
+        tag: parseParticipantTag(s.entrant.participants[0].player.gamerTag),
+        id: s.entrant.participants[0].player.id,
+        entrantId: s.entrant.id,
+        img:
+          s.entrant.participants[0].user &&
+          s.entrant.participants[0].user.images &&
+          s.entrant.participants[0].user.images.length > 0
+            ? s.entrant.participants[0].user.images[0].url
+            : false,
+      }))
 
-    const participants = eventData.standings.nodes.map(s => ({
-      standing: s.placement,
-      of: eventData.standings.nodes.length,
-      tag: parseParticipantTag(s.entrant.participants[0].player.gamerTag),
-      id: s.entrant.participants[0].player.id,
-      entrantId: s.entrant.id,
-      img:
-        s.entrant.participants[0].user &&
-        s.entrant.participants[0].user.images &&
-        s.entrant.participants[0].user.images.length > 0
-          ? s.entrant.participants[0].user.images[0].url
-          : false,
-    }))
-
-    const sets = (eventData.sets.nodes || [])
-      .map(s => {
-        const player1 = {
-            id: s.slots[0].entrant.participants[0].player.id,
-            placement: s.slots[0].standing.placement,
-            tag: parseParticipantTag(
-              s.slots[0].entrant.participants[0].player.gamerTag,
-            ),
-            score: s.slots[0].standing.stats.score.value,
-            img:
-              s.slots[0].entrant.participants[0].user &&
-              s.slots[0].entrant.participants[0].user.images &&
-              s.slots[0].entrant.participants[0].user.images.length > 0
-                ? s.slots[0].entrant.participants[0].user.images[0].url
-                : false,
-          },
-          player2 = {
-            id: s.slots[1].entrant.participants[0].player.id,
-            placement: s.slots[0].standing.placement,
-            tag: parseParticipantTag(
-              s.slots[1].entrant.participants[0].player.gamerTag,
-            ),
-            score: s.slots[1].standing.stats.score.value,
-            img:
-              s.slots[1].entrant.participants[0].user &&
-              s.slots[1].entrant.participants[0].user.images &&
-              s.slots[1].entrant.participants[0].user.images.length > 0
-                ? s.slots[1].entrant.participants[0].user.images[0].url
-                : false,
+      const sets = (eventData.sets.nodes || [])
+        .map(s => {
+          const player1 = {
+              id: s.slots[0].entrant.participants[0].player.id,
+              placement: s.slots[0].standing.placement,
+              tag: parseParticipantTag(
+                s.slots[0].entrant.participants[0].player.gamerTag,
+              ),
+              score: s.slots[0].standing.stats.score.value,
+              img:
+                s.slots[0].entrant.participants[0].user &&
+                s.slots[0].entrant.participants[0].user.images &&
+                s.slots[0].entrant.participants[0].user.images.length > 0
+                  ? s.slots[0].entrant.participants[0].user.images[0].url
+                  : false,
+            },
+            player2 = {
+              id: s.slots[1].entrant.participants[0].player.id,
+              placement: s.slots[0].standing.placement,
+              tag: parseParticipantTag(
+                s.slots[1].entrant.participants[0].player.gamerTag,
+              ),
+              score: s.slots[1].standing.stats.score.value,
+              img:
+                s.slots[1].entrant.participants[0].user &&
+                s.slots[1].entrant.participants[0].user.images &&
+                s.slots[1].entrant.participants[0].user.images.length > 0
+                  ? s.slots[1].entrant.participants[0].user.images[0].url
+                  : false,
+            }
+          let winner, loser
+          if (player1.score > player2.score) {
+            winner = player1
+            loser = player2
+          } else if (player1.score < player2.score) {
+            winner = player2
+            loser = player1
+          } else if (player1.placement === 1) {
+            winner = player1
+            loser = player2
+          } else {
+            winner = player2
+            loser = player1
           }
-        let winner, loser
-        if (player1.score > player2.score) {
-          winner = player1
-          loser = player2
-        } else if (player1.score < player2.score) {
-          winner = player2
-          loser = player1
-        } else if (player1.placement === 1) {
-          winner = player1
-          loser = player2
-        } else {
-          winner = player2
-          loser = player1
-        }
-        return {
-          date: s.completedAt,
-          winnerId: winner.id,
-          loserId: loser.id,
-          winnerTag: winner.tag,
-          loserTag: loser.tag,
-          winnerScore: winner.score,
-          loserScore: loser.score,
-          winnerImg: winner.img,
-          loserImg: loser.img,
-        }
-      })
-      .filter(s => s)
+          return {
+            date: s.completedAt,
+            winnerId: winner.id,
+            loserId: loser.id,
+            winnerTag: winner.tag,
+            loserTag: loser.tag,
+            winnerScore: winner.score,
+            loserScore: loser.score,
+            winnerImg: winner.img,
+            loserImg: loser.img,
+          }
+        })
+        .filter(s => s)
 
-    currentlyLoadingNewEvents.splice(
-      currentlyLoadingNewEvents.indexOf(tournamentSlug + eventSlug),
-      1,
-    )
+      currentlyLoadingNewEvents.splice(
+        currentlyLoadingNewEvents.indexOf(tournamentSlug + eventSlug),
+        1,
+      )
 
-    log(
-      'done getting',
-      eventSlug,
-      tournamentSlug,
-      'on smash.gg,',
-      currentlyLoadingNewEvents.length,
-      'left in queue',
-    )
+      log(
+        'done getting',
+        eventSlug,
+        tournamentSlug,
+        'on smash.gg,',
+        currentlyLoadingNewEvents.length,
+        'left in queue',
+      )
 
-    // log(currentlyLoadingNewEvents)
+      // log(currentlyLoadingNewEvents)
 
-    const eventDataToReturn = {
-      id: eventData.id,
-      name: eventData.name,
-      eventSlug,
-      game: gameTitle(eventData.videogame.name),
-      date: eventData.startAt,
-      service: 'smashgg',
-      tournamentSlug,
-      tournamentName: eventData.tournament.name,
-      ownerId: eventData.tournament.owner.id,
-      participants,
-      sets,
+      const eventDataToReturn = {
+        id: eventData.id,
+        name: eventData.name,
+        eventSlug,
+        game: gameTitle(eventData.videogame.name),
+        date: eventData.startAt,
+        service: 'smashgg',
+        tournamentSlug,
+        tournamentName: eventData.tournament.name,
+        ownerId: eventData.tournament.owner.id,
+        participants,
+        sets,
+      }
+      if (eventData.images.length > 0)
+        eventDataToReturn.img = eventData.images[0].url
+      return eventDataToReturn
+    } catch (e) {
+      logError('malformed data for', eventSlug, tournamentSlug, e)
+      return { err: 'malformed data' }
     }
-    if (eventData.images.length > 0)
-      eventDataToReturn.img = eventData.images[0].url
-    return eventDataToReturn
   },
 
   async eventsForGameInTournament(game, tournamentSlug) {

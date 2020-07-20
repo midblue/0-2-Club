@@ -246,7 +246,7 @@ query EventStandings($slug: String, $page: Int!, $perPage: Int) {
 const queryTournamentsByOwner = `
 query TournamentsByOwner($ownerId: ID!) {
     tournaments(query: {
-      perPage: 100
+      perPage: 50
       filter: {
         ownerId: $ownerId
       }

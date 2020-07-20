@@ -14,49 +14,60 @@ module.exports = async function(players, quick = false) {
   // weed out players who have been updated too recently
   // — not necessary for quick because it doesn't make any extraneous db calls anyway
   const initialPlayerCount = players.length
-  if (!quick)
+  if (!quick) {
     players = players.filter(
       p => p.lastUpdated * 1000 || 0 > Date.now() - minUpdateCutoff,
     )
-  if (players.length !== initialPlayerCount)
-    low(
-      `skipping updating points/peers for ${players.length -
-        initialPlayerCount} players (too recent)`,
-    )
-
-  // get points for all players
-  let playersWithUnsavedPoints = await Promise.all(
-    players.map(player => recalculatePoints(player, players, quick)),
-  )
-  playersWithUnsavedPoints = playersWithUnsavedPoints.filter(p => p)
-
-  // then, get peers for all players, skipping entirely if quick mode
-  let playersWithUnsavedPeers = quick
-    ? []
-    : await Promise.all(players.map(player => recalculatePeers(player)))
-  playersWithUnsavedPeers = playersWithUnsavedPeers.filter(p => p)
-
-  // then, save all updated players
-  const playersToUpdate = playersWithUnsavedPoints
-  playersWithUnsavedPeers.forEach(mightUpdate => {
-    if (
-      !playersToUpdate.find(
-        alreadySaving =>
-          mightUpdate.id === alreadySaving.id &&
-          mightUpdate.game === alreadySaving.game,
+    if (players.length !== initialPlayerCount)
+      low(
+        `skipping updating points/peers for ${players.length -
+          initialPlayerCount} players (too recent)`,
       )
-    )
-      playersToUpdate.push(mightUpdate)
-  })
+  }
 
-  if (playersToUpdate.length) {
-    low('saving updated players to database...')
-    await Promise.all(playersToUpdate.map(p => db.updatePlayer(p, !quick)))
-    logAdd(
-      `saved ${quick ? 'fast ' : ''}points/peers for ${
-        playersToUpdate.length
-      } player/s`,
+  const batchSize = 100
+  let currentBatchOfPlayersToUpdate = players.splice(0, batchSize)
+
+  while (currentBatchOfPlayersToUpdate.length) {
+    // get points for all players
+    let playersWithUnsavedPoints = await Promise.all(
+      currentBatchOfPlayersToUpdate.map(player =>
+        recalculatePoints(player, currentBatchOfPlayersToUpdate, quick),
+      ),
     )
+    playersWithUnsavedPoints = playersWithUnsavedPoints.filter(p => p)
+
+    // then, get peers for all players, skipping entirely if quick mode
+    let playersWithUnsavedPeers = quick
+      ? []
+      : await Promise.all(
+          currentBatchOfPlayersToUpdate.map(player => recalculatePeers(player)),
+        )
+    playersWithUnsavedPeers = playersWithUnsavedPeers.filter(p => p)
+
+    // then, save all updated players
+    const playersToUpdate = playersWithUnsavedPoints
+    playersWithUnsavedPeers.forEach(mightUpdate => {
+      if (
+        !playersToUpdate.find(
+          alreadySaving =>
+            mightUpdate.id === alreadySaving.id &&
+            mightUpdate.game === alreadySaving.game,
+        )
+      )
+        playersToUpdate.push(mightUpdate)
+    })
+
+    if (playersToUpdate.length) {
+      await Promise.all(playersToUpdate.map(p => db.updatePlayer(p, !quick)))
+      logAdd(
+        `saved ${quick ? 'quick ' : ''}points/peers for ${
+          playersToUpdate.length
+        } player/s`,
+      )
+    }
+
+    currentBatchOfPlayersToUpdate = players.splice(0, batchSize)
   }
 }
 

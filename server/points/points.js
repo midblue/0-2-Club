@@ -225,6 +225,7 @@ async function matchPoints(
   let winStreak = 0,
     inLosers = false
   const opponentsBeat = []
+  const opponentsLostTo = []
 
   return await chronologicalMatches.reduce(async (pointsArray, match) => {
     const points = []
@@ -291,6 +292,14 @@ async function matchPoints(
         value: 5,
       })
     else if (didWin) opponentsBeat.push(match.loserTag)
+    if (!didWIn) opponentsLostTo.push(match.winnerTag)
+
+    if (didWin && opponentsLostTo.find(t => t === match.loserTag))
+      p({
+        title: `Rallied!`,
+        context: `Beat ${match.loserTag} after losing a set to them`,
+        value: 5,
+      })
 
     if (didWin) winStreak++
     else {

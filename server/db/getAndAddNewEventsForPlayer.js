@@ -138,7 +138,7 @@ module.exports = async function(player, skipOwnerIds = []) {
 async function saveEvents(newEvents, game) {
   const uniqueParticipants = []
 
-  newEvents = newEvents.filter(e => e).filter(e => e.participants)
+  newEvents = newEvents.filter(e => e && e.participants)
 
   for (let e of newEvents) {
     uniqueParticipants.push(

@@ -67,6 +67,8 @@ module.exports = {
             '-',
             loadedEntry.tournamentName,
             loadedEntry.id,
+            'on',
+            loadedEntry.service,
           )
           return resolve(loadedEntry)
         }

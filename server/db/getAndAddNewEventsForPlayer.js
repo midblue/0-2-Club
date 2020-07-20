@@ -184,12 +184,13 @@ async function saveEvents(newEvents, game) {
     for (let event of newEvents) {
       let skipDouble = 0
 
-      event.participants.map(participant => {
+      event.participants.forEach(participant => {
         const player = players.find(
           p => participant.id === p.redirect || participant.id === p.id,
         )
 
         let newPlayerData = {}
+        if (!player) return // will be handled on another pass
         if (!player.tag) {
           newPlayerData = prep.makeNewPlayerToSaveFromEvent(event, participant)
         } else {

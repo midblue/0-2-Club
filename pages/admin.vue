@@ -118,7 +118,7 @@ export default {
   data() {
     return {
       hide: true,
-      delService: 'smash.gg',
+      delService: 'smashgg',
       delGame: 'Super Smash Bros. Melee',
       delId: null,
       presetPlayers: [

@@ -142,7 +142,6 @@ module.exports = async function(player, skipOwnerIds = []) {
 
 async function saveEvents(newEvents, game) {
   const uniqueParticipants = []
-  console.log(0)
 
   newEvents = newEvents.filter(e => e && e.participants)
 
@@ -154,13 +153,13 @@ async function saveEvents(newEvents, game) {
       ),
     )
   }
-  console.log(1)
 
   for (let event of newEvents) await db.addEvent(event)
-  console.log(1.5)
 
   const batchSize = 30
   let currentBatchOfParticipants = uniqueParticipants.splice(0, batchSize)
+  let totalNew = 0,
+    totalUpdated = 0
 
   while (currentBatchOfParticipants.length) {
     let newPlayersCount = 0
@@ -172,14 +171,14 @@ async function saveEvents(newEvents, game) {
         return { id: p.id }
       }),
     )
+    totalNew += newPlayersCount
+    totalUpdated += players.length - newPlayersCount
 
     // todo necessary?
     players = players.filter(
       // weed out doubles (i.e. redirect)
       (p, index) => players.findIndex(p2 => p.id === p2.id) === index,
     )
-
-    console.log(2)
 
     for (let event of newEvents) {
       let skipDouble = 0
@@ -204,6 +203,7 @@ async function saveEvents(newEvents, game) {
               e => e.id === newParticipantData.id,
             )
           )
+            // todo getting weird amounts of this... doesnt seem good
             skipDouble++
           else {
             newPlayerData.participatedInEvents = [
@@ -223,19 +223,12 @@ async function saveEvents(newEvents, game) {
         )
     }
 
-    console.log(2.5)
-
-    log(
-      `will update ${players.length -
-        newPlayersCount} and add ${newPlayersCount} players`,
-    )
     // while we're here, go ahead and do the BASIC points for these players
     await updatePlayersPointsAndPeers(players, true)
 
-    console.log(3)
-
     currentBatchOfParticipants = uniqueParticipants.splice(0, batchSize)
   }
+  log(`updated ${totalUpdated} and added ${totalNew} players`)
 }
 
 function getOwnerIds(events, skipOwnerIds = []) {

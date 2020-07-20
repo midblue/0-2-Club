@@ -598,7 +598,7 @@ function yearlyAttendance(player, events) {
     eventsPerYear[year] = (eventsPerYear[year] || 0) + 1
   }
 
-  const levels = [0, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 1000]
+  const levels = [0, 4, 8, 12, 16, 20, 24, 28, 32, 40, 50, 65, 80, 100, 1000]
 
   const awards = Object.keys(eventsPerYear).map(year => {
     const isCurrentYear = new Date().getFullYear() === year

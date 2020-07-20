@@ -1,5 +1,5 @@
 <template>
-  <PlayerView :initialPlayer="player" />
+  <PlayerView :initialPlayer="player" :key="'tag' + player.tag" />
 </template>
 
 <script>

@@ -155,6 +155,7 @@ module.exports = {
         'done getting',
         eventSlug,
         tournamentSlug,
+        eventData.id,
         'on smash.gg,',
         currentlyLoadingNewEvents.length,
         'left in queue',
@@ -433,135 +434,42 @@ async function getEvent(tournamentSlug, eventSlug) {
           data.errors ||
           (data.data ? data.data.error || data.data.errors : 'no data'),
       )
-      attempts++
+      retries++
       data = null
     } else data = data.data.data.event
   }
   if (!isComplete(data)) return { error: 'not complete' }
   if (!isSingles(data)) return { error: 'not singles' }
 
-  data.sets.nodes = []
-  data.standings.nodes = []
-
   const totalSetNumber = data.sets.pageInfo.totalPages,
     totalStandingNumber = data.standings.pageInfo.totalPages
 
-  // todo dynamically raise/lower perPage
+  const allSets = await getAllEventSetsOrStandings(
+    tournamentSlug,
+    eventSlug,
+    'sets',
+    totalSetNumber,
+    50,
+  )
+  const allStandings = await getAllEventSetsOrStandings(
+    tournamentSlug,
+    eventSlug,
+    'standings',
+    totalStandingNumber,
+    100,
+  )
 
-  let perSetQueryPage = 14
-  let perStandingQueryPage = 70
-
-  const totalSetPages = Math.ceil(totalSetNumber / perSetQueryPage),
-    totalStandingPages = Math.ceil(totalStandingNumber / perStandingQueryPage)
-
-  let allSets = []
-  for (
-    let currentSetsPage = 1;
-    currentSetsPage <= totalSetPages;
-    currentSetsPage++
-  ) {
-    allSets.push(
-      new Promise(async resolve => {
-        let moreSets,
-          attempts = 0
-        while (!moreSets && attempts < 5) {
-          attempts++
-          moreSets = await makeQuery(queryEventSets, {
-            page: currentSetsPage,
-            slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
-            perPage: perSetQueryPage,
-          })
-          if (
-            !moreSets ||
-            !moreSets.data ||
-            moreSets.data.error ||
-            moreSets.error ||
-            !moreSets.data.data ||
-            !moreSets.data.data.event ||
-            !moreSets.data.data.event.sets.nodes
-          ) {
-            logError(
-              `Failed to get sets page ${currentSetsPage} for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts})`,
-              `(${JSON.stringify(
-                (!moreSets
-                  ? 'no data at all! perQueryPage might be too high.'
-                  : null) ||
-                  moreSets.data.error ||
-                  moreSets.data.errors ||
-                  moreSets.data,
-                null,
-                2,
-              )})`,
-            )
-            moreSets = null
-          }
-        }
-        if (!moreSets) return resolve({ error: 'no sets data!' })
-        moreSets = moreSets.data.data.event.sets.nodes
-        low(
-          'got sets page',
-          currentSetsPage,
-          'for',
-          `${tournamentSlug} - ${eventSlug}`,
-        )
-        return resolve(moreSets)
-      }),
-    )
-  }
-
-  let allStandings = []
-  for (
-    let currentStandingsPage = 1;
-    currentStandingsPage <= totalStandingPages;
-    currentStandingsPage++
-  ) {
-    allStandings.push(
-      new Promise(async resolve => {
-        let moreStandings,
-          attempts = 0
-        while (!moreStandings && attempts < 5) {
-          attempts++
-          moreStandings = await makeQuery(queryEventStandings, {
-            page: currentStandingsPage,
-            slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
-            perPage: perStandingQueryPage,
-          })
-          if (
-            !moreStandings ||
-            !moreStandings.data ||
-            moreStandings.data.error ||
-            moreStandings.error
-          ) {
-            logError(
-              `Failed to get more standings for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts})`,
-            )
-            moreStandings = null
-          }
-        }
-        if (!moreStandings) return resolve({ error: 'no standings data!' })
-        moreStandings = moreStandings.data.data.event.standings.nodes
-        low(
-          'got standings page',
-          currentStandingsPage,
-          'for',
-          `${tournamentSlug} - ${eventSlug}`,
-        )
-        return resolve(moreStandings)
-      }),
-    )
-  }
-
-  allSets = await Promise.all(allSets)
-  allSets = [].concat.apply([], allSets)
-  if (allSets.find(s => s.error))
-    return { error: allSets.find(s => s.error).error }
+  if (allSets.error) return { error: 'error getting sets: ' + allSets.error }
   data.sets.nodes = allSets
 
-  allStandings = await Promise.all(allStandings)
-  allStandings = [].concat.apply([], allStandings)
-  if (allStandings.find(s => s.error))
-    return { error: allStandings.find(s => s.error).error }
+  if (allStandings.error)
+    return { error: 'error getting standings: ' + allStandings.error }
   data.standings.nodes = allStandings
+
+  if (!isSingles(data)) return { error: 'not singles' }
+
+  console.log('done!')
+  return { error: 'debug' }
 
   return data
 }
@@ -570,4 +478,109 @@ function isNotAlreadyLoading(event) {
   return !currentlyLoadingNewEvents.find(
     e => e === event.tournamentSlug + (event.eventSlug || event.slug),
   )
+}
+
+async function getAllEventSetsOrStandings(
+  tournamentSlug,
+  eventSlug,
+  type,
+  totalNumberOfElements,
+  initialPerPage,
+  maxRetries = 10,
+) {
+  return new Promise(resolve => {
+    let retries = 0
+    const allData = []
+    let perPage = initialPerPage
+
+    const getStartPoint = () => {
+      let index = 0
+      while (allData[index] !== undefined) index++
+      if (index >= totalNumberOfElements) return false
+      return index
+    }
+
+    const doneRatio = () => {
+      let done = 0
+      for (let i = 0; i < totalNumberOfElements; i++)
+        if (allData[i] && allData[i] !== 'claimed') done++
+      return done / totalNumberOfElements
+    }
+
+    const getSomeData = async () => {
+      const currentPerPage = perPage
+      const startPoint = getStartPoint()
+
+      const tryAgainWithSmallerPerPage = async () => {
+        for (let i = startPoint; i < startPoint + currentPerPage; i++)
+          allData[i] = undefined
+        perPage = Math.ceil(currentPerPage * 0.8)
+        if (perPage !== initialPerPage) retries++
+        if (retries > maxRetries) return resolve({ error: 'too many retries' })
+        getSomeData()
+      }
+
+      try {
+        if (startPoint === false) return
+        const pageNumber = Math.floor(startPoint / currentPerPage)
+        const startPointOnPage = startPoint % currentPerPage
+
+        for (let i = startPoint; i < startPoint + currentPerPage; i++)
+          allData[i] = 'claimed'
+        allData.splice(totalNumberOfElements, 1000)
+
+        const res = await makeQuery(
+          type === 'sets' ? queryEventSets : queryEventStandings,
+          {
+            slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
+            perPage: currentPerPage,
+            page: pageNumber,
+          },
+        )
+        if (
+          !res ||
+          !res.data ||
+          res.error ||
+          res.data.error ||
+          res.data.errors ||
+          (type === 'sets' &&
+            (!res.data.data ||
+              !res.data.data.event ||
+              !res.data.data.event.sets.nodes))
+        ) {
+          logError(
+            `Failed to get ${type} page ${pageNumber} (perPage ${currentPerPage}) for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${retries +
+              1})`,
+            `(${JSON.stringify(
+              (!res ? 'no data' : null) ||
+                res.error ||
+                res.data.error ||
+                res.data.errors ||
+                res.data,
+              null,
+              2,
+            )})`,
+          )
+          tryAgainWithSmallerPerPage()
+        } else {
+          const actualArrayOfData =
+            type === 'sets'
+              ? res.data.data.event.sets.nodes
+              : res.data.data.event.standings.nodes
+          for (let i = startPointOnPage; i < actualArrayOfData.length; i++) {
+            allData[currentPerPage * pageNumber + i] = actualArrayOfData[i]
+            if (actualArrayOfData[i].error)
+              return resolve({ error: actualArrayOfData[i].error })
+          }
+          if (doneRatio() === 1) return resolve(allData)
+          else while (getStartPoint() !== false) getSomeData()
+        }
+      } catch (e) {
+        logError(`error getting ${type}`, e)
+        tryAgainWithSmallerPerPage()
+      }
+    }
+
+    getSomeData()
+  })
 }

@@ -11,7 +11,11 @@ const rateLimiter = require('../../scripts/rateLimiter')
 const limiter = new rateLimiter(12, 10000)
 
 async function makeQuery(query, variables) {
-  // log('querying smashgg api:', query.substring(7, query.indexOf('(')))
+  // log(
+  //   'querying smashgg api:',
+  //   query.substring(7, query.indexOf('(')),
+  //   variables,
+  // )
   const request = {
     url: 'https://api.smash.gg/gql/alpha',
     method: 'post',
@@ -242,11 +246,11 @@ query EventStandings($slug: String, $page: Int!, $perPage: Int) {
   }
 }`
 
-// todo this is 504ing on a lot of owners (timeout). 92917 for example
+// todo this is 504ing on a lot of owners (timeout). 92917 for example.
 const queryTournamentsByOwner = `
 query TournamentsByOwner($ownerId: ID!) {
     tournaments(query: {
-      perPage: 50
+      perPage: 40
       filter: {
         ownerId: $ownerId
       }

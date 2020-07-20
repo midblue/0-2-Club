@@ -434,6 +434,7 @@ module.exports = {
         `${event.name} @ ${event.tournamentName}` +
         ' on ' +
         event.service +
+        `(${event.id})` +
         ' to database',
     )
   },

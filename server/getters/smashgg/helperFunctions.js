@@ -39,14 +39,10 @@ module.exports = {
     ) {
       let isProbablyDoubles = 0
       for (let c = 0; c < 6; c++) {
-        const set =
-          event.sets.nodes[Math.floor(Math.random() * event.sets.nodes.length)]
-        console.log(
-          set.slots.find(s => s.standing.placement > 2),
-          parseParticipantTag(
-            set.slots[0].entrant.participants[0].player.gamerTag,
-          ),
+        const randomSetNumber = Math.floor(
+          Math.random() * event.sets.nodes.length,
         )
+        const set = event.sets.nodes[randomSetNumber]
         if (set.slots.find(s => s.standing.placement > 2)) return false // 3 or more players
         if (
           // slashes in participant names

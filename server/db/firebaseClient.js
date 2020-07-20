@@ -114,7 +114,7 @@ const currentMsUntilMidnightInPST =
 
 resetInterval = setTimeout(resetCounts, currentMsUntilMidnightInPST)
 
-module.exports = {
+const exportFunctions = {
   async getStats() {
     return statsRef.get().then(async doc => {
       const games = await this.getGames()
@@ -499,3 +499,7 @@ function handleError(label, err) {
   writes = maxWrites
   deletes = maxDeletes
 }
+
+exportFunctions.deleteEvent(40311, 'smash.gg', 'Super Smash Bros. Melee')
+
+module.exports = exportFunctions

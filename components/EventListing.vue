@@ -2,10 +2,13 @@
   <div class="panel" :class="{ open }" @click="open ? null : (open = !open)">
     <h3 :class="{ open }" @click.stop="open = !open">
       <span
-        v-if="event.points.reduce((t, p) => t + p.value, 0)"
+        v-if="totalPoints"
         class="colorpad points"
-        :style="{ background: `var(--l${level})` }"
-        ><span>+{{ event.points.reduce((t, p) => t + p.value, 0) }}</span></span
+        :style="{
+          background: `var(--l${displayColorLevel})`,
+          opacity: displayOpacity,
+        }"
+        ><span>+{{ totalPoints }}</span></span
       >
       <span class="title">
         <span class="tournamentname">{{
@@ -28,7 +31,7 @@
         <span
           class="pointvalue"
           :style="{
-            color: `var(--l${level}d)`,
+            color: `var(--l${displayColorLevel}d)`,
             opacity: point.value >= 8 ? 1 : point.value / 10 + 0.2,
           }"
           >+{{ point.value }}</span
@@ -78,6 +81,8 @@
 </template>
 
 <script>
+import levels from '~/common/levels'
+
 export default {
   props: {
     openByDefault: { default: false },
@@ -90,7 +95,22 @@ export default {
       open: this.openByDefault,
     }
   },
-  computed: {},
+  computed: {
+    totalPoints() {
+      return this.event.points.reduce((t, p) => t + p.value, 0)
+    },
+    displayColorLevel() {
+      return this.level
+      // const eventAdjustedPoints = this.totalPoints * 50
+      // let l = 0
+      // while (eventAdjustedPoints > levels[l].points) l++
+      // if (l > 0) l--
+      // return l
+    },
+    displayOpacity() {
+      return 1
+    },
+  },
 }
 </script>
 

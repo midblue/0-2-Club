@@ -20,6 +20,12 @@ module.exports = [
     log: false,
   },
   {
+    regex: /192.151.157.210/g,
+    name: 'nocix.net',
+    allowed: false,
+    log: false,
+  },
+  {
     regex: /(136.243.70.151|144.76.60.198|148.251.|144.76.108.)/g,
     name: 'Hetzner Online',
     allowed: false,

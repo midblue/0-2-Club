@@ -69,7 +69,7 @@ module.exports = async function(playerGamesAndIds) {
   if (knownMissingEvents.size)
     logError(
       'Missing events',
-      knownMissingEvents.values(), //.map(e => e.id).join(', '),
+      Array.from(knownMissingEvents).join(', '),
       'in db, removed from player histories',
     )
 

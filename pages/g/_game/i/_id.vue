@@ -14,7 +14,7 @@ export default {
     let ipInfo
     if (req) {
       ipInfo = parseIp(req)
-      console.log('ip info:', ipInfo)
+      // console.log('ip info:', ipInfo)
       if (!ipInfo.allowed) {
         if (ipInfo.log)
           require('~/server/scripts/log')('page:id', 'gray')(

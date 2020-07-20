@@ -6,6 +6,8 @@ const log = logger('api', 'gray')
 const get = require('../getters/get')
 const updateManager = require('../updater/updateManager')
 const updateSinglePlayerPointsAndPeers = require('../db/updateSinglePlayerPointsAndPeers')
+const dbDataPrep = require('../db/dbDataPrep')
+const db = require('../db/firebaseClient')
 
 router.get('/test', (req, res) => {
   res.json({ test: 'success' })
@@ -97,6 +99,15 @@ router.get('/combine/:game/:tag/:id/', async (req, res, next) => {
     id,
   })
   res.json({ id: didRedirect })
+})
+
+/* GET delete event manually */
+router.get('/delev/:game/:service/:id/', async (req, res, next) => {
+  const game = decodeURIComponent(req.params.game)
+  const service = decodeURIComponent(req.params.service)
+  const id = parseInt(decodeURIComponent(req.params.id))
+  await db.deleteEvent(id, service, game)
+  res.json({ success: true })
 })
 
 /* GET run new event scan from admin panel */

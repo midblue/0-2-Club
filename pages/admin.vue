@@ -5,6 +5,13 @@
     <button @click="scanForNewEvents">Scan for New Events</button>
     <button @click="rollingUpdate">Rolling Update</button>
 
+    <br />
+    <input v-model="delService" value="smash.gg" />
+    <input v-model="delGame" value="Super Smash Bros. Melee" />
+    <input v-model="delId" placeholder="id" />
+    <button @click="deleteEvent">Delete</button>
+    <br />
+
     <div
       class="button"
       v-for="(event, index) in presetEvents"
@@ -111,6 +118,9 @@ export default {
   data() {
     return {
       hide: true,
+      delService: 'smash.gg',
+      delGame: 'Super Smash Bros. Melee',
+      delId: null,
       presetPlayers: [
         {
           id: '517615',
@@ -186,6 +196,15 @@ export default {
     socket.on('newEvent', data => console.log(data))
   },
   methods: {
+    deleteEvent() {
+      this.$store.commit('setIsLoading', true)
+      axios
+        .get(`/api/delev/${this.delGame}/${this.delService}/${this.delId}/`)
+        .then(res => {
+          this.$store.commit('setIsLoading', false)
+          this.$store.dispatch('notifications/notify', `Done!`)
+        })
+    },
     scanForNewEvents() {
       this.$store.commit('setIsLoading', true)
       axios.get(`/api/scan/`).then(res => {

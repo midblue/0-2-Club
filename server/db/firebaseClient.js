@@ -500,6 +500,4 @@ function handleError(label, err) {
   deletes = maxDeletes
 }
 
-exportFunctions.deleteEvent(40311, 'smash.gg', 'Super Smash Bros. Melee')
-
 module.exports = exportFunctions

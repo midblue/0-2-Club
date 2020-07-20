@@ -5,7 +5,7 @@
       v-if="player.id && player.tag && !hasLoadedGetMore && !updatedTooRecently"
       @click="getMore"
     >
-      Auto-Scan For Recent Events
+      Auto-Scan For More Events
     </button>
     <button
       :class="{ low: player.id }"
@@ -47,7 +47,9 @@ export default {
     },
   },
   watch: {},
-  mounted() {},
+  mounted() {
+    console.log(this.player)
+  },
   methods: {
     searchFor() {
       let event

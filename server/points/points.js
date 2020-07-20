@@ -2,7 +2,6 @@ const { getPlacingRatio } = require('../../common/functions')
 const db = require('../db/firebaseClient')
 
 // todo make rivals be people who you have an actual close ratio with
-// todo "rally!" beat someone you lost to earlier in the tournament
 
 module.exports = {
   async get(player, onlyTouchEventId, loadedPlayers = [], quick = false) {
@@ -361,7 +360,9 @@ async function matchPoints(
       p({
         category: `Progression`,
         title: `Strong Opponent`,
-        context: `${opponentTag} usually places well`,
+        context: `${opponentTag} usually places${
+          opponentRatio < 0.15 ? ' very' : ''
+        } well`,
         value: 2,
       })
 

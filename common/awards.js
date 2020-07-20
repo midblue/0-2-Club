@@ -30,6 +30,7 @@ function getAwards(player, events) {
     ...bestStreak(player, events),
     ...totalGameWins(player, events),
     ...totalPodiumFinishes(player, events),
+    ...totalFirstPlaces(player, events),
     ...mostWeeksInARow(player, events),
     ...mostInOneWeek(player, events),
     ...yearlyImprovement(player, events),
@@ -278,6 +279,58 @@ function totalPodiumFinishes(player, events) {
   }</span> time${levels[1] === 1 ? '' : 's'}`
 
   const img = '/img/awards/podium.png'
+
+  const label = ``
+
+  const points = level * 10
+
+  if (level < 1) return []
+  return [
+    {
+      title,
+      total,
+      level,
+      levelStart,
+      levelEnd,
+      levelProgress,
+      bestAttemptString,
+      levelDescription,
+      requirements,
+      img,
+      label,
+      points,
+    },
+  ]
+}
+
+function totalFirstPlaces(player, events) {
+  const totalFirstPlaces = events.reduce(
+    (total, event) => total + (event.standing === 1 ? 1 : 0),
+    0,
+  )
+  const levels = [0, 1, 2, 4, 7, 10, 15, 20, 30, 50, 75, 100, 1000]
+
+  const title = `Number One`
+  const total = totalFirstPlaces
+
+  let level = levels.findIndex(l => totalFirstPlaces < l) - 1
+  if (totalFirstPlaces < 1) level = -1 // not started
+
+  const levelStart = levels[level] || 0,
+    levelEnd = levels[level + 1],
+    levelProgress = totalFirstPlaces / levelEnd
+
+  const bestAttemptString = `Current: ${totalFirstPlaces}`
+
+  const levelDescription = `Won <span style="font-weight: bold; color:var(--l${level});">${totalFirstPlaces}</span> tournament${
+    totalFirstPlaces === 1 ? '' : 's'
+  }`
+
+  const requirements = `Level 1: Win a tournament <span style="font-weight: bold;">${
+    levels[1]
+  }</span> time${levels[1] === 1 ? '' : 's'}`
+
+  const img = '/img/awards/championships.png'
 
   const label = ``
 

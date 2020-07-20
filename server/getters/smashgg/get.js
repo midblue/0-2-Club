@@ -34,6 +34,12 @@ module.exports = {
     if (!(tournamentSlug && eventSlug))
       return { err: 'missing event or tournament slug' }
 
+    const removeFromLoadingList = () =>
+      currentlyLoadingNewEvents.splice(
+        currentlyLoadingNewEvents.indexOf(tournamentSlug + slug),
+        1,
+      )
+
     if (currentlyLoadingNewEvents.find(e => e === tournamentSlug + eventSlug)) {
       logError(
         'already loading this event! load queue length:',
@@ -46,10 +52,14 @@ module.exports = {
     const eventData = await getEvent(tournamentSlug, eventSlug)
     if (!eventData || eventData.error) {
       logError(`skipping event:`, eventData.error)
+      removeFromLoadingList()
       return { err: eventData.error }
     }
     const isDone = eventData.state === 'COMPLETED'
-    if (!isDone) return { err: 'not done' }
+    if (!isDone) {
+      removeFromLoadingList()
+      return { err: 'not done' }
+    }
 
     // it's possible to start loading this while it's waiting for data, so we check again
     if (
@@ -63,10 +73,7 @@ module.exports = {
         tournamentSlug + eventSlug,
         currentlyLoadingNewEvents,
       )
-      currentlyLoadingNewEvents.splice(
-        currentlyLoadingNewEvents.indexOf(tournamentSlug + slug),
-        1,
-      )
+      removeFromLoadingList()
       return { err: 'already loading' }
     }
     try {
@@ -142,10 +149,7 @@ module.exports = {
         })
         .filter(s => s)
 
-      currentlyLoadingNewEvents.splice(
-        currentlyLoadingNewEvents.indexOf(tournamentSlug + eventSlug),
-        1,
-      )
+      removeFromLoadingList()
 
       log(
         'done getting',
@@ -176,6 +180,7 @@ module.exports = {
       return eventDataToReturn
     } catch (e) {
       logError('malformed data for', eventSlug, tournamentSlug, e)
+      removeFromLoadingList()
       return { err: 'malformed data' }
     }
   },

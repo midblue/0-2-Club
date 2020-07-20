@@ -45,4 +45,6 @@ module.exports = async function({ game, tag, id }) {
   masterPlayer.lastActive = Date.now() / 1000
   await Promise.all(playersToCombine.map(player => db.addPlayer(player, false)))
   log(`combined ${playersToCombine.length} players`)
+
+  await updateSinglePlayerPointsAndPeers(masterPlayer, true)
 }

@@ -95,7 +95,12 @@ module.exports = async function(player, skipOwnerIds = []) {
 
           // don't try to load the next event yet if this one was huge (heap out of memory possible)
           if (loadedEventData.participants.length > 100) await doneSaving
-        } else logError(`skipping event ${loadedEventData}, bad data`)
+        } else
+          logError(
+            `skipping event ${(loadedEventData || {}).eventSlug} ${
+              (loadedEventData || {}).tournamentSlug
+            }, bad data`,
+          )
 
         shouldContinue = remainingStubs.length > 0
 
@@ -139,6 +144,7 @@ module.exports = async function(player, skipOwnerIds = []) {
 
 async function saveEvents(newEvents, game) {
   const uniqueParticipants = []
+  console.log(0)
 
   newEvents = newEvents.filter(e => e && e.participants)
 
@@ -150,6 +156,7 @@ async function saveEvents(newEvents, game) {
       ),
     )
   }
+  console.log(1)
 
   let players = await Promise.all(
     uniqueParticipants.map(async p => {
@@ -159,77 +166,65 @@ async function saveEvents(newEvents, game) {
     }),
   )
 
+  // todo necessary?
   players = players.filter(
     // weed out doubles (i.e. redirect)
     (p, index) => players.findIndex(p2 => p.id === p2.id) === index,
   )
+  const newPlayersCount = player.reduce((acc, p) => acc + (p.tag ? 0 : 1), 0)
 
-  const updatedPlayers = players.filter(p => p.tag)
-  const newPlayers = players.filter(p => !p.tag)
+  console.log(2)
 
-  await Promise.all(
-    newEvents.map(async event => {
-      await db.addEvent(event)
+  for (let event of newEvents) {
+    console.log(3)
+    await db.addEvent(event)
 
-      let skipDouble = 0
+    console.log(4)
 
-      event.participants.map(participant => {
-        const player =
-          newPlayers.find(
-            p => participant.id === p.redirect || participant.id === p.id,
-          ) ||
-          updatedPlayers.find(
-            p => participant.id === p.redirect || participant.id === p.id,
-          )
+    let skipDouble = 0
 
-        let newPlayerData = {}
-        if (!player.tag) {
-          newPlayerData = prep.makeNewPlayerToSaveFromEvent(event, participant)
-        } else {
-          // todo also grab image, tag, etc? (or only if is most recent event for player)
-          const newParticipantData = prep.makeParticipantDataToSaveFromEvent(
-            event,
-            participant,
-          )
-          // todo update instead
-          if (
-            player.participatedInEvents.find(
-              e => e.id === newParticipantData.id,
-            )
-          )
-            skipDouble++
-          else {
-            newPlayerData.participatedInEvents = [
-              ...player.participatedInEvents,
-              newParticipantData,
-            ]
-          }
-        }
-        for (let key of Object.keys(newPlayerData))
-          player[key] = newPlayerData[key]
-      })
-      if (skipDouble)
-        logError(
-          'skipped double adding participant data for',
-          skipDouble,
-          `players (event ${event.name} @ ${event.tournamentName})`,
+    event.participants.map(participant => {
+      const player = players.find(
+        p => participant.id === p.redirect || participant.id === p.id,
+      )
+
+      let newPlayerData = {}
+      if (!player.tag) {
+        newPlayerData = prep.makeNewPlayerToSaveFromEvent(event, participant)
+      } else {
+        // todo also grab image, tag, etc? (or only if is most recent event for player)
+        const newParticipantData = prep.makeParticipantDataToSaveFromEvent(
+          event,
+          participant,
         )
-    }),
-  )
-
-  if (updatedPlayers.length + newPlayers.length)
-    log(
-      `will update ${updatedPlayers.length} and add ${newPlayers.length} players`,
-    )
-
-  await Promise.all(newPlayers.map(player => db.addPlayer(player))) // to keep counts correct etc
-  if (newPlayers.length) logAdd(`added ${newPlayers.length} new players`)
-
-  // while we're here, go ahead and do the BASIC points for these players
-  if (newPlayers.length || updatedPlayers.length) {
-    // await verifyPlayers([...newPlayers, ...updatedPlayers]) // probably don't need to do this here tbh
-    await updatePlayersPointsAndPeers([...newPlayers, ...updatedPlayers], true)
+        if (
+          player.participatedInEvents.find(e => e.id === newParticipantData.id)
+        )
+          skipDouble++
+        else {
+          newPlayerData.participatedInEvents = [
+            ...player.participatedInEvents,
+            newParticipantData,
+          ]
+        }
+      }
+      for (let key of Object.keys(newPlayerData))
+        player[key] = newPlayerData[key]
+    })
+    if (skipDouble)
+      logError(
+        'skipped double adding participant data for',
+        skipDouble,
+        `players (event ${event.name} @ ${event.tournamentName})`,
+      )
   }
+
+  log(
+    `will update ${players.length -
+      newPlayersCount} and add ${newPlayersCount} players`,
+  )
+  // while we're here, go ahead and do the BASIC points for these players
+  await updatePlayersPointsAndPeers([...newPlayers, ...updatedPlayers], true)
 }
 
 function getOwnerIds(events, skipOwnerIds = []) {

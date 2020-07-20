@@ -90,15 +90,30 @@ setInterval(() => {
   prevDeletes = deletes
 }, 5 * 60 * 1000)
 clearInterval(resetInterval) // for hot reload
-resetInterval = setInterval(() => {
+const resetCounts = () => {
   writes = 0
   reads = 0
   deletes = 0
   prevWrites = 0
   prevReads = 0
   prevDeletes = 0
-  low('reset db usage counts to 0')
-}, aDayInSeconds * 1000)
+  low('reset local usage counts to 0')
+  const msUntilNextMidnightPST = 24 * 60 * 60 * 1000
+  setTimeout(resetCounts, msUntilNextMidnightPST)
+}
+const currentMsUntilMidnightInPST =
+  (24 -
+    new Date(
+      new Date().getTime() +
+        new Date().getTimezoneOffset() * 60000 +
+        3600000 * -8,
+    ).getHours()) *
+  60 *
+  60 *
+  1000
+console.log(currentMsUntilMidnightInPST)
+
+resetInterval = setTimeout(resetCounts, currentMsUntilMidnightInPST)
 
 module.exports = {
   async getStats() {

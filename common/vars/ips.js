@@ -26,7 +26,7 @@ module.exports = [
     log: false,
   },
   {
-    regex: /(136.243.70.151|144.76.60.198|148.251.|144.76.108.)/g,
+    regex: /(136.243.70.151|144.76.60.198|148.251.|144.76.108.|5.9.155.37)/g,
     name: 'Hetzner Online',
     allowed: false,
     log: false,

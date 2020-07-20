@@ -242,6 +242,7 @@ query EventStandings($slug: String, $page: Int!, $perPage: Int) {
   }
 }`
 
+// todo this is 504ing on a lot of owners (timeout). 51, 28574, 92917 for example. test using api explorer!
 const queryTournamentsByOwner = `
 query TournamentsByOwner($ownerId: ID!) {
     tournaments(query: {

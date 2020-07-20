@@ -76,16 +76,6 @@ module.exports = async function(player, skipOwnerIds = []) {
     )
 
   if (stubs.length) {
-    // ! this is faster, but has serious race condition potential.... can't do it this way.
-    // await Promise.all(
-    //   stubs.map(async stub => {
-    //     let loadedEventData = await services[stub.service].event(stub)
-    //     log('loading', stub.eventSlug, stub.tournamentSlug)
-    // 		await saveEvents([loadedEventData], player.game) // save event fully
-    //     io.to(`${player.game}`).emit('newEvents', [loadedEventData])
-    //   }),
-    // )
-
     let remainingStubs = [...stubs]
     let shouldContinue = remainingStubs.length > 0
     if (shouldContinue) {
@@ -94,14 +84,16 @@ module.exports = async function(player, skipOwnerIds = []) {
       let doneSaving
 
       while (shouldContinue) {
-        // grab preloaded event data
-        preloadedEventData = await preloadedEventData
+        preloadedEventData = await preloadedEventData // grab preloaded event data
         const loadedEventData = preloadedEventData
         await doneSaving // previous event is saved
-        doneSaving = saveEvents([loadedEventData], player.game) // save event fully
+        doneSaving = saveEvents([loadedEventData], player.game) // save THIS preloaded event fully
           .then(() =>
             io.to(`${player.game}`).emit('newEvents', [loadedEventData]),
           )
+
+        // don't try to load the next event yet if this one was huge (heap out of memory possible)
+        if (loadedEventData.participants.length > 100) await doneSaving
 
         shouldContinue = remainingStubs.length > 0
 

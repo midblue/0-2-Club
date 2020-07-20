@@ -37,9 +37,8 @@ export default {
     return {
       showSearchBar: false,
       hasLoadedGetMore: false,
-      //'',
-      searchUrl:
-        'https://smash.gg/tournament/battle-gateway-21-1/events/melee-singles-vs/standings?page=2',
+      searchUrl: '',
+      // 'https://smash.gg/tournament/battle-gateway-21-1/events/melee-singles-vs/standings?page=2',
     }
   },
   computed: {

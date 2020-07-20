@@ -159,7 +159,7 @@ async function saveEvents(newEvents, game) {
   for (let event of newEvents) await db.addEvent(event)
   console.log(1.5)
 
-  const batchSize = 100
+  const batchSize = 30
   let currentBatchOfParticipants = uniqueParticipants.splice(0, batchSize)
 
   while (currentBatchOfParticipants.length) {

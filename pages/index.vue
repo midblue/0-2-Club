@@ -460,7 +460,7 @@ h4 {
   & > div {
     display: flex;
     justify-content: center;
-    // todo not working on mobile
+    // todo not working on mobile (obv)
 
     @media (max-width: 768px) {
       display: block;

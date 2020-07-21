@@ -25,7 +25,6 @@ module.exports = {
   },
 
   isSingles(event) {
-    // todo not always right
     // melee-singles smash-at-york-15-melee-wii-u-singles-waseda-doubles
     // melee-singles mini-smash-at-york-melee-wii-u-singles-doubles
     const hasNumbers = /(?:[２３４234][ -]?(?:vs?|on|対)[ -]*[２３４234]|do?u?b(?:le)?[sz]|team[sz])/gi

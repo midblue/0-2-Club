@@ -21,8 +21,6 @@ module.exports = async function(
 ) {
   if (!Array.isArray(players)) players = [players]
 
-  console.log(players.length)
-
   // weed out players who have been updated too recently
   // — not necessary for quick because it doesn't make any extraneous db calls anyway
   if (!quick && !forceUpdate) {
@@ -141,8 +139,10 @@ async function recalculatePeers(player) {
         game: player.game,
       })
       if (!event || !event.participants) return
-      const playerStanding = event.participants.find(p => p.id === player.id)
-        .standing
+      const playerStanding = (
+        event.participants.find(p => p.id === player.id) || {}
+      ).standing
+      if (!playerStanding) return
       event.participants.forEach(({ id, tag, img, standing }) => {
         if (tag !== player.tag) {
           const standingSimilarity =

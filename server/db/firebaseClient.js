@@ -7,12 +7,6 @@ const logError = logger('firebase', 'yellow')
 const memo = require('../scripts/memo')
 const prep = require('./dbDataPrep')
 
-// todo slowest things
-// getting new events from ownerids (can we do concurrently?)
-// getting event data
-
-// todo uh oh Error updating player 3 A document cannot be written because it exceeds the maximum size allowed.
-
 const admin = require('firebase-admin')
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -77,7 +71,6 @@ setInterval(() => {
 
 */
 
-// todo usage estimates are wrong usually, and don't reset at the right time
 setInterval(() => {
   if (writes !== prevWrites || reads !== prevReads || deletes !== prevDeletes)
     low(

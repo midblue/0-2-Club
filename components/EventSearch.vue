@@ -43,6 +43,7 @@ export default {
   },
   computed: {
     updatedTooRecently() {
+      // todo not working
       return Date.now() - (this.player.lastUpdated || 0) * 1000 < 30 * 60 * 1000
     },
   },

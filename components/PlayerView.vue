@@ -160,7 +160,7 @@ export default {
       return (this.player.participatedInEvents || []).reduce(
         (acc, event) => [
           ...acc,
-          ...event.points.map(p => ({
+          ...(event.points || []).map(p => ({
             ...p,
             eventName: event.name,
             tournamentName: event.tournamentName,

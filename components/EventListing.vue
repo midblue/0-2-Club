@@ -83,6 +83,8 @@
 <script>
 import levels from '~/common/levels'
 
+// todo add dropdown arrow for closed/open
+
 export default {
   props: {
     openByDefault: { default: false },

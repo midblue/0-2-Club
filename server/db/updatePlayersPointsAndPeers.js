@@ -21,9 +21,10 @@ module.exports = async function(
 ) {
   if (!Array.isArray(players)) players = [players]
 
+  console.log(players.length)
+
   // weed out players who have been updated too recently
   // — not necessary for quick because it doesn't make any extraneous db calls anyway
-  const initialPlayerCount = players.length
   if (!quick && !forceUpdate) {
     players = players.filter(
       p => p.lastUpdated * 1000 || 0 > Date.now() - minUpdateCutoff,

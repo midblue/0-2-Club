@@ -103,10 +103,12 @@ module.exports = async function(newEvents) {
 
     // while we're here, go ahead and do the BASIC points for these players.
     // this will also save the new & updated player data for us.
+    // we force update so that new players still get added.
     await updatePlayersPointsAndPeers(
       players,
       true,
       newEvents.map(e => e.id),
+      true,
     )
 
     currentBatchOfParticipants = uniqueParticipants.splice(0, batchSize)

@@ -32,7 +32,7 @@ router.get('/player/:game/tag/:tag/:active*?', async (req, res, next) => {
     setActive,
   })
   if (foundPlayer) {
-    if (setActive) updatePlayersPointsAndPeers(foundPlayer, false)
+    if (setActive) updatePlayersPointsAndPeers(foundPlayer)
     res.json(foundPlayer)
   } else {
     res.json({ err: 'No player in database by that tag.' })
@@ -46,7 +46,7 @@ router.get('/player/:game/id/:id/:active*?', async (req, res, next) => {
   const setActive = !!req.params.active
   const foundPlayer = await get.player({ game, id, setActive })
   if (foundPlayer) {
-    if (setActive) updatePlayersPointsAndPeers(foundPlayer, false)
+    if (setActive) updatePlayersPointsAndPeers(foundPlayer)
     res.json(foundPlayer)
   } else {
     res.json({ err: 'No player in database by that id.' })

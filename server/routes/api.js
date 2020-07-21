@@ -5,7 +5,7 @@ const log = logger('api', 'gray')
 
 const get = require('../getters/get')
 const updateManager = require('../updater/updateManager')
-const updateSinglePlayerPointsAndPeers = require('../db/updateSinglePlayerPointsAndPeers')
+const updatePlayersPointsAndPeers = require('../db/updatePlayersPointsAndPeers')
 const dbDataPrep = require('../db/dbDataPrep')
 const db = require('../db/firebaseClient')
 
@@ -32,7 +32,7 @@ router.get('/player/:game/tag/:tag/:active*?', async (req, res, next) => {
     setActive,
   })
   if (foundPlayer) {
-    if (setActive) updateSinglePlayerPointsAndPeers(foundPlayer)
+    if (setActive) updatePlayersPointsAndPeers(foundPlayer, false)
     res.json(foundPlayer)
   } else {
     res.json({ err: 'No player in database by that tag.' })
@@ -46,7 +46,7 @@ router.get('/player/:game/id/:id/:active*?', async (req, res, next) => {
   const setActive = !!req.params.active
   const foundPlayer = await get.player({ game, id, setActive })
   if (foundPlayer) {
-    if (setActive) updateSinglePlayerPointsAndPeers(foundPlayer)
+    if (setActive) updatePlayersPointsAndPeers(foundPlayer, false)
     res.json(foundPlayer)
   } else {
     res.json({ err: 'No player in database by that id.' })

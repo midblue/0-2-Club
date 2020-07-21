@@ -131,9 +131,21 @@ export default {
   },
   computed: {
     points() {
-      return [...(this.$store.state.player.points || [])].sort(
-        (a, b) => a.date - b.date,
-      )
+      return (this.player.participatedInEvents || [])
+        .reduce(
+          (acc, event) => [
+            ...acc,
+            ...event.points.map(p => ({
+              ...p,
+              eventName: event.name,
+              tournamentName: event.tournamentName,
+              eventSlug: event.eventSlug,
+              tournamentSlug: event.tournamentSlug,
+            })),
+          ],
+          [],
+        )
+        .sort((a, b) => a.date - b.date)
     },
     peers() {
       return this.$store.state.player.peers
@@ -221,7 +233,19 @@ export default {
         if (res.data && !res.data.err) {
           this.rivalTag = res.data.tag
           this.$nextTick(() => {
-            this.rivalPoints = res.data.points
+            this.rivalPoints = (res.data.participatedInEvents || []).reduce(
+              (acc, event) => [
+                ...acc,
+                ...event.points.map(p => ({
+                  ...p,
+                  eventName: event.name,
+                  tournamentName: event.tournamentName,
+                  eventSlug: event.eventSlug,
+                  tournamentSlug: event.tournamentSlug,
+                })),
+              ],
+              [],
+            )
             this.fillData()
           })
         }
@@ -253,7 +277,19 @@ export default {
         if (res.data.disambiguation)
           return (this.rivalId = res.data.disambiguation[0].id)
         this.rivalTag = res.data.tag
-        this.rivalPoints = res.data.points
+        this.rivalPoints = (res.data.participatedInEvents || []).reduce(
+          (acc, event) => [
+            ...acc,
+            ...event.points.map(p => ({
+              ...p,
+              eventName: event.name,
+              tournamentName: event.tournamentName,
+              eventSlug: event.eventSlug,
+              tournamentSlug: event.tournamentSlug,
+            })),
+          ],
+          [],
+        )
         this.fillData()
       })
     },

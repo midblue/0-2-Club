@@ -97,7 +97,7 @@ export default {
   },
   computed: {
     totalPoints() {
-      return this.event.points.reduce((t, p) => t + p.value, 0)
+      return (this.event.points || []).reduce((t, p) => t + p.value, 0)
     },
     displayColorLevel() {
       return this.level

@@ -38,6 +38,48 @@ module.exports = {
     }
   },
 
+  stripUnnecessaryEventData(event) {
+    //* turns out we don't actually NEED sets etc.
+    return {
+      id: event.id,
+      img: event.img,
+      game: event.game,
+      date: event.date,
+      service: event.service,
+      eventSlug: event.eventSlug,
+      name: event.name,
+      tournamentSlug: event.tournamentSlug,
+      tournamentName: event.tournamentName,
+      ownerId: event.ownerId,
+      participants: event.participants.map(
+        ({ img, id, standing, of, tag }) => ({ img, id, standing, of, tag }),
+      ),
+    }
+  },
+
+  collatePointsIntoPlayerData(player) {
+    if (!player || !player.points) return
+    const collatedEvents = (player.participatedInEvents || []).map(event => {
+      const eventDataWithPoints = {
+        ...event,
+        points: (player.points || []).filter(
+          point =>
+            point.eventSlug === event.eventSlug &&
+            point.tournamentSlug === event.tournamentSlug,
+        ),
+      }
+      eventDataWithPoints.points = eventDataWithPoints.points.map(point => {
+        delete point.eventSlug
+        delete point.tournamentSlug
+        return point
+      })
+      return eventDataWithPoints
+    })
+    delete player.points
+    player.participatedInEvents = collatedEvents
+    return player
+  },
+
   parsePlayerDisambiguation(foundPlayer) {
     if (!foundPlayer || !Array.isArray(foundPlayer)) return foundPlayer
     if (foundPlayer.length === 1) return foundPlayer[0]

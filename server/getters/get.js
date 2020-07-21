@@ -1,7 +1,7 @@
 const services = require('./services')
 const db = require('../db/firebaseClient')
-const addSingleEvent = require('../db/addSingleEvent')
-const getAndAddNewEventsForPlayer = require('../db/getAndAddNewEventsForPlayer')
+const saveEvents = require('../db/saveEvents')
+const getAndAddNewEventsForPlayer = require('./getAndAddNewEventsForPlayer')
 const combinePlayers = require('../db/combinePlayers')
 const logger = require('../scripts/log')
 const low = logger('get', 'gray')
@@ -101,8 +101,7 @@ module.exports = {
       }
 
       if (loadedEntry && !loadedEntry.err) {
-        await addSingleEvent(loadedEntry, onlyUpdatePlayers)
-        io.to(game).emit('newEvents', [loadedEntry])
+        await saveEvents(loadedEntry, onlyUpdatePlayers)
       }
 
       resolve(loadedEntry)
@@ -118,9 +117,6 @@ module.exports = {
     })
     if (Array.isArray(loadedPlayer)) return { disambiguation: loadedPlayer }
     if (loadedPlayer && setActive) db.setPlayerActive(loadedPlayer)
-    // if (loadedPlayer)
-    //   log('returning player', loadedPlayer.tag, loadedPlayer.id)
-    loadedPlayer = collatePointsIntoPlayerData(loadedPlayer)
     return loadedPlayer
   },
 
@@ -174,17 +170,17 @@ module.exports = {
   },
 }
 
-function collatePointsIntoPlayerData(player) {
-  if (!player) return
-  const collatedEvents = (player.participatedInEvents || []).map(event => {
-    return {
-      ...event,
-      points: (player.points || []).filter(
-        point =>
-          point.eventSlug === event.eventSlug &&
-          point.tournamentSlug === event.tournamentSlug,
-      ),
-    }
-  })
-  return { ...player, participatedInEvents: collatedEvents }
-}
+// function collatePointsIntoPlayerData(player) {
+//   if (!player) return
+//   const collatedEvents = (player.participatedInEvents || []).map(event => {
+//     return {
+//       ...event,
+//       points: (player.points || []).filter(
+//         point =>
+//           point.eventSlug === event.eventSlug &&
+//           point.tournamentSlug === event.tournamentSlug,
+//       ),
+//     }
+//   })
+//   return { ...player, participatedInEvents: collatedEvents }
+// }

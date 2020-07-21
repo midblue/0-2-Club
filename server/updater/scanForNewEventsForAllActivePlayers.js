@@ -1,6 +1,6 @@
 const db = require('../db/firebaseClient')
 const memoryOk = require('../scripts/memoryOk')
-const getAndAddNewEventsForPlayer = require('../db/getAndAddNewEventsForPlayer')
+const getAndAddNewEventsForPlayer = require('../getters/getAndAddNewEventsForPlayer')
 
 const logger = require('../scripts/log')
 const low = logger('eventscanner', 'gray')

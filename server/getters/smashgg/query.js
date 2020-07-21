@@ -187,6 +187,10 @@ query EventSets($slug: String, $page: Int!, $perPage: Int) {
         hideEmpty: true
       }
     ) {
+			pageInfo {
+				page
+				perPage
+			}
       nodes {
         completedAt
         slots {

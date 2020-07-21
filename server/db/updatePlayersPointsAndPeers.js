@@ -1,5 +1,8 @@
 const points = require('../points/points')
 const db = require('./firebaseClient')
+const { collatePointsIntoPlayerData } = require('./dbDataPrep')
+
+const io = require('../io/io')()
 
 const logger = require('../scripts/log')
 const low = logger('points&peers', 'gray')
@@ -10,18 +13,25 @@ const logError = logger('points&peers', 'yellow')
 
 const minUpdateCutoff = 5 * 60 * 1000
 
-module.exports = async function(players, quick = false) {
+module.exports = async function(
+  players,
+  quick = false,
+  onlyTouchEventIds = null,
+  forceUpdate = false,
+) {
+  if (!Array.isArray(players)) players = [players]
+
   // weed out players who have been updated too recently
   // — not necessary for quick because it doesn't make any extraneous db calls anyway
   const initialPlayerCount = players.length
-  if (!quick) {
+  if (!quick && !forceUpdate) {
     players = players.filter(
       p => p.lastUpdated * 1000 || 0 > Date.now() - minUpdateCutoff,
     )
     if (players.length !== initialPlayerCount)
       low(
-        `skipping updating points/peers for ${players.length -
-          initialPlayerCount} players (too recent)`,
+        `skipping updating points/peers for ${initialPlayerCount -
+          players.length} player/s (too recent)`,
       )
   }
 
@@ -30,12 +40,29 @@ module.exports = async function(players, quick = false) {
   let currentBatchOfPlayersToUpdate = players.splice(0, batchSize)
 
   while (currentBatchOfPlayersToUpdate.length) {
-    // get points for all players
-    let playersWithUnsavedPoints = await Promise.all(
-      currentBatchOfPlayersToUpdate.map(player =>
-        recalculatePoints(player, currentBatchOfPlayersToUpdate, quick),
+    // player objects might not be fully up-to-date, so grab em again
+    currentBatchOfPlayersToUpdate = await Promise.all(
+      currentBatchOfPlayersToUpdate.map(
+        async player => (await db.getPlayer(player)) || player,
       ),
     )
+
+    // get points for all players
+    let playersWithUnsavedPoints = (
+      await Promise.all(
+        currentBatchOfPlayersToUpdate.map(player => {
+          io.to(`${player.game}/${player.id}`).emit(
+            'notification',
+            'Updating points & peers...',
+          )
+          io.to(`${player.game}/${player.tag}`).emit(
+            'notification',
+            'Updating points & peers...',
+          )
+          return recalculatePoints(player, players, quick, onlyTouchEventIds)
+        }),
+      )
+    ).map(player => collatePointsIntoPlayerData(player))
     playersWithUnsavedPoints = playersWithUnsavedPoints.filter(p => p)
 
     // then, get peers for all players, skipping entirely if quick mode
@@ -62,20 +89,32 @@ module.exports = async function(players, quick = false) {
     if (playersToUpdate.length) {
       await Promise.all(playersToUpdate.map(p => db.updatePlayer(p, !quick)))
       logAdd(
-        `saved ${quick ? 'quick ' : ''}points/peers for ${
-          playersToUpdate.length
-        } player/s`,
+        `saved ${quick ? 'quick ' : 'full '}points/peers for ${
+          playersToUpdate.length === 1
+            ? playersToUpdate[0].tag
+            : `${playersToUpdate.length} players`
+        }`,
       )
     }
+
+    currentBatchOfPlayersToUpdate.forEach(player => {
+      io.to(`${player.game}/${player.id}`).emit('playerFullyUpdated', player)
+      io.to(`${player.game}/${player.tag}`).emit('playerFullyUpdated', player)
+    })
 
     currentBatchOfPlayersToUpdate = players.splice(0, batchSize)
   }
 }
 
-async function recalculatePoints(player, players, quick) {
+async function recalculatePoints(
+  player,
+  players,
+  quick,
+  onlyTouchEventIds = null,
+) {
   return new Promise(async resolve => {
     const startingPointsLength = (player.points || []).length
-    player.points = await points.get(player, null, players, quick)
+    player.points = await points.get(player, onlyTouchEventIds, players, quick)
     const wereNewPoints = startingPointsLength !== player.points.length
     resolve(wereNewPoints ? player : null)
   })

@@ -1,10 +1,9 @@
-const prep = require('./dbDataPrep')
-const db = require('./firebaseClient')
-const services = require('../getters/services')
+const saveEvents = require('../db/saveEvents')
+const db = require('../db/firebaseClient')
+const services = require('./services')
 const { gameTitle } = require('../../common/functions')
 const verifyPlayers = require('../updater/verifyPlayers')
-const updateSinglePlayerPointsAndPeers = require('./updateSinglePlayerPointsAndPeers')
-const updatePlayersPointsAndPeers = require('./updatePlayersPointsAndPeers')
+const updatePlayersPointsAndPeers = require('../db/updatePlayersPointsAndPeers')
 
 const io = require('../io/io')()
 
@@ -41,7 +40,7 @@ module.exports = async function(player, skipOwnerIds = []) {
   )
   const newOwnerIds = getOwnerIds(player, skipOwnerIds)
 
-  const maxNewEvents = 30
+  const maxNewEvents = 50
   let stubs = (
     await getMoreEventStubs(player, skipOwnerIds.length ? newOwnerIds : null)
   ).slice(0, maxNewEvents)
@@ -80,6 +79,12 @@ module.exports = async function(player, skipOwnerIds = []) {
     let shouldContinue = remainingStubs.length > 0
     if (shouldContinue) {
       let currentStub = remainingStubs.shift()
+      log(
+        'preloading',
+        currentStub.eventSlug,
+        currentStub.tournamentSlug,
+        `(${remainingStubs.length} left in queue)`,
+      )
       let preloadedEventData = services[currentStub.service].event(currentStub)
       let doneSaving
 
@@ -88,10 +93,7 @@ module.exports = async function(player, skipOwnerIds = []) {
         const loadedEventData = preloadedEventData
         if (loadedEventData && loadedEventData.participants) {
           await doneSaving // previous event is saved
-          doneSaving = saveEvents([loadedEventData], player.game) // save THIS preloaded event fully
-            .then(() =>
-              io.to(`${player.game}`).emit('newEvents', [loadedEventData]),
-            )
+          doneSaving = saveEvents(loadedEventData) // save THIS preloaded event fully
 
           // don't try to load the next event yet if this one was huge (heap out of memory possible)
           if (loadedEventData.participants.length > 100) await doneSaving
@@ -132,103 +134,12 @@ module.exports = async function(player, skipOwnerIds = []) {
   }
   log('done loading more events for', player.tag)
 
-  await updateSinglePlayerPointsAndPeers(player, true)
+  await updatePlayersPointsAndPeers(player, false, null, true)
 
   io.to(`${player.game}/${player.id}`).emit('endEventSearch')
   io.to(`${player.game}/${player.tag}`).emit('endEventSearch')
 
   return { newOwnerIds }
-}
-
-async function saveEvents(newEvents, game) {
-  const uniqueParticipants = []
-
-  newEvents = newEvents.filter(e => e && e.participants)
-
-  for (let e of newEvents) {
-    uniqueParticipants.push(
-      ...e.participants.filter(
-        participant =>
-          !uniqueParticipants.find(player => player.id === participant.id),
-      ),
-    )
-  }
-
-  for (let event of newEvents) await db.addEvent(event)
-
-  const batchSize = 30
-  let currentBatchOfParticipants = uniqueParticipants.splice(0, batchSize)
-  let totalNew = 0,
-    totalUpdated = 0
-
-  while (currentBatchOfParticipants.length) {
-    let newPlayersCount = 0
-    let players = await Promise.all(
-      currentBatchOfParticipants.map(async p => {
-        const foundPlayer = await db.getPlayerById(game, p.id)
-        if (foundPlayer) return foundPlayer
-        newPlayersCount++
-        return { id: p.id }
-      }),
-    )
-    totalNew += newPlayersCount
-    totalUpdated += players.length - newPlayersCount
-
-    // todo necessary?
-    players = players.filter(
-      // weed out doubles (i.e. redirect)
-      (p, index) => players.findIndex(p2 => p.id === p2.id) === index,
-    )
-
-    for (let event of newEvents) {
-      let skipDouble = 0
-
-      event.participants.forEach(participant => {
-        const player = players.find(
-          p => participant.id === p.redirect || participant.id === p.id,
-        )
-
-        let newPlayerData = {}
-        if (!player) return // will be handled on another pass
-        if (!player.tag) {
-          newPlayerData = prep.makeNewPlayerToSaveFromEvent(event, participant)
-        } else {
-          // todo also grab image, tag, etc? (or only if is most recent event for player)
-          const newParticipantData = prep.makeParticipantDataToSaveFromEvent(
-            event,
-            participant,
-          )
-          if (
-            player.participatedInEvents.find(
-              e => e.id === newParticipantData.id,
-            )
-          )
-            // todo getting weird amounts of this... doesnt seem good
-            skipDouble++
-          else {
-            newPlayerData.participatedInEvents = [
-              ...player.participatedInEvents,
-              newParticipantData,
-            ]
-          }
-        }
-        for (let key of Object.keys(newPlayerData))
-          player[key] = newPlayerData[key]
-      })
-      if (skipDouble)
-        logError(
-          'skipped double adding participant data for',
-          skipDouble,
-          `players (event ${event.name} @ ${event.tournamentName})`,
-        )
-    }
-
-    // while we're here, go ahead and do the BASIC points for these players
-    await updatePlayersPointsAndPeers(players, true)
-
-    currentBatchOfParticipants = uniqueParticipants.splice(0, batchSize)
-  }
-  log(`updated ${totalUpdated} and added ${totalNew} players`)
 }
 
 function getOwnerIds(events, skipOwnerIds = []) {
@@ -252,7 +163,6 @@ async function getMoreEventStubs(player, ownerIdsToCheck) {
       return services[s].moreEventStubsForPlayer(
         player,
         ownerIdsToCheck,
-        null,
         gameTitle(player.game),
       )
     }),

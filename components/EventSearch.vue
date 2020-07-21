@@ -47,9 +47,7 @@ export default {
     },
   },
   watch: {},
-  mounted() {
-    console.log(this.player)
-  },
+  mounted() {},
   methods: {
     searchFor() {
       let event

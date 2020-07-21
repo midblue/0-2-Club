@@ -44,7 +44,6 @@ module.exports = async function(playerGamesAndIds) {
       let thisEventIsKnownToBeMissing = !!knownMissingEvents.has(
         event.service + event.id + event.game,
       )
-      // todo test this
       if (!thisEventIsKnownToBeMissing) {
         if (
           !(await db.getEventExists({

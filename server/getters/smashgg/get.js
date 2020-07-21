@@ -26,7 +26,6 @@ const logAdd = logger('smashgg', 'green')
 const logError = logger('smashgg', 'yellow')
 
 const currentlyLoadingNewEvents = []
-// sometimes has trouble with double call to MORE, can get stuck with entries left in it
 
 module.exports = {
   async event({ tournamentSlug, slug, eventSlug }) {
@@ -207,203 +206,209 @@ module.exports = {
     return events
   },
 
-  async moreEventStubsForPlayer(
-    player,
-    ownerIdsToCheck,
-    existingEvents,
-    onlyFromGame,
-  ) {
-    if (!player) return []
+  moreEventStubsForPlayer(player, ownerIdsToCheck, onlyFromGame, limit = 50) {
+    return new Promise(async resolve => {
+      if (!player) return resolve([])
 
-    let foundEvents = []
+      let foundEvents = []
 
-    const isUnknownEvent = async ({ tournamentSlug, eventSlug }) => {
-      return new Promise(async resolve => {
-        // todo takes the bulk of the time when querying for new events
-
-        const existsInNewFoundEvents = foundEvents.find(
-          knownEvent =>
-            knownEvent.tournamentSlug === tournamentSlug &&
-            knownEvent.eventSlug === eventSlug,
-        )
-        if (existsInNewFoundEvents) return resolve(false)
-
-        const existsInDb = existingEvents
-          ? existingEvents.find(
-              existingEvent =>
-                existingEvent.tournamentSlug === tournamentSlug &&
-                existingEvent.eventSlug === eventSlug &&
-                existingEvent.service === 'smashgg',
-            )
-          : await db.getEventExists({
-              service: 'smashgg',
-              tournamentSlug,
-              eventSlug: eventSlug,
-              game: player.game,
-            })
-
-        if (existsInDb) return resolve(false)
-
-        return resolve(true)
-      })
-    }
-
-    // check recent sets for that player via api
-    let ownersFoundFromRecentSets = []
-    if (player.id) {
-      const res = await makeQuery(queryPlayerSets, {
-        id: player.id,
-      })
-      let sets
-      if (!res.data.data || !res.data.data.player) {
-        logError(
-          `Failed to get recent sets for player ${
-            player.id
-          } on smashgg. (${JSON.stringify(
-            res.data.error ||
-              res.data.errors ||
-              res.data.data.error ||
-              res.data.data.errors,
-            null,
-            2,
-          )})`,
-        )
-        sets = []
-      } else sets = res.data.data.player.sets.nodes || []
-      let newPlayerSetEvents = await Promise.all(
-        sets.map(async set => {
-          return new Promise(async resolve => {
-            if (
-              !set.event ||
-              set.event.state !== 'COMPLETED' ||
-              (onlyFromGame &&
-                gameTitle(set.event.videogame.name) !== gameTitle(onlyFromGame))
-            )
-              return resolve()
-            const [
-              wholeString,
-              tournamentSlug,
-              eventSlug,
-            ] = /tournament\/([^/]*)\/event\/([^/]*)/g.exec(set.event.slug)
-            const isNew = await isUnknownEvent({
-              tournamentSlug,
-              eventSlug,
-            })
-            if (isNew) {
-              ownersFoundFromRecentSets.push(set.event.tournament.owner.id)
-              resolve({
-                service: 'smashgg',
-                tournamentSlug,
-                eventSlug,
-                game: gameTitle(set.event.videogame.name),
-              })
-            } else resolve()
-          })
-        }),
-      )
-      newPlayerSetEvents = newPlayerSetEvents
-        .filter(e => e)
-        // filter out internal duplicates
-        .reduce((newEvents, e) => {
-          if (
-            newEvents.find(
-              newEvent =>
-                newEvent.eventSlug === e.eventSlug &&
-                newEvent.tournamentSlug === e.tournamentSlug,
-            )
+      const isUnknownEvent = ({ tournamentSlug, eventSlug }) => {
+        return new Promise(async resolve => {
+          const existsInNewFoundEvents = foundEvents.find(
+            knownEvent =>
+              knownEvent.tournamentSlug === tournamentSlug &&
+              knownEvent.eventSlug === eventSlug,
           )
-            return newEvents
-          return [...newEvents, e]
-        }, [])
-        .filter(isSingles)
-        .filter(isNotAlreadyLoading)
-      if (newPlayerSetEvents.length > 0)
-        log(
-          newPlayerSetEvents.length,
-          'additional event/s found via api for player',
-          player.tag,
-        )
-      else low('no new events found via api for player', player.tag)
+          if (existsInNewFoundEvents) return resolve(false)
 
-      ownersFoundFromRecentSets = Array.from(new Set(ownersFoundFromRecentSets))
-      if (ownersFoundFromRecentSets.length > 0 && !ownerIdsToCheck)
-        low(
-          `found ${ownersFoundFromRecentSets.length} owner/s from recent sets`,
-        )
-      foundEvents.push(...newPlayerSetEvents)
-    }
-
-    // then check other events from the same organizer as all events concerning user
-    const ownerIds =
-      ownerIdsToCheck ||
-      Array.from(
-        new Set([
-          ...player.participatedInEvents
-            .filter(event => event.service === 'smashgg')
-            .map(e => e.ownerId),
-          ...ownersFoundFromRecentSets,
-        ]),
-      )
-
-    if (ownerIds.length)
-      low(
-        'will check',
-        ownerIds.length,
-        'owner/s —',
-        ownerIdsToCheck ? 'preset' : 'organic',
-      )
-    const eventsFromOwnerIds = await Promise.all(
-      ownerIds.map(async ownerId => {
-        let data = null,
-          attempts = 0
-        while (data === null && attempts < 2) {
-          data = await makeQuery(queryTournamentsByOwner, {
-            page: 1,
-            ownerId,
+          const existsInDb = await db.getEventExists({
+            service: 'smashgg',
+            tournamentSlug,
+            eventSlug,
+            game: player.game,
           })
-          if (
-            !data ||
-            !data.data ||
-            data.data.errors ||
-            data.error ||
-            !data.data.data.tournaments ||
-            !data.data.data.tournaments.nodes
-          ) {
-            logError(
-              `Failed to get data for ownerId ${ownerId} on smashgg, retrying... (attempt ${attempts})`,
+          if (existsInDb) return resolve(false)
+
+          return resolve(true)
+        })
+      }
+
+      const isDone = () => {
+        return foundEvents.length >= limit
+      }
+
+      // check recent sets for that player via api
+      let ownersFoundFromRecentSets = []
+      if (player.id) {
+        const res = await makeQuery(queryPlayerSets, {
+          id: player.id,
+        })
+        let sets
+        if (!res.data.data || !res.data.data.player) {
+          logError(
+            `Failed to get recent sets for player ${
+              player.id
+            } on smashgg. (${JSON.stringify(
+              res.data.error ||
+                res.data.errors ||
+                res.data.data.error ||
+                res.data.data.errors,
+              null,
+              2,
+            )})`,
+          )
+          sets = []
+        } else sets = res.data.data.player.sets.nodes || []
+        let newPlayerSetEvents = await Promise.all(
+          sets
+            .reduce(
+              (setsWithUniqueEvent, set) =>
+                setsWithUniqueEvent.find(ue => ue.event.slug === set.event.slug)
+                  ? setsWithUniqueEvent
+                  : [...setsWithUniqueEvent, set],
+              [],
             )
-            attempts++
-            data = null
-          }
-        }
-        if (!data) return []
-
-        let newEvents = await parseEventStubsFromTournaments(
-          data.data.data.tournaments.nodes,
-          onlyFromGame,
+            .map(async set => {
+              return new Promise(async resolve => {
+                if (
+                  !set.event ||
+                  set.event.state !== 'COMPLETED' ||
+                  (onlyFromGame &&
+                    gameTitle(set.event.videogame.name) !==
+                      gameTitle(onlyFromGame))
+                )
+                  return resolve()
+                const [
+                  wholeString,
+                  tournamentSlug,
+                  eventSlug,
+                ] = /tournament\/([^/]*)\/event\/([^/]*)/g.exec(set.event.slug)
+                if (!isSingles({ eventSlug })) return resolve()
+                const isNew = await isUnknownEvent({
+                  tournamentSlug,
+                  eventSlug,
+                })
+                if (isNew) {
+                  ownersFoundFromRecentSets.push(set.event.tournament.owner.id)
+                  return resolve({
+                    service: 'smashgg',
+                    tournamentSlug,
+                    eventSlug,
+                    game: gameTitle(set.event.videogame.name),
+                  })
+                } else return resolve()
+              })
+            }),
         )
-        newEvents = await Promise.all(
-          newEvents.map(async e => {
-            const isUnknown = await isUnknownEvent(e)
-            if (isUnknown) return e
-            return false
-          }),
-        )
-
-        newEvents = newEvents
+        newPlayerSetEvents = newPlayerSetEvents
           .filter(e => e)
+          // filter out internal duplicates
+          .reduce((newEvents, e) => {
+            if (
+              newEvents.find(
+                newEvent =>
+                  newEvent.eventSlug === e.eventSlug &&
+                  newEvent.tournamentSlug === e.tournamentSlug,
+              )
+            )
+              return newEvents
+            return [...newEvents, e]
+          }, [])
           .filter(isSingles)
           .filter(isNotAlreadyLoading)
-        if (newEvents.length > 0)
-          log(newEvents.length, 'additional event/s found via owner', ownerId)
-        else low('no new events found via owner', ownerId)
+        if (newPlayerSetEvents.length > 0)
+          log(
+            newPlayerSetEvents.length,
+            'additional event/s found via api for player',
+            player.tag,
+          )
+        else low('no new events found via api for player', player.tag)
 
-        return newEvents
-      }),
-    )
-    eventsFromOwnerIds.forEach(eventList => foundEvents.push(...eventList))
+        ownersFoundFromRecentSets = Array.from(
+          new Set(ownersFoundFromRecentSets),
+        )
+        if (ownersFoundFromRecentSets.length > 0 && !ownerIdsToCheck)
+          low(
+            `found ${ownersFoundFromRecentSets.length} owner/s from recent sets`,
+          )
+        foundEvents.push(...newPlayerSetEvents)
+        if (isDone()) return resolve(foundEvents.slice(0, limit))
+      }
 
-    return foundEvents
+      // then check other events from the same organizer as all events concerning user
+      const ownerIds =
+        ownerIdsToCheck ||
+        Array.from(
+          new Set([
+            ...player.participatedInEvents
+              .filter(event => event.service === 'smashgg')
+              .map(e => e.ownerId),
+            ...ownersFoundFromRecentSets,
+          ]),
+        )
+
+      if (ownerIds.length)
+        low(
+          'will check',
+          ownerIds.length,
+          'owner/s —',
+          ownerIdsToCheck ? 'preset' : 'organic',
+        )
+      await Promise.all(
+        ownerIds.map(async ownerId => {
+          if (isDone()) return
+          let data = null,
+            attempts = 0
+
+          while (data === null && attempts < 2) {
+            data = await makeQuery(queryTournamentsByOwner, {
+              page: 1,
+              ownerId,
+            })
+            if (
+              !data ||
+              !data.data ||
+              data.data.errors ||
+              data.error ||
+              !data.data.data.tournaments ||
+              !data.data.data.tournaments.nodes
+            ) {
+              logError(
+                `Failed to get data for ownerId ${ownerId} on smashgg, retrying... (attempt ${attempts})`,
+              )
+              attempts++
+              data = null
+            }
+          }
+          if (!data || isDone()) return
+
+          let newEvents = await parseEventStubsFromTournaments(
+            data.data.data.tournaments.nodes,
+            onlyFromGame,
+          )
+          newEvents = await Promise.all(
+            newEvents.map(async e => {
+              const isUnknown = await isUnknownEvent(e)
+              if (isUnknown) return e
+              return false
+            }),
+          )
+
+          newEvents = newEvents
+            .filter(e => e)
+            .filter(isSingles)
+            .filter(isNotAlreadyLoading)
+          if (newEvents.length > 0)
+            log(newEvents.length, 'additional event/s found via owner', ownerId)
+          else low('no new events found via owner', ownerId)
+
+          foundEvents.push(...newEvents)
+          if (isDone()) return resolve(foundEvents.slice(0, limit))
+        }),
+      )
+
+      return resolve(foundEvents.slice(0, limit))
+    })
   },
 }
 
@@ -449,7 +454,7 @@ async function getEvent(tournamentSlug, eventSlug) {
     eventSlug,
     'sets',
     totalSetNumber,
-    50,
+    45,
   )
   const allStandings = await getAllEventSetsOrStandings(
     tournamentSlug,
@@ -458,6 +463,8 @@ async function getEvent(tournamentSlug, eventSlug) {
     totalStandingNumber,
     100,
   )
+
+  // console.log(allSets)
 
   if (allSets.error) return { error: 'error getting sets: ' + allSets.error }
   data.sets.nodes = allSets
@@ -531,7 +538,7 @@ async function getAllEventSetsOrStandings(
           {
             slug: `tournament/${tournamentSlug}/event/${eventSlug}`,
             perPage: currentPerPage,
-            page: pageNumber,
+            page: pageNumber + 1, // ! smashgg pages are fucking 1-indexed. this took me like 4 hours to figure out.
           },
         )
         if (

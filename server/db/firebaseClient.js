@@ -11,6 +11,8 @@ const prep = require('./dbDataPrep')
 // getting new events from ownerids (can we do concurrently?)
 // getting event data
 
+// todo uh oh Error updating player 3 A document cannot be written because it exceeds the maximum size allowed.
+
 const admin = require('firebase-admin')
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -372,6 +374,7 @@ const exportFunctions = {
       service + (id || tournamentSlug + eventSlug) + game,
     )
     if (memoed) return true
+    // todo could do this without loading all data from event
     return !!(await this.getEvent({
       service,
       id,
@@ -397,7 +400,7 @@ const exportFunctions = {
     writes++
   },
 
-  async updatePlayer(player, setLastUpdated = true) {
+  async updatePlayer(player, setLastUpdated = true, merge = false) {
     const playerData = prep.pruneUndefined(player)
     memoizedPlayers.set(player.id + player.game, playerData)
     const gameRef = await getGameRef(player.game)
@@ -408,7 +411,7 @@ const exportFunctions = {
       .set(
         // switched to .set because .update was slow
         newData,
-        { merge: true },
+        { merge },
       )
       .catch(err => {
         handleError('Error updating player', err)
@@ -418,11 +421,11 @@ const exportFunctions = {
 
   async setPlayerActive(player) {
     player.lastActive = parseInt(Date.now() / 1000)
-    this.updatePlayer(player)
+    this.updatePlayer(player, false, true)
   },
 
   async addEvent(event) {
-    const eventData = prep.pruneUndefined(event)
+    const eventData = prep.pruneUndefined(prep.stripUnnecessaryEventData(event))
     const gameRef = await getGameRef(event.game)
     let eventRef = gameRef.collection('events').doc(event.service + event.id)
     await eventRef.set(eventData, { merge: true }).catch(err => {

@@ -4,23 +4,29 @@ const db = require('../db/firebaseClient')
 // todo make rivals be people who you have an actual close ratio with
 
 module.exports = {
-  async get(player, onlyTouchEventId, loadedPlayers = [], quick = false) {
-    let points = []
+  async get(player, onlyTouchEventIds, loadedPlayers = [], quick = false) {
+    if (onlyTouchEventIds && !Array.isArray(onlyTouchEventIds))
+      onlyTouchEventIds = [onlyTouchEventIds]
 
     const chronologicalEvents = (player.participatedInEvents || []).sort(
       (a, b) => a.date - b.date,
     )
 
-    points.push(
-      ...(await eventPoints(
-        chronologicalEvents,
-        player,
-        onlyTouchEventId,
-        loadedPlayers,
-        quick,
-      )),
+    const points = await eventPoints(
+      chronologicalEvents,
+      player,
+      onlyTouchEventIds,
+      loadedPlayers,
+      quick,
     )
 
+    // if (player.tag === 'H0P')
+    //   console.log(
+    //     chronologicalEvents.length,
+    //     onlyTouchEventIds,
+    //     quick,
+    //     points.length,
+    //   )
     return points
   },
 }
@@ -28,15 +34,24 @@ module.exports = {
 async function eventPoints(
   events,
   player,
-  onlyTouchEventId,
+  onlyTouchEventIds,
   loadedPlayers,
   quick,
 ) {
   let runningPlacingAverage
   let lastEventDate
   return await events.reduce(async (collectedPoints, event, index) => {
-    if (onlyTouchEventId && event.id !== onlyTouchEventId) {
-      return collectedPoints
+    if (onlyTouchEventIds && !onlyTouchEventIds.find(id => id === event.id)) {
+      collectedPoints = await collectedPoints
+      // if (player.tag === 'H0P') console.log('reusing existing points')
+      return [
+        ...collectedPoints,
+        ...(event.points || []).map(p => ({
+          ...p,
+          eventSlug: event.eventSlug,
+          tournamentSlug: event.tournamentSlug,
+        })),
+      ]
     }
 
     const points = []
@@ -96,9 +111,8 @@ async function eventPoints(
         date: event.date,
       })
 
-    if (index === 0 && !onlyTouchEventId)
+    if (index === 0 && !onlyTouchEventIds)
       p({
-        category: `Progression`,
         title: `First Event`,
         context: `For ${player.game}`,
         value: 20,
@@ -106,7 +120,6 @@ async function eventPoints(
       })
     else if (index === 1)
       p({
-        category: `Progression`,
         title: `Sticking With It`,
         context: `Attended your second event`,
         value: 10,
@@ -114,7 +127,6 @@ async function eventPoints(
       })
     else if (index === 2)
       p({
-        category: `Progression`,
         title: `Sticking With It`,
         context: `Attended your third event`,
         value: 5,
@@ -122,7 +134,6 @@ async function eventPoints(
       })
     else if (event.standing / event.totalParticipants < runningPlacingAverage)
       p({
-        category: `Progression`,
         title: `Placed Better than Average`,
         context: `You're improving!`,
         value: 10,
@@ -141,7 +152,6 @@ async function eventPoints(
 
     if (event.standing === 1) {
       p({
-        category: `Progression`,
         title: `Won the Tournament`,
         context: `First place!`,
         value: 20,
@@ -149,7 +159,6 @@ async function eventPoints(
       })
     } else if (event.standing === 2) {
       p({
-        category: `Progression`,
         title: `Runner-Up`,
         context: `Nice job!`,
         value: 15,
@@ -157,7 +166,6 @@ async function eventPoints(
       })
     } else if (event.standing / event.totalParticipants <= 0.1) {
       p({
-        category: `Progression`,
         title: `Top 10%`,
         context: `${event.standing} of ${event.totalParticipants}`,
         value: 10,
@@ -165,7 +173,6 @@ async function eventPoints(
       })
     } else if (event.standing / event.totalParticipants <= 0.25) {
       p({
-        category: `Progression`,
         title: `Top 25%`,
         context: `${event.standing} of ${event.totalParticipants}`,
         value: 8,
@@ -173,7 +180,6 @@ async function eventPoints(
       })
     } else if (event.standing / event.totalParticipants <= 0.5) {
       p({
-        category: `Progression`,
         title: `Top 50%`,
         context: `${event.standing} of ${event.totalParticipants}`,
         value: 5,
@@ -221,6 +227,7 @@ async function matchPoints(
   quick,
 ) {
   const chronologicalMatches = matches.sort((a, b) => a.date - b.date)
+  // if (player.tag === 'H0P') console.log(chronologicalMatches)
   let winStreak = 0,
     inLosers = false
   const opponentsBeat = []
@@ -238,7 +245,6 @@ async function matchPoints(
 
     if (didWin && lostGames - wonGames === 1)
       p({
-        category: `Progression`,
         title: `Clinched a Close Set`,
         context: `${wonGames}-${lostGames} vs. %O`,
         opponent: {
@@ -250,7 +256,6 @@ async function matchPoints(
       })
     else if (didWin)
       p({
-        category: `Progression`,
         title: `Won a Set`,
         context: `vs. %O`,
         opponent: {
@@ -262,7 +267,6 @@ async function matchPoints(
       })
     else if (wonGames - lostGames === 1)
       p({
-        category: `Progression`,
         title: `Played a Close Set`,
         context: `${wonGames}-${lostGames} vs. %O`,
         opponent: {
@@ -340,14 +344,12 @@ async function matchPoints(
       opponentData.participatedInEvents.length > 2
     ) {
       p({
-        category: `Progression`,
         title: `Up a Weight Class`,
         context: `${opponentTag} usually places higher than you`,
         value: 2,
       })
       if (didWin) {
         p({
-          category: `Progression`,
           title: `David & Goliath`,
           context: `You took down a giant!`,
           value: 10,
@@ -358,7 +360,6 @@ async function matchPoints(
       opponentData.participatedInEvents.length > 2
     )
       p({
-        category: `Progression`,
         title: `Strong Opponent`,
         context: `${opponentTag} usually places${
           opponentRatio < 0.15 ? ' very' : ''
@@ -435,15 +436,14 @@ function makePointElementGenerator(pointsAccumulator, event, useDate) {
     date = useDate || event.date,
   }) => {
     const newPoint = {
-      category,
       title,
       context,
       value,
       date,
       eventSlug: event.eventSlug,
-      eventName: event.name,
       tournamentSlug: event.tournamentSlug,
-      tournamentName: event.tournamentName,
+      // eventName: event.name,
+      // tournamentName: event.tournamentName,
     }
     if (opponent) newPoint.opponent = opponent
     pointsAccumulator.push(newPoint)

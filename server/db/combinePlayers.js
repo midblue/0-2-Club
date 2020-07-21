@@ -2,6 +2,7 @@ const db = require('./firebaseClient')
 const { gameTitle } = require('../../common/functions')
 
 const logger = require('../scripts/log')
+const updatePlayersPointsAndPeers = require('./updatePlayersPointsAndPeers')
 const low = logger('combine', 'gray')
 const log = logger('combine', 'white')
 const logAdd = logger('combine', 'green')
@@ -46,5 +47,5 @@ module.exports = async function({ game, tag, id }) {
   await Promise.all(playersToCombine.map(player => db.addPlayer(player, false)))
   log(`combined ${playersToCombine.length} players`)
 
-  await updateSinglePlayerPointsAndPeers(masterPlayer, true)
+  await updatePlayersPointsAndPeers(masterPlayer, false, null, true)
 }

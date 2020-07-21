@@ -55,7 +55,7 @@
 
     <ProgressChart
       v-if="displayEvents"
-      :points="player.points"
+      :points="points"
       :player="player"
       :level="level.level"
       :peers="player.peers"
@@ -156,10 +156,25 @@ export default {
         ? this.player.participatedInEvents.slice().reverse()
         : null
     },
+    points() {
+      return (this.player.participatedInEvents || []).reduce(
+        (acc, event) => [
+          ...acc,
+          ...event.points.map(p => ({
+            ...p,
+            eventName: event.name,
+            tournamentName: event.tournamentName,
+            eventSlug: event.eventSlug,
+            tournamentSlug: event.tournamentSlug,
+          })),
+        ],
+        [],
+      )
+    },
     totalPoints() {
       return (
-        (this.player.points
-          ? this.player.points.reduce((total, { value }) => total + value, 0)
+        (this.points
+          ? this.points.reduce((total, { value }) => total + value, 0)
           : 0) +
         (this.awards || []).reduce((total, { points }) => total + points, 0)
       )

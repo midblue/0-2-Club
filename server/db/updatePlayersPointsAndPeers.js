@@ -60,7 +60,13 @@ module.exports = async function(
             'notification',
             'Updating points & peers...',
           )
-          return recalculatePoints(player, players, quick, onlyTouchEventIds)
+          return recalculatePoints(
+            player,
+            players,
+            quick,
+            onlyTouchEventIds,
+            forceUpdate,
+          )
         }),
       )
     ).map(player => collatePointsIntoPlayerData(player))
@@ -112,12 +118,13 @@ async function recalculatePoints(
   players,
   quick,
   onlyTouchEventIds = null,
+  forceUpdate,
 ) {
   return new Promise(async resolve => {
     const startingPointsLength = (player.points || []).length
     player.points = await points.get(player, onlyTouchEventIds, players, quick)
     const wereNewPoints = startingPointsLength !== player.points.length
-    resolve(wereNewPoints ? player : null)
+    resolve(wereNewPoints || forceUpdate ? player : null)
   })
 }
 

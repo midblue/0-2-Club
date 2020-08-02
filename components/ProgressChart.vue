@@ -67,6 +67,7 @@ import axios from 'axios'
 
 // todo really wish peers linked to their page here
 // todo avg. win/loss ratio line chart
+// todo not always updating with player update? might be temporary issue
 
 export default {
   props: {},

@@ -42,6 +42,8 @@
 import axios from '~/plugins/axios'
 const { parseIp } = require('~/common/functions')
 
+// todo what if none of them are me?
+
 export default {
   asyncData({ params, error, redirect, req }) {
     if (req) {

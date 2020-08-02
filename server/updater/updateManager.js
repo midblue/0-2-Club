@@ -34,7 +34,7 @@ udpdateTimeout = setTimeout(
   Math.round(aDayInMilliseconds / 60.03),
 )
 
-// this will add new events for active players.
+// this will add new events for active players. remains to be seen if it's toooooo much to ask
 async function scanForNewEvents() {
   if (isUpdating || isScanning)
     return logError('Skipping attempt to scan while update/scan is running')
@@ -49,7 +49,6 @@ async function scanForNewEvents() {
   logInfo('starting scan for new events')
   try {
     await scanForNewEventsForAllActivePlayers()
-
     await db.logUsage()
   } catch (e) {
     logError('scan failed:', e)
@@ -87,7 +86,6 @@ async function rollingUpdate() {
     const updatedPlayers = await verifyPlayers(relevantPlayerGamesAndIds)
 
     if (updatedPlayers) await updatePlayersPointsAndPeers(updatedPlayers, true) // could get too heavy here, so switching to quick mode
-
     await db.logUsage()
   } catch (e) {
     logError('update failed:', e)

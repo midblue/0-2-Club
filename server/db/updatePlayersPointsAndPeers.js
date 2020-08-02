@@ -51,14 +51,16 @@ module.exports = async function(
     let playersWithUnsavedPoints = (
       await Promise.all(
         currentBatchOfPlayersToUpdate.map(player => {
-          io.to(`${player.game}/${player.id}`).emit(
-            'notification',
-            'Updating points & peers...',
-          )
-          io.to(`${player.game}/${player.tag}`).emit(
-            'notification',
-            'Updating points & peers...',
-          )
+          if (!quick) {
+            io.to(`${player.game}/${player.id}`).emit(
+              'notification',
+              'Updating points & peers...',
+            )
+            io.to(`${player.game}/${player.tag}`).emit(
+              'notification',
+              'Updating points & peers...',
+            )
+          }
           return recalculatePoints(
             player,
             players,

@@ -14,7 +14,7 @@ module.exports = async function(events) {
   const toFix = await checkForAccuracy(events, relevantPlayerGamesAndIds)
   if (toFix.length) {
     logError('Found error in data for', toFix.length, 'event/s, resolving...')
-    await fixEventDataErrors(toFix, events)
+    await fixEventDataErrors(toFix)
   } else
     low(
       events.length,
@@ -105,6 +105,7 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
       return new Promise(async resolve => {
         const player = await db.getPlayerById(affectedPlayers[id][0].game, id)
         if (!player) {
+          log('no player found for', affectedPlayers[id][0].game, id)
           nonexistantPlayers.push(id)
           return resolve()
         }

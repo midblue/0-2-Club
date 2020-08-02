@@ -36,7 +36,7 @@ const maxWrites = 20000,
 let writes = 0,
   reads = 0,
   deletes = 0,
-  resetInterval,
+  resetTimeout,
   prevWrites = 0,
   prevReads = 0,
   prevDeletes = 0
@@ -84,7 +84,7 @@ setInterval(() => {
   prevReads = reads
   prevDeletes = deletes
 }, 5 * 60 * 1000)
-clearInterval(resetInterval) // for hot reload
+clearInterval(resetTimeout) // for hot reload
 const resetCounts = () => {
   writes = 0
   reads = 0
@@ -107,7 +107,16 @@ const currentMsUntilMidnightInPST =
   60 *
   1000
 
-resetInterval = setTimeout(resetCounts, currentMsUntilMidnightInPST)
+resetTimeout = setTimeout(resetCounts, currentMsUntilMidnightInPST)
+
+// async function exitHandler(type) {
+//   await logUsage()
+//   low('logged usage before exiting')
+//   process.exit()
+// }
+// process.on('SIGINT', exitHandler.bind(null, 'SIGINT'))
+// process.on('SIGUSR1', exitHandler.bind(null, 'SIGUSR1'))
+// process.on('SIGUSR2', exitHandler.bind(null, 'SIGUSR2'))
 
 const exportFunctions = {
   async getStats() {
@@ -126,16 +135,7 @@ const exportFunctions = {
     }
   },
 
-  async logUsage() {
-    await statsRef.update(
-      {
-        [`usage.reads`]: reads,
-        [`usage.writes`]: writes,
-        [`usage.deletes`]: deletes,
-      },
-      { merge: true },
-    )
-  },
+  logUsage,
 
   async updateActive(game, count) {
     await statsRef.update(
@@ -486,6 +486,17 @@ function getGameRef(game) {
     .catch(err => {
       handleError('Error getting game ref', err)
     })
+}
+
+async function logUsage() {
+  await statsRef.update(
+    {
+      [`usage.reads`]: reads,
+      [`usage.writes`]: writes,
+      [`usage.deletes`]: deletes,
+    },
+    { merge: true },
+  )
 }
 
 function handleError(label, err) {

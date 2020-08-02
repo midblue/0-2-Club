@@ -25,6 +25,5 @@ module.exports = async (url, selector) => {
   return results
 }
 
-const sleep = milliseconds => {
-  return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
+const sleep = milliseconds =>
+  new Promise(resolve => setTimeout(resolve, milliseconds))

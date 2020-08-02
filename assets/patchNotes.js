@@ -1,5 +1,9 @@
 module.exports = [
   {
+    date: 'July 21, 2020',
+    content: `Phew. Managing memory limits with these monster events is tough, but batching and some (満足だけど) clever tricks have alleviated many of our main worries. Feel free to compete in as many events as you want! Expecially if your name is SFAT. You were the first to break the Firebase 1MB data size limit ;)`,
+  },
+  {
     date: 'July 10, 2020',
     content: `We're getting to close to user-testing territory! We're generally working on building up the database with the bigest events, so that anyone who searches themselves will likely find SOMEthing. In other news, what an ...interesting week! Good riddance to all previously-hidden awful members of the community, and huge respect to those who spoke up. I'm thinking of removing offenders from the club, too. Let us know what you think!`,
   },

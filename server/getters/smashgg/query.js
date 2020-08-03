@@ -252,9 +252,9 @@ query EventStandings($slug: String, $page: Int!, $perPage: Int) {
 
 // todo this is 504ing on a lot of owners (timeout). 92917 for example.
 const queryTournamentsByOwner = `
-query TournamentsByOwner($ownerId: ID!) {
+query TournamentsByOwner($ownerId: ID!, $count: Int!,) {
     tournaments(query: {
-      perPage: 40
+      perPage: $count
       filter: {
         ownerId: $ownerId
       }

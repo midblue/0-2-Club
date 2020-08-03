@@ -35,14 +35,25 @@
     <button class="low" @click="combineAll">
       These are all the same person
     </button>
+    <br />
+    <br />
+    <br />
+    Or, if none of them are you, add an event you've been in here!<br />
+    Your URL should look something like
+    <code
+      v-html="
+        `https://smash.gg/tournament/<b><i>[tournament name]</i></b>/events/`
+      "
+    ></code
+    >.
+    <EventSearch />
   </section>
 </template>
 
 <script>
 import axios from '~/plugins/axios'
 const { parseIp } = require('~/common/functions')
-
-// todo what if none of them are me?
+import EventSearch from '~/components/EventSearch'
 
 export default {
   asyncData({ params, error, redirect, req }) {
@@ -72,7 +83,7 @@ export default {
         }
       })
   },
-  components: {},
+  components: { EventSearch },
   head() {
     return {
       meta: [

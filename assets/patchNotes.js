@@ -1,7 +1,11 @@
 module.exports = [
   {
+    date: 'August 3, 2020',
+    content: `Big visual upgrade! Rounded corners, and backgrounds correspond to level colors on player pages.`,
+  },
+  {
     date: 'July 21, 2020',
-    content: `Phew. Managing memory limits with these monster events is tough, but batching and some (満足だけど) clever tricks have alleviated many of our main worries. Feel free to compete in as many events as you want! Expecially if your name is SFAT. You were the first to break the Firebase 1MB data size limit ;)`,
+    content: `Phew. Managing memory limits with these monster events is tough, but batching and some (満足だけど) clever tricks have alleviated many of our main worries. Feel free to compete in as many events as you want! Expecially if your name is SFAT, who was the first to break the Firebase 1MB document size limit ;)`,
   },
   {
     date: 'July 10, 2020',

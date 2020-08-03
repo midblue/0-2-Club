@@ -6,6 +6,7 @@
           v-for="(event, index) in displayEvents"
           :key="event.eventSlug + event.tournamentSlug"
           :event="event"
+          :maxPoints="maxPoints"
           :level="level"
           :game="game"
           :openByDefault="index === 0"
@@ -47,12 +48,19 @@ export default {
     game() {
       return this.$store.state.player.game
     },
+    maxPoints() {
+      return this.displayEvents.reduce((highest, e) => {
+        const total = (e.points || []).reduce((t, p) => t + p.value, 0)
+        return Math.max(total, highest)
+      }, 0)
+    },
   },
 }
 </script>
 
 <style scoped lang="scss">
 .disclaimer {
+  color: white;
   text-align: center;
   max-width: 450px;
   margin: 0 auto;

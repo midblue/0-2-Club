@@ -8,6 +8,7 @@ const updatePlayersPointsAndPeers = require('../db/updatePlayersPointsAndPeers')
 const io = require('../io/io')()
 
 const logger = require('../scripts/log')
+const { updatePlayer } = require('../db/firebaseClient')
 const low = logger('getnewevents', 'gray')
 const log = logger('getnewevents', 'white')
 const logAdd = logger('getnewevents', 'green')
@@ -135,6 +136,16 @@ module.exports = async function(player, skipOwnerIds = []) {
   log('done loading more events for', player.tag)
 
   await updatePlayersPointsAndPeers(player, false, null, true)
+
+  await updatePlayer(
+    {
+      id: player.id,
+      game: player.game,
+      lastScanned: parseInt(Date.now() / 1000),
+    },
+    false,
+    true,
+  )
 
   io.to(`${player.game}/${player.id}`).emit('endEventSearch')
   io.to(`${player.game}/${player.tag}`).emit('endEventSearch')

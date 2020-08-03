@@ -326,7 +326,14 @@ const exportFunctions = {
       })
   },
 
-  async getEvent({ service, id, tournamentSlug, eventSlug, game }) {
+  async getEvent({
+    service,
+    id,
+    tournamentSlug,
+    eventSlug,
+    game,
+    onlyCareIfExists,
+  }) {
     const memoed = memoizedEvents.get(
       service + (id || tournamentSlug + eventSlug) + game,
     )
@@ -345,16 +352,18 @@ const exportFunctions = {
       .get()
       .then(snapshot => {
         if (snapshot.docs.length === 0) return
+        reads += snapshot.docs.length || 0
+        memoizedKnownEventStubs.set(
+          service + (id || tournamentSlug + eventSlug) + game,
+          true,
+        )
+        if (onlyCareIfExists) return true
+
         const eventData = snapshot.docs[0].data()
         memoizedEvents.set(
           service + (id || tournamentSlug + eventSlug) + game,
           eventData,
         )
-        memoizedKnownEventStubs.set(
-          service + (id || tournamentSlug + eventSlug) + game,
-          true,
-        )
-        reads += snapshot.docs.length || 0
         return eventData
       })
       .catch(err => {
@@ -367,13 +376,13 @@ const exportFunctions = {
       service + (id || tournamentSlug + eventSlug) + game,
     )
     if (memoed) return true
-    // todo could do this without loading all data from event
     return !!(await this.getEvent({
       service,
       id,
       tournamentSlug,
       eventSlug,
       game,
+      onlyCareIfExists: true,
     }))
   },
 
@@ -395,11 +404,16 @@ const exportFunctions = {
 
   async updatePlayer(player, setLastUpdated = true, merge = false) {
     const playerData = prep.pruneUndefined(player)
-    memoizedPlayers.set(player.id + player.game, playerData)
-    const gameRef = await getGameRef(player.game)
-    let playerRef = gameRef.collection('players').doc(`${player.id}`)
     const newData = { ...playerData }
     if (setLastUpdated) newData.lastUpdated = parseInt(Date.now() / 1000)
+    const existingMemoizedData =
+      memoizedPlayers.get(player.id + player.game) || {}
+    memoizedPlayers.set(player.id + player.game, {
+      ...existingMemoizedData,
+      ...newData,
+    })
+    const gameRef = await getGameRef(player.game)
+    let playerRef = gameRef.collection('players').doc(`${player.id}`)
     await playerRef
       .set(
         // switched to .set because .update was slow

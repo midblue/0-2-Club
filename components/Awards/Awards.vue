@@ -1,6 +1,6 @@
 <template>
   <div v-if="achievedAwards.length > 0 || awardsInProgress.length > 0">
-    <h2 class="awardslabel">Awards</h2>
+    <!-- <h2 class="awardslabel">Awards</h2> -->
     <div class="awards">
       <Award
         v-for="(award, index) in achievedAwards"
@@ -13,9 +13,7 @@
 
       <div
         class="divider"
-        v-if="
-          achievedAwards.length > 0 && awardsInProgress.length > 0
-        "
+        v-if="achievedAwards.length > 0 && awardsInProgress.length > 0"
       ></div>
 
       <Award
@@ -68,6 +66,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(auto-fit, 80px);
   grid-gap: 0px;
+  z-index: 4;
 }
 
 .divider {

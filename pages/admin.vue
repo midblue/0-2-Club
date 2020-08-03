@@ -41,7 +41,6 @@
 
     <br />
 
-    <div class="color" style="background: var(--l0l)"></div>
     <div class="color" style="background: var(--l1l)"></div>
     <div class="color" style="background: var(--l2l)"></div>
     <div class="color" style="background: var(--l3l)"></div>
@@ -55,10 +54,10 @@
     <div class="color" style="background: var(--l11l)"></div>
     <div class="color" style="background: var(--l12l)"></div>
     <div class="color" style="background: var(--l13l)"></div>
+    <div class="color" style="background: var(--l14l)"></div>
 
     <br />
 
-    <div class="color" style="background: var(--l0)"></div>
     <div class="color" style="background: var(--l1)"></div>
     <div class="color" style="background: var(--l2)"></div>
     <div class="color" style="background: var(--l3)"></div>
@@ -72,10 +71,10 @@
     <div class="color" style="background: var(--l11)"></div>
     <div class="color" style="background: var(--l12)"></div>
     <div class="color" style="background: var(--l13)"></div>
+    <div class="color" style="background: var(--l14)"></div>
 
     <br />
 
-    <div class="color" style="background: var(--l0d)"></div>
     <div class="color" style="background: var(--l1d)"></div>
     <div class="color" style="background: var(--l2d)"></div>
     <div class="color" style="background: var(--l3d)"></div>
@@ -89,6 +88,7 @@
     <div class="color" style="background: var(--l11d)"></div>
     <div class="color" style="background: var(--l12d)"></div>
     <div class="color" style="background: var(--l13d)"></div>
+    <div class="color" style="background: var(--l14d)"></div>
   </section>
 </template>
 
@@ -185,7 +185,7 @@ export default {
   },
   created() {},
   mounted() {
-    if (process.client && window.prompt('') !== `'`)
+    if (process.client && window.prompt('').charCodeAt(0) !== 39)
       window.location.replace('http://www.0-2.club/')
     this.hide = false
 

@@ -26,7 +26,7 @@ module.exports = async function(
   if (!quick && !forceUpdate) {
     const initialPlayerCount = players.length
     players = players.filter(
-      p => p.lastUpdated * 1000 || 0 > Date.now() - minUpdateCutoff,
+      p => (p.lastUpdated || 0) * 1000 < Date.now() - minUpdateCutoff,
     )
     if (players.length !== initialPlayerCount)
       low(

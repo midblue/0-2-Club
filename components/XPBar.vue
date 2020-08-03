@@ -56,7 +56,7 @@ export default {
       let l = 0
       while (this.totalPoints > levels[l].points) l++
       if (l > 0) l--
-      return { ...levels[l], level: l }
+      return { ...levels[l], level: l + 1 }
     },
     percentToNextLevel() {
       return (
@@ -66,16 +66,12 @@ export default {
       )
     },
     pointsToNextLevel() {
-      return (
-        this.levels[this.level.level + 1].points - this.totalPoints
-      )
+      return this.levels[this.level.level + 1].points - this.totalPoints
     },
     labelPosition() {
       const buffer = this.isMobile ? 15 : 9
       let pos =
-        this.displayPercent > 100 - buffer
-          ? 100 - buffer
-          : this.displayPercent
+        this.displayPercent > 100 - buffer ? 100 - buffer : this.displayPercent
       if (pos < buffer) pos = buffer
       return pos
     },
@@ -110,6 +106,7 @@ export default {
 }
 .progress {
   height: 300%;
+  border-radius: 3px;
   position: relative;
   top: -100%;
   transition: width 1s;

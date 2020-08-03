@@ -22,6 +22,8 @@ export default {}
   margin: 50px 0;
   width: 100%;
   max-width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
 
   @media (max-width: 768px) {
     display: block;
@@ -34,6 +36,8 @@ export default {}
   height: 100%;
   margin: 0;
   max-width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 .bigbutton {
   position: relative;
@@ -42,6 +46,7 @@ export default {}
 
   & > *,
   & > * > * {
+    border-radius: 0;
     position: relative;
     display: block;
     margin: 0;

@@ -105,7 +105,6 @@ async function fixEventDataErrors(eventsToDeleteAndReAdd) {
       return new Promise(async resolve => {
         const player = await db.getPlayerById(affectedPlayers[id][0].game, id)
         if (!player) {
-          log('no player found for', affectedPlayers[id][0].game, id)
           nonexistantPlayers.push(id)
           return resolve()
         }

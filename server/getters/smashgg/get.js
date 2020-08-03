@@ -364,6 +364,7 @@ module.exports = {
             data = await makeQuery(queryTournamentsByOwner, {
               page: 1,
               ownerId,
+              count: attempts > 0 ? 1 : 40,
             })
             if (
               !data ||
@@ -374,7 +375,8 @@ module.exports = {
               !data.data.data.tournaments.nodes
             ) {
               logError(
-                `Failed to get data for ownerId ${ownerId} on smashgg, retrying... (attempt ${attempts})`,
+                `Failed to get data for ownerId ${ownerId} on smashgg, retrying... (attempt ${attempts +
+                  1})`,
               )
               attempts++
               data = null
@@ -434,7 +436,8 @@ async function getEvent(tournamentSlug, eventSlug) {
       !data.data.data.event.sets.pageInfo
     ) {
       logError(
-        `Failed to get data for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts})`,
+        `Failed to get data for ${tournamentSlug} - ${eventSlug} on smashgg, retrying... (attempt ${attempts +
+          1})`,
         data.error ||
           data.errors ||
           (data.data ? data.data.error || data.data.errors : 'no data'),

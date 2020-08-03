@@ -3,9 +3,7 @@
     <div>
       <div class="sub">
         Made by
-        <a href="https://www.jasperstephenson.com/" target="_blank"
-          >jasp</a
-        >
+        <a href="https://www.jasperstephenson.com/" target="_blank">Jasper</a>
         in 2020.
       </div>
       <div class="sub">
@@ -25,9 +23,11 @@ export default {}
 
 <style lang="scss" scoped>
 footer {
+  position: relative;
+  z-index: 1;
   width: 100%;
   // background: var(--text);
-  // color: white;
+  color: white;
   text-align: center;
 
   & > div {
@@ -42,5 +42,6 @@ footer {
 
 a {
   line-height: 1;
+  color: white;
 }
 </style>

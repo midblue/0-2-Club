@@ -1,16 +1,17 @@
 <template>
   <div class="panel" :class="{ open }" @click="open ? null : (open = !open)">
-    <h3 :class="{ open }" @click.stop="open = !open">
-      <span
-        v-if="totalPoints"
-        class="colorpad points"
-        :style="{
-          background: `var(--l${displayColorLevel})`,
-          opacity: displayOpacity,
-        }"
-        ><span>+{{ totalPoints }}</span></span
-      >
-      <span class="title">
+    <h3 :class="{ open, fullheader: open }" @click.stop="open = !open">
+      <div v-if="totalPoints" class="colorpad points">
+        <div
+          class="bg"
+          :style="{
+            background: `var(--l${displayColorLevel})`,
+            opacity: displayOpacity,
+          }"
+        ></div>
+        <span>+{{ totalPoints }}</span>
+      </div>
+      <div class="title">
         <span class="tournamentname">{{
           event.tournamentName.replace(/ fe?a?tu?r?i?n?g?\.? .*/gi, '')
         }}</span>
@@ -19,7 +20,7 @@
           {{ event.name.replace(/ fe?a?tu?r?i?n?g?\.? .*/gi, '') }}
           ({{ new Date(event.date * 1000).toLocaleDateString() }})
         </span>
-      </span>
+      </div>
     </h3>
     <template v-if="open">
       <div
@@ -91,6 +92,7 @@ export default {
     event: {},
     level: {},
     game: {},
+    maxPoints: {},
   },
   data() {
     return {
@@ -110,7 +112,7 @@ export default {
       // return l
     },
     displayOpacity() {
-      return 1
+      return (this.totalPoints / this.maxPoints) * 0.9 + 0.1
     },
   },
 }
@@ -118,32 +120,62 @@ export default {
 
 <style scoped lang="scss">
 .panel {
+  position: relative;
+
   &:not(.open) {
-    padding-top: 1.5em;
-    padding-bottom: 1.5em;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 0;
     cursor: pointer;
   }
 }
 
 h3 {
+  position: relative;
   line-height: 1;
   margin-top: 0;
   cursor: pointer;
   display: flex;
+  align-items: stretch;
+  margin-bottom: 0.7em !important;
 
   &:not(.open) {
     font-size: 1.2em;
-    margin-bottom: 0;
+    margin-bottom: 0 !important;
+    align-items: stretch;
+
+    .title {
+      padding-top: 1em;
+      padding-bottom: 1em;
+    }
+
+    .points {
+      width: 8%;
+      border-radius: 0;
+      font-size: 1em;
+    }
   }
 
   .points {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 0.5em;
-    padding: 0.15em 0.35em;
+    margin-right: 2.5%;
     position: relative;
-    top: -0.1em;
+    font-size: 1.2em;
+    width: 15%;
+    top: 0;
+    border-bottom-right-radius: var(--radius);
+    overflow: hidden;
+
+    .bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
 
     span {
       position: relative;
@@ -152,8 +184,10 @@ h3 {
   }
 
   .title {
+    display: block;
     line-height: 1.1;
     flex: 1;
+    padding: 0.7em 0;
 
     .tournamentname {
       font-size: 1.2em;
@@ -162,7 +196,7 @@ h3 {
 
   &.open {
     .points {
-      padding: 0.15em 0.5em;
+      padding: 0.7em 0.7em;
     }
   }
 }

@@ -2,13 +2,19 @@
   <div class="eventsearch">
     <button
       class="low marr"
-      v-if="player.id && player.tag && !hasLoadedGetMore && !updatedTooRecently"
+      v-if="
+        player &&
+          player.id &&
+          player.tag &&
+          !hasLoadedGetMore &&
+          !scannedTooRecently
+      "
       @click="getMore"
     >
       Auto-Scan For More Events
     </button>
     <button
-      :class="{ low: player.id }"
+      :class="{ low: player && player.id }"
       v-if="!showSearchBar"
       @click="showSearchBar = true"
     >
@@ -42,9 +48,9 @@ export default {
     }
   },
   computed: {
-    updatedTooRecently() {
+    scannedTooRecently() {
       // todo not working
-      return Date.now() - (this.player.lastUpdated || 0) * 1000 < 30 * 60 * 1000
+      return Date.now() - (this.player.lastScanned || 0) * 1000 < 30 * 60 * 1000
     },
   },
   watch: {},

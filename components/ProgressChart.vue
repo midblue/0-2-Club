@@ -1,6 +1,6 @@
 <template>
   <div
-    class="progresschart drop"
+    class="progresschart panel"
     :class="{ ready: chartIsReady, padb: !peers.length }"
     v-if="pointsToUse.length > 0"
   >
@@ -319,6 +319,10 @@ function generateData(points) {
 
 <style lang="scss">
 .progresschart {
+  // background: var(--grayl);
+  border: none;
+  margin: 0;
+  padding: 0;
   transition: all 0.3s;
   --chartW: 100%;
   --chartH: 150px;
@@ -343,9 +347,11 @@ function generateData(points) {
 .chartholder {
   position: relative;
   padding: 30px 30px 0 30px;
+  margin-bottom: -15px;
 
   @media (max-width: 768px) {
     padding: 20px 20px 0 20px;
+    margin-bottom: 0;
   }
 }
 .chart {
@@ -361,7 +367,7 @@ function generateData(points) {
   margin-top: 30px;
   padding: 18px 40px 18px 40px;
   line-height: 1.6;
-  background: var(--grayl);
+  background: var(--gray);
 
   @media (max-width: 768px) {
     display: block;
@@ -408,6 +414,7 @@ function generateData(points) {
   margin: 0 4px 4px 0;
   background: var(--gray);
   display: inline-block;
+  border-radius: 5px;
 
   &:hover {
     background: var(--grayd);

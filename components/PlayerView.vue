@@ -53,58 +53,77 @@
       <Share class="mobileshare" v-if="isMobile" />
     </template>
 
-    <ProgressChart
-      v-if="displayEvents"
-      :points="points"
-      :player="player"
-      :level="level.level"
-      :peers="player.peers"
-      class="chart"
-    />
-
     <Awards v-if="awards" :awards="awards" class="awardspane" />
 
-    <div class="eventslabel">
-      <h2 v-if="displayEvents">
-        Events
-        <span class="sub">({{ displayEvents.length }})</span>
-      </h2>
-
-      <EventSearch :player="player" class="eventsearch" />
+    <div class="chartholder">
+      <ProgressChart v-if="displayEvents" />
     </div>
-    <EventsListing
-      :events="displayEvents"
-      :level="level.level"
-      :game="player.game"
-    />
 
-    <template v-if="player.peers && player.peers.length > 0">
-      <hr />
-
-      <div class="peers" :class="{ flex: !isMobile }">
-        <div style="margin-right: 30px; flex-shrink: 0;">
-          <b>Related Players</b>
-        </div>
-        <div>
-          <span v-for="peer in player.peers" :key="peer.id">
-            <nuxt-link v-if="peer" :to="`/g/${player.game}/i/${peer.id}`">
-              <div
-                v-if="peer.img"
-                :style="{
-                  'background-image': `url('${peer.img}')`,
-                }"
-                class="playericon"
-              ></div>
-            </nuxt-link>
-            <nuxt-link
-              :to="`/g/${player.game}/i/${peer.id}`"
-              v-html="peer.tag"
-            ></nuxt-link
-            >&nbsp;&nbsp;
-          </span>
-        </div>
+    <div class="colorzone2">
+      <div class="bgholder">
+        <div
+          v-if="displayEvents"
+          class="colorbg"
+          :style="{
+            background: `linear-gradient(125deg, var(--l${level.level}l), var(--l${level.level}))`,
+          }"
+        ></div>
       </div>
-    </template>
+    </div>
+
+    <div class="colorzone">
+      <div class="bgholder">
+        <div
+          v-if="displayEvents"
+          class="colorbg"
+          :style="{
+            background: `linear-gradient(to bottom, var(--text), var(--textl)), linear-gradient(125deg, var(--l${level.level}), var(--l${level.level}d))`,
+          }"
+        ></div>
+      </div>
+
+      <div class="eventslabel">
+        <h2 v-if="displayEvents">
+          Events
+          <span class="sub">({{ displayEvents.length }})</span>
+        </h2>
+
+        <EventSearch :player="player" class="eventsearch" />
+      </div>
+      <EventsListing
+        :events="displayEvents"
+        :level="level.level"
+        :game="player.game"
+      />
+
+      <template v-if="player.peers && player.peers.length > 0">
+        <hr />
+
+        <div class="peers bottom" :class="{ flex: !isMobile }">
+          <div style="margin-right: 30px; flex-shrink: 0;">
+            <b>Related Players</b>
+          </div>
+          <div>
+            <span v-for="peer in player.peers" :key="peer.id">
+              <nuxt-link v-if="peer" :to="`/g/${player.game}/i/${peer.id}`">
+                <div
+                  v-if="peer.img"
+                  :style="{
+                    'background-image': `url('${peer.img}')`,
+                  }"
+                  class="playericon"
+                ></div>
+              </nuxt-link>
+              <nuxt-link
+                :to="`/g/${player.game}/i/${peer.id}`"
+                v-html="peer.tag"
+              ></nuxt-link
+              >&nbsp;&nbsp;
+            </span>
+          </div>
+        </div>
+      </template>
+    </div>
   </section>
 </template>
 
@@ -184,9 +203,9 @@ export default {
       while (this.totalPoints > this.levels[l].points) l++
       if (l > 0) l--
       this.$store.commit('setPlayer', {
-        level: { ...this.levels[l], level: l },
+        level: { ...this.levels[l], level: l + 1 },
       })
-      return { ...this.levels[l], level: l }
+      return { ...this.levels[l], level: l + 1 }
     },
   },
   watch: {},
@@ -234,7 +253,6 @@ export default {
       this.socket.on('newEvents', this.gotNewEvents)
       this.socket.on('notification', n => {
         this.$store.commit('setIsLoading', true)
-        this.$store.dispatch('notifications/notify', n)
       })
       this.socket.on('playerFullyUpdated', async data => {
         await this.refreshPlayer()
@@ -337,8 +355,18 @@ export default {
   margin-bottom: 3em;
 }
 
-.chart {
+.chartholder {
+  position: relative;
+  display: flex;
+  z-index: 3;
+  padding: 0;
   margin-bottom: 2em;
+  background: white;
+  border-radius: var(--radius);
+}
+.chart {
+  padding: 0;
+  margin: 0;
 }
 
 .panel {
@@ -347,9 +375,56 @@ export default {
   }
 }
 
+.colorzone,
+.colorzone > *,
+.colorzone2,
+.colorzone2 > * {
+  position: relative;
+  z-index: 2;
+}
+
+.bgholder {
+  box-sizing: content-box;
+  overflow: hidden;
+  position: absolute;
+  z-index: 1;
+  left: -100vw;
+  right: -100vw;
+  height: 100%;
+  padding-bottom: 300px;
+}
+.colorbg {
+  position: absolute;
+  top: 230px;
+  left: -100vw;
+  right: -100vw;
+  bottom: -50vh;
+  transform-origin: top center;
+  transform: rotate(-4deg);
+  background-blend-mode: multiply;
+  filter: grayscale(40%) brightness(0.7);
+}
+
+.colorzone2 {
+  z-index: 0;
+
+  .bgholder {
+    top: -180px;
+    padding-bottom: 500px;
+    z-index: 0;
+  }
+  .colorbg {
+    top: 50px;
+    opacity: 0.3;
+    filter: none;
+    transform: rotate(5deg);
+    filter: grayscale(40%);
+  }
+}
+
 .eventslabel {
-  margin: 2em 0 0 0;
-  // display: flex;
+  margin: 4em 0 0 0;
+  display: flex;
   // align-items: center;
 
   & > * {
@@ -357,9 +432,9 @@ export default {
     margin-bottom: 0;
   }
 
-  // h2 {
-  // margin-right: 0.5em;
-  // }
+  h2 {
+    margin-right: 30px;
+  }
 }
 .eventsearch {
   flex: 1;
@@ -367,5 +442,15 @@ export default {
 
 h3 {
   line-height: 1.1;
+}
+
+hr {
+  border-top: 1px dashed white;
+  opacity: 0.5;
+}
+
+.bottom,
+.bottom a {
+  color: white !important;
 }
 </style>

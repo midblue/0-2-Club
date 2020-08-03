@@ -69,7 +69,7 @@ export default {
       return this.levels[this.level.level + 1].points - this.totalPoints
     },
     labelPosition() {
-      const buffer = this.isMobile ? 15 : 9
+      const buffer = this.isMobile ? 13 : 9
       let pos =
         this.displayPercent > 100 - buffer ? 100 - buffer : this.displayPercent
       if (pos < buffer) pos = buffer

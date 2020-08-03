@@ -306,6 +306,10 @@ h4 {
     margin-right: 20px;
   }
 
+  @media (max-width: 768px) {
+    margin-right: 0px !important;
+  }
+
   &.invert {
     color: white;
     background: rgba(white, 0.2);

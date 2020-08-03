@@ -1,7 +1,7 @@
 const { getPlacingRatio } = require('./functions')
 
 // ? awards for:
-// attending tournaments in a series
+// attending tournaments in a series <-- !!!!
 // lifetime total x unique opponents
 // x total rivals / rivals beat
 

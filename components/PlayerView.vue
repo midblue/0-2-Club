@@ -409,12 +409,12 @@ export default {
   z-index: 0;
 
   .bgholder {
-    top: -180px;
-    padding-bottom: 500px;
+    top: -380px;
+    padding-bottom: 900px;
     z-index: 0;
   }
   .colorbg {
-    top: 50px;
+    top: 250px;
     opacity: 0.3;
     filter: none;
     transform: rotate(5deg);
@@ -426,6 +426,10 @@ export default {
   margin: 4em 0 0 0;
   display: flex;
   // align-items: center;
+
+  @media (max-width: 768px) {
+    display: block;
+  }
 
   & > * {
     margin-top: 0;

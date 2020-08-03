@@ -1,5 +1,11 @@
 <template>
-  <div class="panel" :class="{ open }" @click="open ? null : (open = !open)">
+  <div
+    class="panel"
+    :class="{ open }"
+    @click="open ? null : (open = !open)"
+    @mouseover="hover = true"
+    @mouseout="hover = false"
+  >
     <h3 :class="{ open, fullheader: open }" @click.stop="open = !open">
       <div v-if="totalPoints" class="colorpad points">
         <div
@@ -9,7 +15,7 @@
             opacity: displayOpacity,
           }"
         ></div>
-        <span>+{{ totalPoints }}</span>
+        <span>{{ totalPoints }}</span>
       </div>
       <div class="title">
         <span class="tournamentname">{{
@@ -20,6 +26,9 @@
           {{ event.name.replace(/ fe?a?tu?r?i?n?g?\.? .*/gi, '') }}
           ({{ new Date(event.date * 1000).toLocaleDateString() }})
         </span>
+      </div>
+      <div v-if="!open" :class="{ hover }" class="downcaret">
+        <span>˅</span>
       </div>
     </h3>
     <template v-if="open">
@@ -35,7 +44,7 @@
             color: `var(--l${displayColorLevel}d)`,
             opacity: point.value >= 8 ? 1 : point.value / 10 + 0.2,
           }"
-          >+{{ point.value }}</span
+          >{{ point.value }}</span
         >
         <div class="explanation">
           <span class="title">{{ point.title }}</span>
@@ -97,6 +106,7 @@ export default {
   data() {
     return {
       open: this.openByDefault,
+      hover: false,
     }
   },
   computed: {
@@ -125,6 +135,7 @@ export default {
   &:not(.open) {
     padding-top: 0;
     padding-bottom: 0;
+    padding-right: 0;
     padding-left: 0;
     cursor: pointer;
   }
@@ -151,8 +162,28 @@ h3 {
 
     .points {
       width: 8%;
+      min-width: 50px;
       border-radius: 0;
       font-size: 1em;
+    }
+  }
+
+  .downcaret {
+    opacity: 0.2;
+    display: flex;
+    width: 10%;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+
+    span {
+      position: relative;
+      top: 5%;
+      transform: scaleX(1.5);
+    }
+
+    &.hover {
+      opacity: 0.8;
     }
   }
 
@@ -165,6 +196,7 @@ h3 {
     position: relative;
     font-size: 1.2em;
     width: 15%;
+    min-width: 80px;
     top: 0;
     border-bottom-right-radius: var(--radius);
     overflow: hidden;
@@ -203,7 +235,8 @@ h3 {
 
 .point {
   line-height: 1.4;
-  max-width: 600px;
+  max-width: 575px;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: 20px 1fr;
   grid-gap: 10px;
@@ -232,6 +265,7 @@ h3 {
 
   .pointvalue {
     font-weight: bold;
+    text-align: center;
   }
 }
 

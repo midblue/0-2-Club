@@ -24,7 +24,7 @@ export default {}
 <style lang="scss" scoped>
 footer {
   position: relative;
-  z-index: 1;
+  z-index: 5;
   width: 100%;
   // background: var(--text);
   color: white;

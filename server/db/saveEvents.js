@@ -20,14 +20,23 @@ CAN NOT handle events from multiple games at once
 
 */
 
+const currentlySaving = {}
+
 module.exports = async function(newEvents) {
   if (!Array.isArray(newEvents)) newEvents = [newEvents]
   const game = newEvents[0].game
   const uniqueParticipants = []
 
-  newEvents = newEvents.filter(e => e && e.participants)
+  newEvents = newEvents.filter(
+    e =>
+      e &&
+      e.participants &&
+      !currentlySaving[game + e.tournamentSlug + e.eventSlug],
+  )
 
   for (let e of newEvents) {
+    currentlySaving[game + e.tournamentSlug + e.eventSlug] = true
+
     uniqueParticipants.push(
       ...e.participants.filter(
         participant =>
@@ -36,7 +45,11 @@ module.exports = async function(newEvents) {
     )
   }
 
-  for (let event of newEvents) await db.addEvent(event)
+  for (let event of newEvents) {
+    if (!(await db.getEventExists(event))) await db.addEvent(event)
+    else
+      logError('attempted to add an event that already exists in the database!')
+  }
 
   const batchSize = 30
   let currentBatchOfParticipants = uniqueParticipants.splice(0, batchSize)
@@ -113,6 +126,9 @@ module.exports = async function(newEvents) {
 
     currentBatchOfParticipants = uniqueParticipants.splice(0, batchSize)
   }
+
+  for (let e of newEvents)
+    delete currentlySaving[game + e.tournamentSlug + e.eventSlug]
 
   io.to(`${game}`).emit('newEvents', newEvents)
   logAdd(`updated ${totalUpdated} and added ${totalNew} players`)

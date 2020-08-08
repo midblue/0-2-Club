@@ -49,7 +49,6 @@ export default {
   },
   computed: {
     scannedTooRecently() {
-      // todo not working
       return Date.now() - (this.player.lastScanned || 0) * 1000 < 30 * 60 * 1000
     },
   },

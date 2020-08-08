@@ -169,18 +169,3 @@ module.exports = {
     })
   },
 }
-
-// function collatePointsIntoPlayerData(player) {
-//   if (!player) return
-//   const collatedEvents = (player.participatedInEvents || []).map(event => {
-//     return {
-//       ...event,
-//       points: (player.points || []).filter(
-//         point =>
-//           point.eventSlug === event.eventSlug &&
-//           point.tournamentSlug === event.tournamentSlug,
-//       ),
-//     }
-//   })
-//   return { ...player, participatedInEvents: collatedEvents }
-// }

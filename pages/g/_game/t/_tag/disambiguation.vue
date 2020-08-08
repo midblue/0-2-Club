@@ -1,11 +1,11 @@
 <template>
   <section>
-    <h1>
+    <h2>
       We found multiple
       <span class="highlight">{{ player.tag }}</span
       >s!
-    </h1>
-    <h2>Which are you?</h2>
+    </h2>
+    <h3>Which are you looking for?</h3>
     <nuxt-link
       v-for="(p, index) in disambiguation"
       :to="`/g/${player.game}/i/${p.id}`"
@@ -23,18 +23,12 @@
       </h3>
       <div v-if="p.participatedInEvents">
         <div v-for="event in p.participatedInEvents" :key="event.id">
-          Placed {{ event.standing }}/{{ event.totalParticipants }} in
+          {{ event.standing }} of {{ event.totalParticipants }} in
           {{ event.name }} at
           <b>{{ event.tournamentName }}</b>
         </div>
       </div>
     </nuxt-link>
-    <br />
-    <br />
-    <br />
-    <button class="low" @click="combineAll">
-      These are all the same person
-    </button>
     <br />
     <br />
     <br />
@@ -47,6 +41,12 @@
     ></code
     >.
     <EventSearch />
+    <!-- <br />
+    <br />
+    <br />
+    <button class="low" @click="combineAll">
+      These are all the same person
+    </button> -->
   </section>
 </template>
 
@@ -54,6 +54,9 @@
 import axios from '~/plugins/axios'
 const { parseIp } = require('~/common/functions')
 import EventSearch from '~/components/EventSearch'
+
+// todo crashed here once? zain disambig is weird... 1563637
+// todo like... combine _request_? idk
 
 export default {
   asyncData({ params, error, redirect, req }) {
@@ -157,6 +160,8 @@ h2 {
 h3 {
   font-size: 2em;
   margin: 0;
+  display: flex;
+  align-items: center;
 }
 .button.full {
   display: block;

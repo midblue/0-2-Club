@@ -241,6 +241,7 @@ const exportFunctions = {
       })
   },
 
+  // todo rolling check from 86312
   async getSomeEvents(numberOfEvents = 3) {
     // get starting point from db
     if (

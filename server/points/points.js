@@ -2,6 +2,7 @@ const { getPlacingRatio } = require('../../common/functions')
 const db = require('../db/firebaseClient')
 
 // todo make rivals be people who you have an actual close ratio with
+// todo "domination" for 3-0s
 
 module.exports = {
   async get(player, onlyTouchEventIds, loadedPlayers = [], quick = false) {

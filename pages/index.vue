@@ -1,7 +1,14 @@
 <template>
   <section>
     <div class="header">
-      <h1>Welcome to the club.</h1>
+      <h1>
+        Welcome to<img
+          v-if="!isMobile"
+          src="~/static/img/shines.svg"
+          class="sparkle"
+        />
+        the club.
+      </h1>
     </div>
     <h3>
       Track your progress, keep improving, and stay motivated —
@@ -281,6 +288,17 @@ export default {
 .header {
   padding-top: 10vh;
   max-width: 500px;
+
+  h1 {
+    position: relative;
+  }
+  .sparkle {
+    display: none;
+    position: relative;
+    width: 60px;
+    top: -30px;
+    left: 5%;
+  }
 }
 
 .negmartop {
@@ -313,6 +331,10 @@ h4 {
   &.invert {
     color: white;
     background: rgba(white, 0.2);
+
+    &:hover {
+      color: var(--text);
+    }
 
     .sub {
       opacity: 1;
@@ -397,6 +419,7 @@ h4 {
   margin: 0;
   width: 100%;
   height: 100%;
+  font-size: 3.5em;
 }
 
 .intro {
@@ -509,6 +532,10 @@ h4 {
       align-items: center;
     }
   }
+}
+
+h3 {
+  font-size: 1.3em;
 }
 
 hr {

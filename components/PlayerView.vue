@@ -248,7 +248,7 @@ export default {
 
       this.socket.on('startEventSearch', data => {
         this.$store.commit('setIsLoading', true)
-        // todo 敵機的に c00l melee facts...?
+        // todo 定期的に c00l melee facts...?
       })
       this.socket.on('newEvents', this.gotNewEvents)
       this.socket.on('notification', n => {

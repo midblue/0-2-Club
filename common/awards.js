@@ -1,7 +1,6 @@
 const { getPlacingRatio } = require('./functions')
 
 // ? awards for:
-// attending tournaments in a series <-- !!!!
 // lifetime total x unique opponents
 // x total rivals / rivals beat
 
@@ -32,6 +31,7 @@ function getAwards(player, events) {
     ...totalPodiumFinishes(player, events),
     ...totalFirstPlaces(player, events),
     ...mostWeeksInARow(player, events),
+    ...eventsInASeries(player, events),
     ...mostInOneWeek(player, events),
     ...yearlyImprovement(player, events),
     ...majors(player, events),
@@ -400,6 +400,71 @@ function mostWeeksInARow(player, events) {
   const requirements = `Attend an event for at least <b>${levels[1]}</b> consecutive weeks`
 
   const img = '/img/awards/weeksinarow.png'
+
+  const label = ``
+
+  const points = level * 10
+
+  if (level < 1) return []
+  return [
+    {
+      title,
+      total,
+      level,
+      levelStart,
+      levelEnd,
+      levelProgress,
+      bestAttemptString,
+      levelDescription,
+      requirements,
+      img,
+      label,
+      points,
+    },
+  ]
+}
+
+function eventsInASeries(player, events) {
+  const seriesCounts = events.reduce((totals, event, index) => {
+    const seriesName = event.tournamentName
+      .toLowerCase()
+      .replace(/[\d+=.,\s\/_–—<>()#\-]/gi, '')
+    if (seriesName.length < 3) return totals
+    if (!totals[seriesName]) totals[seriesName] = []
+    totals[seriesName].push(event)
+    return totals
+  }, {})
+
+  const longestSeries = Object.values(seriesCounts).reduce(
+    (highest, series) => (series.length > highest.length ? series : highest),
+    [],
+  )
+  if (longestSeries.length === 0) return []
+  const longestSeriesName = longestSeries[0].tournamentName
+    .replace(/[#\d]/gi, '')
+    .replace(/\s*$/g, '')
+
+  const levels = [0, 3, 4, 5, 7, 9, 12, 20, 30, 52, 65, 85, 130, 1000]
+
+  const title = `Series Regular`
+  const total = longestSeries.length
+
+  let level = levels.findIndex(l => total < l) - 1
+  if (total < 1) level = -1 // not started
+
+  const levelStart = levels[level] || 0,
+    levelEnd = levels[level + 1],
+    levelProgress = total / levelEnd
+
+  const bestAttemptString = `Best: ${total} times at ${longestSeriesName}`
+
+  const levelDescription = `Attended <span style="font-weight: bold; color:var(--l${level});">${longestSeriesName} ${total}</span> time${
+    total === 1 ? '' : 's'
+  }`
+
+  const requirements = `Attend a series <b>${levels[1]}</b> times`
+
+  const img = '/img/awards/series.png'
 
   const label = ``
 

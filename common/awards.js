@@ -59,23 +59,25 @@ points
 
 // won tournaments
 function bestStreak(player, events) {
-  const bestStreak = (player.points || []).reduce(
-    (highest, point) => {
-      if (point.context.indexOf('wins in a row') > -1) {
-        const wins = parseInt(
-          point.context.substring(0, point.context.indexOf(' ')),
-        )
-        if (wins > highest.total)
-          return {
-            total: wins,
-            date: point.date,
-            name: point.tournamentName,
-          }
-      }
-      return highest
-    },
-    { total: 0 },
-  )
+  const bestStreak = (events || [])
+    .reduce((points, e) => [...points, ...e.points], [])
+    .reduce(
+      (highest, point) => {
+        if (point.context.indexOf('wins in a row') > -1) {
+          const wins = parseInt(
+            point.context.substring(0, point.context.indexOf(' ')),
+          )
+          if (wins > highest.total)
+            return {
+              total: wins,
+              date: point.date,
+              name: point.tournamentName,
+            }
+        }
+        return highest
+      },
+      { total: 0 },
+    )
   const levels = [0, 3, 4, 5, 6, 7, 8, 10, 12, 15, 20, 30, 40, 1000]
 
   const title = `Streakin'`
@@ -436,7 +438,10 @@ function eventsInASeries(player, events) {
   }, {})
 
   const longestSeries = Object.values(seriesCounts).reduce(
-    (highest, series) => (series.length > highest.length ? series : highest),
+    (highest, series) => {
+      // todo skip multiple events that happened on the same day/weekend
+      return series.length > highest.length ? series : highest
+    },
     [],
   )
   if (longestSeries.length === 0) return []

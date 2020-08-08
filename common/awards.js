@@ -60,7 +60,17 @@ points
 // won tournaments
 function bestStreak(player, events) {
   const bestStreak = (events || [])
-    .reduce((points, e) => [...points, ...e.points], [])
+    .reduce(
+      (points, e) => [
+        ...points,
+        ...e.points.map(p => ({
+          ...p,
+          tournamentName: e.tournamentName,
+          date: e.date,
+        })),
+      ],
+      [],
+    )
     .reduce(
       (highest, point) => {
         if (point.context.indexOf('wins in a row') > -1) {

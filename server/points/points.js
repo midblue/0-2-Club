@@ -2,7 +2,6 @@ const { getPlacingRatio } = require('../../common/functions')
 const db = require('../db/firebaseClient')
 
 // todo make rivals be people who you have an actual close ratio with
-// todo "domination" for 3-0s
 
 module.exports = {
   async get(player, onlyTouchEventIds, loadedPlayers = [], quick = false) {
@@ -254,6 +253,17 @@ async function matchPoints(
           img: match.loserImg,
         },
         value: 4,
+      })
+    else if (didWin && lostGames === 0 && wonGames > 2)
+      p({
+        title: `Easily Won a Set`,
+        context: `${wonGames}-${lostGames} vs. %O`,
+        opponent: {
+          tag: match.loserTag,
+          id: match.loserId,
+          img: match.loserImg,
+        },
+        value: 5,
       })
     else if (didWin)
       p({

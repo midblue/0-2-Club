@@ -437,13 +437,20 @@ function mostWeeksInARow(player, events) {
 }
 
 function eventsInASeries(player, events) {
+  const tooSoonCutoff = 2 * 24 * 60 * 60 // 2 days in seconds
   const seriesCounts = events.reduce((totals, event, index) => {
     const seriesName = event.tournamentName
       .toLowerCase()
       .replace(/[\d+=.,\s\/_–—<>()#\-]/gi, '')
     if (seriesName.length < 3) return totals
     if (!totals[seriesName]) totals[seriesName] = []
-    totals[seriesName].push(event)
+    if (
+      !totals[seriesName].find(
+        existingEvent =>
+          Math.abs(existingEvent.date - event.date) <= tooSoonCutoff,
+      )
+    )
+      totals[seriesName].push(event)
     return totals
   }, {})
 
@@ -505,7 +512,7 @@ function eventsInASeries(player, events) {
 }
 
 function mostInOneWeek(player, events) {
-  const aWeek = 7 * 24 * 60 * 60
+  const aWeek = 7 * 24 * 60 * 60 // in seconds
   const mostInOneWeek = events.reduce((max, event, index) => {
     const start = event.date
     let currentEventIndex = index,

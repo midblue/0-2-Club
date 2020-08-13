@@ -63,7 +63,7 @@ function bestStreak(player, events) {
     .reduce(
       (points, e) => [
         ...points,
-        ...e.points.map(p => ({
+        ...(e.points || []).map(p => ({
           ...p,
           tournamentName: e.tournamentName,
           date: e.date,
@@ -456,7 +456,6 @@ function eventsInASeries(player, events) {
 
   const longestSeries = Object.values(seriesCounts).reduce(
     (highest, series) => {
-      // todo skip multiple events that happened on the same day/weekend
       return series.length > highest.length ? series : highest
     },
     [],
@@ -480,7 +479,7 @@ function eventsInASeries(player, events) {
 
   const bestAttemptString = `Best: ${total} times at ${longestSeriesName}`
 
-  const levelDescription = `Attended <span style="font-weight: bold; color:var(--l${level});">${longestSeriesName} ${total}</span> time${
+  const levelDescription = `Attended ${longestSeriesName} <span style="font-weight: bold; color:var(--l${level});">${total}</span> time${
     total === 1 ? '' : 's'
   }`
 

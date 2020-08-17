@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="chartzone panel"
-    :class="{ ready: chartIsReady, padb: !peers.length }"
-  >
+  <div class="chartzone panel" :class="{ padb: !peers.length }">
     <div class="chartholder">
       <!-- <line-chart
         class="chart"
@@ -10,15 +7,12 @@
         :options="options"
         @chart:render="chartIsReady = true"
       ></line-chart> -->
-      <client-only>
-        <ProgressChart
-          class="chart"
-          :pointsData="pointsData"
-          :winRateData="winRateData"
-          :placingData="placingData"
-          @ready="chartIsReady = true"
-        />
-      </client-only>
+      <ProgressChart
+        class="chart"
+        :pointsData="pointsData"
+        :winRateData="winRateData"
+        :placingData="placingData"
+      />
     </div>
 
     <div v-if="peers.length" class="compare">
@@ -89,7 +83,6 @@ export default {
       pointsData: [],
       winRateData: [],
       placingData: [],
-      chartIsReady: false,
     }
   },
   computed: {
@@ -332,25 +325,10 @@ function generatePlacingData(events) {
 
 <style lang="scss">
 .chartzone {
-  // background: var(--grayl);
   border: none;
   margin: 0;
   padding: 0;
   transition: all 0.3s;
-  --chartW: 100%;
-  --chartH: 150px;
-  width: var(--chartW);
-
-  & > * {
-    opacity: 0;
-    transition: opacity 1s;
-  }
-
-  &.ready {
-    & > * {
-      opacity: 1;
-    }
-  }
 
   &.padb {
     padding-bottom: 30px;
@@ -365,13 +343,6 @@ function generatePlacingData(events) {
   @media (max-width: 768px) {
     // padding: 20px 20px 0 20px;
     margin-bottom: 0;
-  }
-}
-.chart {
-  canvas {
-    height: var(--chartH);
-    max-height: var(--chartH);
-    max-width: var(--chartW);
   }
 }
 

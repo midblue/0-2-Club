@@ -180,7 +180,7 @@ export default {
   data() {
     return {
       width: 0,
-      height: 0,
+      height: 200,
       containerWidth: 0,
       scrollLeft: 0,
       labelWidth: 100,
@@ -353,8 +353,6 @@ export default {
 
   async mounted() {
     window.addEventListener('resize', this.resetChartSize)
-
-    this.$emit('ready')
 
     await this.$nextTick()
     this.resetChartSize()

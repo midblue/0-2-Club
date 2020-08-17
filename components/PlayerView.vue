@@ -56,9 +56,7 @@
     <Awards v-if="player.awards" :awards="player.awards" class="awardspane" />
 
     <div class="chartholder">
-      <client-only>
-        <ChartZone v-if="displayEvents" />
-      </client-only>
+      <ChartZone v-if="displayEvents" />
     </div>
 
     <div class="colorzone2">
@@ -120,7 +118,7 @@
                 :to="`/g/${player.game}/i/${peer.id}`"
                 v-html="peer.tag"
               ></nuxt-link
-              >&nbsp;&nbsp;
+              >&nbsp;&nbsp;&nbsp;
             </span>
           </div>
         </div>

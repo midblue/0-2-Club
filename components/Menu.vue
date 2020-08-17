@@ -174,6 +174,7 @@ export default {
   }
 
   .playericon {
+    cursor: pointer;
     margin-left: 34px;
     padding-right: 15px;
 
@@ -183,6 +184,7 @@ export default {
   }
 
   h4 {
+    cursor: pointer;
     line-height: 1;
     padding-left: 0.3em;
     font-size: 1.2em;

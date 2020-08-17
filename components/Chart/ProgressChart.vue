@@ -231,8 +231,13 @@ export default {
     },
 
     playerPointPaths() {
+      if (
+        !this.playerPointsData ||
+        !this.playerPointsData.data ||
+        !this.playerPointsData.data.length
+      )
+        return []
       const data = this.playerPointsData.data
-      if (!data.length) return ''
       let paths = []
       let prevYAdj = 0,
         prevLevelYAdjStart = this.height,

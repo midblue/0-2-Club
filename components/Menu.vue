@@ -71,36 +71,42 @@
         </a>
       </div>
     </div>
-    <div class="subbar" v-if="player.id" :class="{ open: subBarOpen }">
-      <div
-        class="iconholder"
-        @click="
-          $router.go({ path: `/g/${player.game}/i/${player.id}`, force: true })
-        "
-      >
-        <span
-          v-if="player.img"
-          :style="{
-            'background-image': `url('${player.img}')`,
-          }"
-          class="playericon med"
-        ></span>
-      </div>
-      <h4>
-        <a
+
+    <client-only>
+      <div class="subbar" v-if="player" :class="{ open: subBarOpen }">
+        <div
+          class="iconholder"
           @click="
             $router.go({
               path: `/g/${player.game}/i/${player.id}`,
               force: true,
             })
           "
-          class="tag"
         >
-          {{ player.tag || `Id #${player.id}` }}
-          <span class="sub">{{ player.game }}</span>
-        </a>
-      </h4>
-    </div>
+          <span
+            v-if="player.img"
+            :style="{
+              'background-image': `url('${player.img}')`,
+            }"
+            class="playericon med"
+          ></span>
+        </div>
+        <h4>
+          <span
+            @click="
+              $router.go({
+                path: `/g/${player.game}/i/${player.id}`,
+                force: true,
+              })
+            "
+            class="tag"
+          >
+            {{ player.tag || `Id #${player.id}` }}
+            <span class="sub">{{ player.game }}</span>
+          </span>
+        </h4>
+      </div>
+    </client-only>
   </nav>
 </template>
 
@@ -127,7 +133,11 @@ export default {
   },
   methods: {
     checkScroll(e) {
-      if (this.subBarOpen === false && document.body.scrollTop > 150)
+      if (
+        this.subBarOpen === false &&
+        document.body.scrollTop > 150 &&
+        this.player.id
+      )
         this.subBarOpen = true
       else if (this.subBarOpen === true && document.body.scrollTop <= 150)
         this.subBarOpen = false
@@ -231,9 +241,5 @@ export default {
       display: none;
     }
   }
-}
-
-a {
-  line-height: 1;
 }
 </style>

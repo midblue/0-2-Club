@@ -220,6 +220,7 @@ export default {
   },
   mounted() {
     this.socketSetup()
+    document.body.scrollTop = 0
   },
   beforeDestroy() {
     this.socket.emit(

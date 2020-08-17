@@ -13,7 +13,13 @@
             xmlns="http://www.w3.org/2000/svg"
             xmlns:xlink="http://www.w3.org/1999/xlink"
           >
-            <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+            <g
+              id="Page-1"
+              stroke="none"
+              stroke-width="1"
+              fill="none"
+              fill-rule="evenodd"
+            >
               <rect
                 id="Rectangle-Copy-25"
                 stroke="#2B2B2B"
@@ -33,7 +39,11 @@
                 height="188"
                 rx="94"
               />
-              <g id="Group-4-Copy-4" transform="translate(248.000000, 72.000000)" fill="#FFFFFF">
+              <g
+                id="Group-4-Copy-4"
+                transform="translate(248.000000, 72.000000)"
+                fill="#FFFFFF"
+              >
                 <circle id="Oval-Copy-8" cx="22" cy="22" r="22" />
                 <circle id="Oval-Copy-9" cx="82" cy="22" r="22" />
               </g>
@@ -49,6 +59,9 @@
         <div class="sub">(Beta! Things will break.)</div>
       </div>
       <div class="right">
+        <a class="discord" href="https://discord.gg/8jz5bbs" target="_blank"
+          ><button class="low">Discord</button></a
+        >&nbsp;
         <a
           class="feedback"
           href="mailto:jasperstephenson@gmail.com?subject=Feedback About The 0-2 Club"
@@ -58,23 +71,35 @@
         </a>
       </div>
     </div>
-    <!-- <div class="subbar" v-if="player.id" :class="{open: subBarOpen}">
-      <a @click="$router.go({path:`/g/${player.game}/i/${player.id}`, force: true})">
+    <div class="subbar" v-if="player.id" :class="{ open: subBarOpen }">
+      <a
+        @click="
+          $router.go({ path: `/g/${player.game}/i/${player.id}`, force: true })
+        "
+      >
         <div
           v-if="player.img"
           :style="{
-                    'background-image': `url('${player.img}')`,
-                  }"
+            'background-image': `url('${player.img}')`,
+          }"
           class="playericon med"
         ></div>
       </a>
       <h4>
-        <a @click="$router.go({path:`/g/${player.game}/i/${player.id}`, force: true})" class="tag">
+        <a
+          @click="
+            $router.go({
+              path: `/g/${player.game}/i/${player.id}`,
+              force: true,
+            })
+          "
+          class="tag"
+        >
           {{ player.tag || `Id #${player.id}` }}
-          <span class="sub">{{player.game}}</span>
+          <span class="sub">{{ player.game }}</span>
         </a>
       </h4>
-    </div>-->
+    </div>
   </nav>
 </template>
 
@@ -93,21 +118,21 @@ export default {
       return this.$store.state.player
     },
   },
-  // mounted() {
-  //   window.addEventListener('scroll', this.checkScroll)
-  // },
-  // beforeDestroy() {
-  //   window.removeEventListener('scroll', this.checkScroll)
-  // },
-  // methods: {
-  //   checkScroll(e) {
-  //     console.log(window.scrollY)
-  //     if (this.subBarOpen === false && window.scrollY > 150)
-  //       this.subBarOpen = true
-  //     else if (this.subBarOpen === true && window.scrollY <= 150)
-  //       this.subBarOpen = false
-  //   },
-  // },
+  mounted() {
+    window.addEventListener('scroll', this.checkScroll)
+  },
+  beforeDestroy() {
+    window.removeEventListener('scroll', this.checkScroll)
+  },
+  methods: {
+    checkScroll(e) {
+      console.log(window.scrollY)
+      if (this.subBarOpen === false && window.scrollY > 150)
+        this.subBarOpen = true
+      else if (this.subBarOpen === true && window.scrollY <= 150)
+        this.subBarOpen = false
+    },
+  },
 }
 </script>
 
@@ -151,12 +176,21 @@ export default {
   .playericon {
     margin-left: 34px;
     padding-right: 15px;
+
+    @media (max-width: 768px) {
+      margin-left: 0px;
+    }
   }
 
   h4 {
     line-height: 1;
     height: 100%;
     font-size: 1.2em;
+
+    .sub {
+      font-size: 1rem;
+      padding-left: 15px;
+    }
   }
 
   a {
@@ -168,10 +202,6 @@ export default {
 
   .tag {
     opacity: 0.8;
-
-    span {
-      padding-left: 15px;
-    }
   }
 }
 

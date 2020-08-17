@@ -39,7 +39,11 @@
       <div class="mainselector">
         <!-- Tag -->
         <div class="tag">
-          <input v-model="inputTag" placeholder="Your tag" />
+          <input
+            v-model="inputTag"
+            placeholder="Your tag"
+            @keydown.enter="go"
+          />
         </div>
         <div class="sub">&nbsp;&nbsp;(No team name necessary!)</div>
 
@@ -53,7 +57,9 @@
           </div> -->
       </div>
       <template #button>
-        <button class="fullsize" @click="go">Go</button>
+        <button class="fullsize" @click="go">
+          Go
+        </button>
       </template>
     </PanelButton>
 

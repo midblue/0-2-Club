@@ -14,15 +14,19 @@
       @click="hover = true"
       v-on-clickaway="() => (hover = false)"
       :style="{
-        'background-color':
-          award.level > 0 ? `var(--l${award.level})` : ``,
+        'background-color': award.level > 0 ? `var(--l${award.level})` : ``,
         'background-image': `url('${award.img}')`,
       }"
     >
       <div class="label">{{ award.label }}</div>
 
       <template v-if="award.levelProgress > 0.01">
-        <svg class="progress" width="106px" height="106px" viewBox="0 0 106 106">
+        <svg
+          class="progress"
+          width="106px"
+          height="106px"
+          viewBox="0 0 106 106"
+        >
           <g fill="none">
             <circle
               stroke-width="3"
@@ -123,6 +127,10 @@ export default {
 $widthu: 100px;
 $width: $widthu - 10px;
 $widthd: $widthu - 20px;
+
+$widthumobile: 80px;
+$widthmobile: 70px;
+
 .awardholder {
   position: relative;
   width: $widthu;
@@ -133,6 +141,11 @@ $widthd: $widthu - 20px;
   align-items: center;
   justify-content: center;
   margin-bottom: 10px;
+
+  @media (max-width: 768px) {
+    width: $widthumobile;
+    height: $widthmobile;
+  }
 }
 .award {
   position: relative;
@@ -157,6 +170,11 @@ $widthd: $widthu - 20px;
   box-shadow: 0 5px 10px var(--grayd);
   transition: box-shadow 0.3s;
   z-index: 1;
+
+  @media (max-width: 768px) {
+    width: $widthmobile;
+    height: $widthmobile;
+  }
 
   &:hover,
   &:active,

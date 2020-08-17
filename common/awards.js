@@ -12,12 +12,15 @@ module.exports = function(player) {
   //   (a, b) => a.date - b.date
   // )
   // so here's a workaround, no idea why it works
-  const orderedDates = player.participatedInEvents
+  const orderedDates = (player.participatedInEvents || [])
     .map(e => e.date)
     .sort((a, b) => a - b)
   const chronologicalEvents = orderedDates
     .map(d => player.participatedInEvents.find(e => e.date === d))
-    .map(e => ({ ...e, name: e.name.replace(/ fe?a?tu?r?i?n?g?\.? .*/gi, '') }))
+    .map(e => ({
+      ...e,
+      name: e.name.replace(/ fe?a?tu?r?i?n?g?\.? .*/gi, ''),
+    }))
 
   const awards = getAwards(player, chronologicalEvents)
 
@@ -54,6 +57,7 @@ requirements
 img
 label (for bottom center of icon)
 points
+date
 
 */
 
@@ -119,6 +123,8 @@ function bestStreak(player, events) {
 
   const points = level * 10
 
+  const date = new Date(bestStreak.date * 1000).getTime()
+
   if (level < 1) return []
   return [
     {
@@ -134,13 +140,17 @@ function bestStreak(player, events) {
       img,
       label,
       points,
+      date,
     },
   ]
 }
 
 function majors(player, events) {
   const majorCutoff = 200
+  let lastMajorDate = Date.now() / 1000
   const majors = events.reduce((total, event) => {
+    lastMajor =
+      event.totalParticipants >= majorCutoff ? event.date : lastMajorDate
     return total + (event.totalParticipants >= majorCutoff ? 1 : 0)
   }, 0)
 
@@ -170,6 +180,8 @@ function majors(player, events) {
 
   const points = level * 10
 
+  const date = new Date(lastMajorDate * 1000).getTime()
+
   if (level < 1) return []
   return [
     {
@@ -185,15 +197,18 @@ function majors(player, events) {
       img,
       label,
       points,
+      date,
     },
   ]
 }
 
 function totalGameWins(player, events) {
+  let lastGameDate = Date.now() / 1000
   const totalGameWins = events.reduce((total, event) => {
     return (
       total +
       event.matchesWithUser.reduce((total, match) => {
+        lastGameDate = match.date
         if (match.winnerId === player.id)
           return total + (match.winnerScore || 2)
         else
@@ -244,6 +259,8 @@ function totalGameWins(player, events) {
 
   const points = level * 10
 
+  const date = new Date(lastGameDate * 1000).getTime()
+
   if (level < 1) return []
   return [
     {
@@ -259,15 +276,17 @@ function totalGameWins(player, events) {
       img,
       label,
       points,
+      date,
     },
   ]
 }
 
 function totalPodiumFinishes(player, events) {
-  const totalPodiumFinishes = events.reduce(
-    (total, event) => total + (event.standing <= 3 ? 1 : 0),
-    0,
-  )
+  let lastPodiumDate = Date.now() / 1000
+  const totalPodiumFinishes = events.reduce((total, event) => {
+    if (event.standing <= 3) lastPodiumDate = event.date
+    return total + (event.standing <= 3 ? 1 : 0)
+  }, 0)
   const levels = [0, 1, 3, 6, 10, 18, 30, 45, 70, 100, 150, 200, 1000]
 
   const title = `Podium Position`
@@ -296,6 +315,8 @@ function totalPodiumFinishes(player, events) {
 
   const points = level * 10
 
+  const date = new Date(lastPodiumDate * 1000).getTime()
+
   if (level < 1) return []
   return [
     {
@@ -311,15 +332,17 @@ function totalPodiumFinishes(player, events) {
       img,
       label,
       points,
+      date,
     },
   ]
 }
 
 function totalFirstPlaces(player, events) {
-  const totalFirstPlaces = events.reduce(
-    (total, event) => total + (event.standing === 1 ? 1 : 0),
-    0,
-  )
+  let lastFirstPlaceDate = Date.now() / 1000
+  const totalFirstPlaces = events.reduce((total, event) => {
+    lastFirstPlaceDate = event.standing === 1 ? event.date : lastFirstPlaceDate
+    return total + (event.standing === 1 ? 1 : 0)
+  }, 0)
   const levels = [0, 1, 2, 4, 7, 10, 15, 20, 30, 50, 75, 100, 1000]
 
   const title = `Number One`
@@ -348,6 +371,8 @@ function totalFirstPlaces(player, events) {
 
   const points = level * 10
 
+  const date = new Date(lastFirstPlaceDate * 1000).getTime()
+
   if (level < 1) return []
   return [
     {
@@ -363,6 +388,7 @@ function totalFirstPlaces(player, events) {
       img,
       label,
       points,
+      date,
     },
   ]
 }
@@ -417,6 +443,8 @@ function mostWeeksInARow(player, events) {
 
   const points = level * 10
 
+  const date = new Date(mostWeeksInARow.start * 1000).getTime()
+
   if (level < 1) return []
   return [
     {
@@ -432,6 +460,7 @@ function mostWeeksInARow(player, events) {
       img,
       label,
       points,
+      date,
     },
   ]
 }
@@ -491,6 +520,12 @@ function eventsInASeries(player, events) {
 
   const points = level * 10
 
+  const date = new Date(
+    longestSeries[longestSeries.length - 1]
+      ? longestSeries[longestSeries.length - 1].date * 1000
+      : Date.now(),
+  ).getTime()
+
   if (level < 1) return []
   return [
     {
@@ -506,6 +541,7 @@ function eventsInASeries(player, events) {
       img,
       label,
       points,
+      date,
     },
   ]
 }
@@ -560,6 +596,8 @@ function mostInOneWeek(player, events) {
 
   const points = level * 10
 
+  const date = new Date(mostInOneWeek.start * 1000).getTime()
+
   if (level < 1) return []
   return [
     {
@@ -575,6 +613,7 @@ function mostInOneWeek(player, events) {
       img,
       label,
       points,
+      date,
     },
   ]
 }
@@ -583,6 +622,7 @@ function yearlyImprovement(player, events) {
   const eventsUntilThisPoint = []
   const cumulativePlacingRatiosByYear = {}
   for (let event of events) {
+    // todo don't count years with <4 events
     eventsUntilThisPoint.push(event)
     const placingRatio = getPlacingRatio(eventsUntilThisPoint)
     const eventDate = new Date(event.date * 1000)
@@ -657,6 +697,8 @@ function yearlyImprovement(player, events) {
 
     const points = level * 10
 
+    const date = new Date(isCurrentYear ? undefined : `${year}-12-31`).getTime()
+
     if (level < 1) return
     return {
       title,
@@ -671,6 +713,7 @@ function yearlyImprovement(player, events) {
       img,
       label,
       points,
+      date,
     }
   })
 
@@ -712,6 +755,8 @@ function yearlyAttendance(player, events) {
 
     const points = level * 10
 
+    const date = new Date(isCurrentYear ? undefined : `${year}-12-31`).getTime()
+
     if (level < 1) return
     return {
       title,
@@ -726,6 +771,7 @@ function yearlyAttendance(player, events) {
       img,
       label,
       points,
+      date,
     }
   })
 

@@ -67,6 +67,10 @@ export default {
   grid-template-columns: repeat(auto-fit, 80px);
   grid-gap: 0px;
   z-index: 4;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fit, 60px);
+  }
 }
 
 .divider {

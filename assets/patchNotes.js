@@ -1,5 +1,9 @@
 module.exports = [
   {
+    date: 'August 17, 2020',
+    content: `Remade the graph from the ground up to have lots more control over what kinds of data we show, and how we show it.`,
+  },
+  {
     date: 'August 3, 2020',
     content: `Big visual upgrade! Rounded corners, and backgrounds correspond to level colors on player pages.`,
   },

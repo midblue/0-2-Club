@@ -15,13 +15,13 @@
             opacity: displayOpacity,
           }"
         ></div>
-        <span>{{ totalPoints }}</span>
+        <span>+{{ totalPoints }}</span>
       </div>
       <div class="title">
         <span class="tournamentname">{{
           event.tournamentName.replace(/ fe?a?tu?r?i?n?g?\.? .*/gi, '')
         }}</span>
-        <br v-if="open" />
+        <br v-if="open || isMobile" />
         <span class="sub eventname">
           {{ event.name.replace(/ fe?a?tu?r?i?n?g?\.? .*/gi, '') }}
           ({{ new Date(event.date * 1000).toLocaleDateString() }})
@@ -44,7 +44,7 @@
             color: `var(--l${displayColorLevel}d)`,
             opacity: point.value >= 8 ? 1 : point.value / 10 + 0.2,
           }"
-          >{{ point.value }}</span
+          >+{{ point.value }}</span
         >
         <div class="explanation">
           <span class="title">{{ point.title }}</span>
@@ -108,6 +108,9 @@ export default {
     }
   },
   computed: {
+    isMobile() {
+      return this.$store.state.isMobile
+    },
     totalPoints() {
       return (this.event.points || []).reduce((t, p) => t + p.value, 0)
     },
@@ -268,7 +271,6 @@ h3 {
 }
 
 .context {
-  opacity: 1;
   color: var(--textl);
 
   a {

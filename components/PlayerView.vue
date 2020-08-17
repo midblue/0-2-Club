@@ -44,19 +44,21 @@
             >
           </span>
 
-          <Share v-if="!isMobile" />
+          <!-- <Share v-if="!isMobile" /> -->
         </h3>
 
         <XPBar :totalPoints="totalPoints" :events="displayEvents" />
       </div>
 
-      <Share class="mobileshare" v-if="isMobile" />
+      <!-- <Share class="mobileshare" v-if="isMobile" /> -->
     </template>
 
-    <Awards v-if="awards" :awards="awards" class="awardspane" />
+    <Awards v-if="player.awards" :awards="player.awards" class="awardspane" />
 
     <div class="chartholder">
-      <ProgressChart v-if="displayEvents" />
+      <client-only>
+        <ChartZone v-if="displayEvents" />
+      </client-only>
     </div>
 
     <div class="colorzone2">
@@ -131,7 +133,7 @@
 import InfoTooltip from '~/components/InfoTooltip'
 import EventSearch from '~/components/EventSearch'
 import EventsListing from '~/components/EventsListing'
-import ProgressChart from '~/components/ProgressChart'
+import ChartZone from '~/components/Chart/ChartZone'
 import XPBar from '~/components/XPBar'
 import Stats from '~/components/Stats'
 import Share from '~/components/Share'
@@ -150,7 +152,7 @@ export default {
     InfoTooltip,
     EventSearch,
     EventsListing,
-    ProgressChart,
+    ChartZone,
     XPBar,
     Stats,
     Share,
@@ -158,7 +160,6 @@ export default {
   },
   data() {
     return {
-      awards: [],
       levels,
       socket: null,
     }
@@ -195,7 +196,10 @@ export default {
         (this.points
           ? this.points.reduce((total, { value }) => total + value, 0)
           : 0) +
-        (this.awards || []).reduce((total, { points }) => total + points, 0)
+        (this.player.awards || []).reduce(
+          (total, { points }) => total + points,
+          0,
+        )
       )
     },
     level() {
@@ -212,7 +216,6 @@ export default {
   created() {
     this.$store.commit('setPlayer', {
       ...this.initialPlayer,
-      awards: this.awards,
     })
     this.recalculateAwards()
     this.socketSetup()
@@ -256,6 +259,7 @@ export default {
       })
       this.socket.on('playerFullyUpdated', async data => {
         await this.refreshPlayer()
+        // todo not firing sometimes for first-timers
       })
       this.socket.on('endEventSearch', async data => {
         await this.refreshPlayer()
@@ -298,12 +302,17 @@ export default {
         )
         .then(res => {
           if (res.data && res.data.disambiguation) return this.$router.go()
-          this.$store.commit('setPlayer', res.data)
-          this.recalculateAwards()
+          this.$store.commit('setPlayer', {
+            ...res.data,
+            awards: calculateAwards(res.data),
+          })
         })
     },
     recalculateAwards() {
-      this.awards = calculateAwards(this.player)
+      this.$store.commit('setPlayer', {
+        ...this.player,
+        awards: calculateAwards(this.player),
+      })
     },
   },
 }

@@ -72,19 +72,20 @@
       </div>
     </div>
     <div class="subbar" v-if="player.id" :class="{ open: subBarOpen }">
-      <a
+      <div
+        class="iconholder"
         @click="
           $router.go({ path: `/g/${player.game}/i/${player.id}`, force: true })
         "
       >
-        <div
+        <span
           v-if="player.img"
           :style="{
             'background-image': `url('${player.img}')`,
           }"
           class="playericon med"
-        ></div>
-      </a>
+        ></span>
+      </div>
       <h4>
         <a
           @click="
@@ -119,17 +120,16 @@ export default {
     },
   },
   mounted() {
-    window.addEventListener('scroll', this.checkScroll)
+    document.body.addEventListener('scroll', this.checkScroll)
   },
   beforeDestroy() {
-    window.removeEventListener('scroll', this.checkScroll)
+    document.body.removeEventListener('scroll', this.checkScroll)
   },
   methods: {
     checkScroll(e) {
-      console.log(window.scrollY)
-      if (this.subBarOpen === false && window.scrollY > 150)
+      if (this.subBarOpen === false && document.body.scrollTop > 150)
         this.subBarOpen = true
-      else if (this.subBarOpen === true && window.scrollY <= 150)
+      else if (this.subBarOpen === true && document.body.scrollTop <= 150)
         this.subBarOpen = false
     },
   },
@@ -184,7 +184,7 @@ export default {
 
   h4 {
     line-height: 1;
-    height: 100%;
+    padding-left: 0.3em;
     font-size: 1.2em;
 
     .sub {
@@ -193,7 +193,7 @@ export default {
     }
   }
 
-  a {
+  .iconholder {
     text-decoration: none;
     height: 100%;
     display: flex;

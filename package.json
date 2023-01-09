@@ -18,7 +18,7 @@
     "connect-timeout": "^1.9.0",
     "cross-env": "^7.0.2",
     "express": "^4.17.1",
-    "firebase-admin": "^8.9.2",
+    "firebase-admin": "^11.4.1",
     "nuxt": "^2.13.3",
     "socket.io": "^2.3.0",
     "source-map-support": "^0.5.16",
